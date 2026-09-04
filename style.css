@@ -898,3 +898,227 @@ textarea:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* =========================================================
+   LIGHT MODE
+========================================================= */
+
+:root[data-theme="light"] {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-2: #f1f1f3;
+  --surface-3: #e7e7ea;
+
+  --border: #dedee2;
+  --border-light: #cfcfd4;
+
+  --text: #111113;
+  --text-secondary: #626267;
+  --text-muted: #8b8b91;
+
+  --white: #111113;
+  --black: #ffffff;
+
+  --success: #166534;
+  --warning: #92400e;
+  --danger: #991b1b;
+}
+
+:root[data-theme="light"] body {
+  background: #f2f2f3;
+}
+
+:root[data-theme="light"] .topbar {
+  background: rgba(247, 247, 248, 0.92);
+  border-bottom-color: rgba(0, 0, 0, 0.07);
+}
+
+:root[data-theme="light"] .bottom-nav {
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme="light"] .app {
+  background: var(--bg);
+}
+
+:root[data-theme="light"] .modal {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="light"] .modal-content {
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   NAV / CONTENT SAFE SPACE
+========================================================= */
+
+main {
+  padding-bottom: 120px;
+}
+
+.bottom-nav {
+  min-height: 62px;
+}
+
+
+/* =========================================================
+   GREETING SPACING
+========================================================= */
+
+.greeting {
+  padding-top: 10px;
+  margin-bottom: 32px;
+}
+
+
+/* =========================================================
+   BETTER ADD SCHOOLWORK
+========================================================= */
+
+.add-schoolwork-button {
+  min-height: 64px;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+  border-style: solid;
+  border-color: var(--border);
+
+  background: var(--surface);
+
+  font-weight: 600;
+}
+
+.add-schoolwork-button span:first-child {
+  display: none;
+}
+
+.add-schoolwork-button::before {
+  content: "+";
+
+  width: 26px;
+  height: 26px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 2px;
+
+  border-radius: 50%;
+
+  background: var(--surface-3);
+
+  color: var(--text);
+
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.add-schoolwork-button:hover {
+  border-color: var(--border-light);
+  background: var(--surface-2);
+}
+
+
+/* =========================================================
+   PRIORITY CARD
+========================================================= */
+
+.priority-card {
+  overflow: hidden;
+}
+
+.priority-card::before {
+  top: 0;
+  bottom: 0;
+  width: 3px;
+}
+
+.priority-label {
+  display: inline-flex;
+
+  margin-left: 10px;
+  padding: 5px 8px;
+
+  background: var(--surface-3);
+
+  border-radius: 999px;
+
+  font-size: 9px;
+  letter-spacing: 0.8px;
+}
+
+.start-button {
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   BOTTOM NAV POLISH
+========================================================= */
+
+.bottom-nav {
+  gap: 4px;
+}
+
+.nav-button {
+  padding: 6px 5px;
+
+  border-radius: 11px;
+
+  font-weight: 500;
+}
+
+.nav-button.active {
+  font-weight: 650;
+}
+
+.nav-button .nav-icon {
+  width: 26px;
+  height: 23px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 7px;
+
+  font-size: 15px;
+}
+
+
+/* =========================================================
+   TASK LIST POLISH
+========================================================= */
+
+.task {
+  padding: 15px 2px;
+}
+
+.task-checkbox {
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   MOBILE SAFE AREA
+========================================================= */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  main {
+    padding-bottom: calc(
+      120px + env(safe-area-inset-bottom)
+    );
+  }
+}
