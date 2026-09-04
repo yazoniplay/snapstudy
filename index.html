@@ -2,522 +2,640 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b0d12">
-  <meta name="description" content="SnapStudy — Turn schoolwork into a clear plan.">
-  <title>SnapStudy</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <meta name="theme-color" content="#0b0b0c">
+
+  <title>School — Your schoolwork, simplified.</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- APP -->
   <div class="app">
 
-    <!-- TOP BAR -->
+    <!-- =========================
+         TOP BAR
+    ========================== -->
+
     <header class="topbar">
 
       <div class="brand">
-        <div class="brand-mark">S</div>
-
-        <div class="brand-text">
-          <span class="brand-name">SnapStudy</span>
-          <span class="brand-tagline">Study smarter.</span>
-        </div>
+        <div class="brand-icon">S</div>
+        <span>School</span>
       </div>
 
-      <div class="topbar-actions">
-        <button class="icon-button" aria-label="Search">
-          🔍
-        </button>
-
-        <button class="profile-button" aria-label="Profile">
-          <span>Y</span>
-        </button>
-      </div>
+      <button
+        class="profile-button"
+        id="profileButton"
+        aria-label="Open profile"
+      >
+        ●
+      </button>
 
     </header>
 
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
 
-      <!-- GREETING -->
-      <section class="hero">
+    <main>
 
-        <div>
-          <p class="hero-eyebrow">FRIDAY, SEPTEMBER 4</p>
+      <!-- Greeting -->
 
-          <h1>
-            What should you
-            <span>do next?</span>
-          </h1>
+      <section class="greeting">
 
-          <p class="hero-description">
-            Drop your schoolwork here. SnapStudy turns it into a clear,
-            prioritized plan.
-          </p>
-        </div>
+        <h1>Good morning, Yazoni.</h1>
 
-        <div class="hero-status">
-          <div class="status-dot"></div>
-          <span>You're all caught up</span>
-        </div>
+        <p>Friday, September 4</p>
 
       </section>
 
 
-      <!-- DO THIS NEXT -->
-      <section class="next-section">
+      <!-- =========================
+           ADD SCHOOLWORK
+      ========================== -->
 
-        <div class="section-heading">
-          <div>
-            <p class="section-eyebrow">YOUR PRIORITY</p>
-            <h2>Do this next</h2>
-          </div>
+      <section class="quick-add">
 
-          <span class="priority-badge">HIGH PRIORITY</span>
+        <div class="section-header">
+          <h2>Add schoolwork</h2>
+        </div>
+
+        <button
+          class="add-schoolwork-button"
+          id="addSchoolworkButton"
+        >
+          <span>+</span>
+
+          <span>
+            Add schoolwork
+          </span>
+        </button>
+
+        <p
+          style="
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-align: center;
+          "
+        >
+          Photo, screenshot, PDF or text
+        </p>
+
+      </section>
+
+
+      <!-- =========================
+           PRIORITY
+      ========================== -->
+
+      <section
+        class="priority-section"
+        id="prioritySection"
+      >
+
+        <div class="section-header">
+
+          <h2>Do this next</h2>
+
+          <button id="viewAllButton">
+            View all
+          </button>
+
         </div>
 
 
         <article class="priority-card">
 
-          <div class="priority-glow"></div>
+          <div class="priority-label">
+            HIGH PRIORITY
+          </div>
 
-          <div class="priority-top">
+          <h3>
+            Mathematics
+          </h3>
 
-            <div class="subject-icon math">
-              ∑
-            </div>
+          <p>
+            Complete exercises 1–20
+          </p>
 
-            <div class="priority-info">
-              <span class="subject">MATHEMATICS</span>
-              <h3>Complete exercises 1–20</h3>
-            </div>
+          <div class="priority-meta">
+
+            <span>Due today</span>
+
+            <span>·</span>
+
+            <span>35 min</span>
 
           </div>
 
-
-          <div class="priority-details">
-
-            <div class="detail">
-              <span class="detail-icon">📅</span>
-
-              <div>
-                <small>Due</small>
-                <strong>Tomorrow</strong>
-              </div>
-            </div>
-
-            <div class="detail">
-              <span class="detail-icon">⏱️</span>
-
-              <div>
-                <small>Estimated</small>
-                <strong>35 min</strong>
-              </div>
-            </div>
-
-            <div class="detail">
-              <span class="detail-icon">📖</span>
-
-              <div>
-                <small>Progress</small>
-                <strong>0 / 20</strong>
-              </div>
-            </div>
-
-          </div>
-
-
-          <div class="priority-action">
-
-            <div class="progress-track">
-              <div class="progress-fill" style="width: 0%"></div>
-            </div>
-
-            <button class="primary-button">
-              Start assignment
-              <span>→</span>
-            </button>
-
-          </div>
+          <button
+            class="start-button"
+            id="startAssignmentButton"
+          >
+            Start assignment
+          </button>
 
         </article>
 
       </section>
 
 
-      <!-- QUICK ADD -->
-      <section class="add-section">
+      <!-- =========================
+           TODAY
+      ========================== -->
 
-        <button class="add-schoolwork">
-
-          <div class="add-icon">
-            +
-          </div>
-
-          <div class="add-text">
-            <strong>Add schoolwork</strong>
-            <span>Photo, screenshot, PDF or text</span>
-          </div>
-
-          <span class="add-arrow">→</span>
-
-        </button>
-
-      </section>
-
-
-      <!-- TODAY -->
       <section class="tasks-section">
 
-        <div class="section-heading">
+        <div class="section-header">
 
-          <div>
-            <p class="section-eyebrow">FRIDAY</p>
-            <h2>Today's tasks</h2>
-          </div>
-
-          <span class="task-count">3 tasks</span>
+          <h2>
+            Today's tasks
+            <span
+              id="taskCount"
+              style="
+                color: var(--text-muted);
+                font-weight: 400;
+              "
+            >
+              · 3
+            </span>
+          </h2>
 
         </div>
 
 
-        <div class="task-list">
+        <div
+          class="task-list"
+          id="taskList"
+        >
 
+          <!-- Mathematics -->
 
-          <!-- TASK 1 -->
-          <article class="task-card">
+          <label class="task">
 
-            <button class="checkbox" aria-label="Complete task"></button>
-
-            <div class="task-content">
-
-              <div class="task-meta">
-                <span class="task-subject math-text">MATH</span>
-                <span class="task-time">35 min</span>
-              </div>
-
-              <h3>Complete exercises 1–20</h3>
-
-              <p>Page 47</p>
-
-            </div>
-
-            <span class="task-arrow">›</span>
-
-          </article>
-
-
-          <!-- TASK 2 -->
-          <article class="task-card">
-
-            <button class="checkbox" aria-label="Complete task"></button>
+            <input
+              type="checkbox"
+              class="task-checkbox"
+            >
 
             <div class="task-content">
 
-              <div class="task-meta">
-                <span class="task-subject english-text">ENGLISH</span>
-                <span class="task-time">45 min</span>
+              <div class="task-title">
+                Mathematics
               </div>
 
-              <h3>Finish introduction for essay</h3>
-
-              <p>English essay · Due Monday</p>
+              <div class="task-subtitle">
+                Complete exercises 1–20
+              </div>
 
             </div>
 
-            <span class="task-arrow">›</span>
+            <span class="task-date">
+              35 min
+            </span>
 
-          </article>
+          </label>
 
 
-          <!-- TASK 3 -->
-          <article class="task-card">
+          <!-- English -->
 
-            <button class="checkbox" aria-label="Complete task"></button>
+          <label class="task">
+
+            <input
+              type="checkbox"
+              class="task-checkbox"
+            >
 
             <div class="task-content">
 
-              <div class="task-meta">
-                <span class="task-subject biology-text">BIOLOGY</span>
-                <span class="task-time">20 min</span>
+              <div class="task-title">
+                English
               </div>
 
-              <h3>Answer worksheet questions</h3>
-
-              <p>Chapter 4 · Due Monday</p>
+              <div class="task-subtitle">
+                Read pages 42–48
+              </div>
 
             </div>
 
-            <span class="task-arrow">›</span>
+            <span class="task-date">
+              20 min
+            </span>
 
-          </article>
+          </label>
 
 
+          <!-- Biology -->
+
+          <label class="task">
+
+            <input
+              type="checkbox"
+              class="task-checkbox"
+            >
+
+            <div class="task-content">
+
+              <div class="task-title">
+                Biology
+              </div>
+
+              <div class="task-subtitle">
+                Finish questions 1–8
+              </div>
+
+            </div>
+
+            <span class="task-date">
+              15 min
+            </span>
+
+          </label>
+
+        </div>
+
+
+        <!-- Only intended to appear when there are no tasks -->
+
+        <div
+          class="empty-state"
+          id="emptyState"
+          style="display: none;"
+        >
+          You're all caught up.
         </div>
 
       </section>
 
 
-      <!-- UPCOMING -->
+      <!-- =========================
+           UPCOMING
+      ========================== -->
+
       <section class="upcoming-section">
 
-        <div class="section-heading">
+        <div class="section-header">
 
-          <div>
-            <p class="section-eyebrow">NEXT 7 DAYS</p>
-            <h2>Coming up</h2>
-          </div>
-
-          <button class="view-all">View all</button>
+          <h2>Coming up</h2>
 
         </div>
 
 
         <div class="upcoming-list">
 
-
-          <article class="upcoming-card">
-
-            <div class="date-box">
-              <strong>07</strong>
-              <span>SEP</span>
-            </div>
+          <article class="upcoming-item">
 
             <div class="upcoming-info">
-              <span>MONDAY</span>
-              <h3>English essay</h3>
-              <p>English · 45 min</p>
+
+              <div class="upcoming-title">
+                History test
+              </div>
+
+              <div class="upcoming-subtitle">
+                Chapter 4–6
+              </div>
+
             </div>
 
-            <span class="upcoming-arrow">›</span>
+            <span class="upcoming-date">
+              Mon
+            </span>
 
           </article>
 
 
-          <article class="upcoming-card">
-
-            <div class="date-box">
-              <strong>07</strong>
-              <span>SEP</span>
-            </div>
+          <article class="upcoming-item">
 
             <div class="upcoming-info">
-              <span>MONDAY</span>
-              <h3>Biology worksheet</h3>
-              <p>Biology · 20 min</p>
+
+              <div class="upcoming-title">
+                Science project
+              </div>
+
+              <div class="upcoming-subtitle">
+                Final submission
+              </div>
+
             </div>
 
-            <span class="upcoming-arrow">›</span>
+            <span class="upcoming-date">
+              Wed
+            </span>
 
           </article>
 
 
-          <article class="upcoming-card">
-
-            <div class="date-box">
-              <strong>11</strong>
-              <span>SEP</span>
-            </div>
+          <article class="upcoming-item">
 
             <div class="upcoming-info">
-              <span>FRIDAY</span>
-              <h3>History presentation</h3>
-              <p>History · 60 min</p>
+
+              <div class="upcoming-title">
+                English essay
+              </div>
+
+              <div class="upcoming-subtitle">
+                500–700 words
+              </div>
+
             </div>
 
-            <span class="upcoming-arrow">›</span>
+            <span class="upcoming-date">
+              Fri
+            </span>
 
           </article>
-
 
         </div>
 
       </section>
 
 
-      <!-- WEEKLY PROGRESS -->
-      <section class="progress-section">
+      <!-- =========================
+           WEEKLY PROGRESS
+      ========================== -->
 
-        <div class="section-heading">
+      <section class="progress-card">
 
-          <div>
-            <p class="section-eyebrow">THIS WEEK</p>
-            <h2>Your progress</h2>
-          </div>
+        <div class="progress-top">
+
+          <span>
+            This week
+          </span>
+
+          <span
+            class="progress-number"
+            id="progressNumber"
+          >
+            0 / 3 completed
+          </span>
 
         </div>
 
 
-        <article class="progress-card">
+        <div class="progress-bar">
 
-          <div class="progress-header">
+          <div
+            class="progress-fill"
+            id="progressFill"
+            style="width: 0%;"
+          ></div>
 
-            <div>
-              <span>Tasks completed</span>
-              <strong>7 / 12</strong>
-            </div>
-
-            <div class="progress-percentage">
-              58%
-            </div>
-
-          </div>
-
-
-          <div class="large-progress-track">
-            <div class="large-progress-fill" style="width: 58%"></div>
-          </div>
-
-
-          <div class="progress-footer">
-
-            <span>🔥 3 day streak</span>
-
-            <span>5 tasks remaining</span>
-
-          </div>
-
-        </article>
+        </div>
 
       </section>
 
 
-      <!-- EMPTY AI EXPLANATION -->
-      <section class="ai-section">
+      <!-- =========================
+           AI EXPLANATION
+      ========================== -->
 
-        <div class="ai-card">
+      <section class="ai-card">
 
-          <div class="ai-symbol">
-            ✦
-          </div>
-
-          <div class="ai-content">
-
-            <span class="ai-label">SNAPSTUDY AI</span>
-
-            <h3>
-              Stop organizing.
-              Start studying.
-            </h3>
-
-            <p>
-              Snap a photo of your assignment and we'll figure out
-              what it means, when it's due, and what you should do next.
-            </p>
-
-          </div>
-
+        <div class="ai-label">
+          <span>✦</span>
+          AI summary
         </div>
+
+        <h3>
+          You've got 3 things to focus on today.
+        </h3>
+
+        <p>
+          Start with Mathematics because it's due today.
+          English and Biology can follow after.
+        </p>
 
       </section>
 
     </main>
 
 
-    <!-- MOBILE NAVIGATION -->
-    <nav class="bottom-nav">
+    <!-- =========================
+         BOTTOM NAVIGATION
+    ========================== -->
 
-      <button class="nav-item active">
+    <nav
+      class="bottom-nav"
+      aria-label="Main navigation"
+    >
+
+      <button
+        class="nav-button active"
+        data-page="home"
+      >
+
         <span class="nav-icon">⌂</span>
+
         <span>Home</span>
+
       </button>
 
-      <button class="nav-item">
+
+      <button
+        class="nav-button"
+        data-page="tasks"
+      >
+
         <span class="nav-icon">✓</span>
+
         <span>Tasks</span>
+
       </button>
 
-      <button class="nav-add">
-        <span>+</span>
+
+      <button
+        class="nav-button"
+        id="navAddButton"
+        data-page="add"
+      >
+
+        <span class="nav-icon">+</span>
+
+        <span>Add</span>
+
       </button>
 
-      <button class="nav-item">
-        <span class="nav-icon">▣</span>
+
+      <button
+        class="nav-button"
+        data-page="calendar"
+      >
+
+        <span class="nav-icon">□</span>
+
         <span>Calendar</span>
+
       </button>
 
-      <button class="nav-item">
-        <span class="nav-icon">◉</span>
+
+      <button
+        class="nav-button"
+        data-page="profile"
+      >
+
+        <span class="nav-icon">○</span>
+
         <span>Profile</span>
+
       </button>
 
     </nav>
 
-
   </div>
 
 
-  <!-- ADD SCHOOLWORK MODAL -->
-  <div class="modal-overlay" id="addModal">
+  <!-- =========================
+       ADD SCHOOLWORK MODAL
+  ========================== -->
 
-    <div class="modal">
+  <div
+    class="modal"
+    id="addSchoolworkModal"
+    aria-hidden="true"
+  >
 
-      <button class="modal-close" aria-label="Close">×</button>
+    <div class="modal-content">
 
-      <div class="modal-icon">✦</div>
+      <div class="modal-header">
 
-      <h2>Add schoolwork</h2>
+        <h2>Add schoolwork</h2>
 
-      <p>
-        Give SnapStudy anything from your school and we'll
-        turn it into organized tasks.
-      </p>
-
-
-      <div class="upload-options">
-
-        <button class="upload-option">
-          <span>📷</span>
-
-          <div>
-            <strong>Take a photo</strong>
-            <small>Use your camera</small>
-          </div>
-
-          <span>›</span>
-        </button>
-
-
-        <button class="upload-option">
-          <span>🖼️</span>
-
-          <div>
-            <strong>Choose image</strong>
-            <small>Upload a screenshot or photo</small>
-          </div>
-
-          <span>›</span>
-        </button>
-
-
-        <button class="upload-option">
-          <span>📄</span>
-
-          <div>
-            <strong>Upload PDF</strong>
-            <small>Import a school document</small>
-          </div>
-
-          <span>›</span>
-        </button>
-
-
-        <button class="upload-option">
-          <span>⌨️</span>
-
-          <div>
-            <strong>Paste text</strong>
-            <small>Paste an assignment or message</small>
-          </div>
-
-          <span>›</span>
+        <button
+          class="modal-close"
+          id="modalClose"
+          aria-label="Close"
+        >
+          ×
         </button>
 
       </div>
+
+
+      <div class="modal-options">
+
+
+        <!-- Camera -->
+
+        <button
+          class="upload-option"
+          id="cameraOption"
+        >
+
+          <span class="upload-option-icon">
+            ◉
+          </span>
+
+          <span class="upload-option-title">
+            Take a photo
+          </span>
+
+          <span class="upload-option-description">
+            Photograph homework
+          </span>
+
+        </button>
+
+
+        <!-- Image -->
+
+        <button
+          class="upload-option"
+          id="imageOption"
+        >
+
+          <span class="upload-option-icon">
+            ▧
+          </span>
+
+          <span class="upload-option-title">
+            Choose image
+          </span>
+
+          <span class="upload-option-description">
+            Select a screenshot
+          </span>
+
+        </button>
+
+
+        <!-- PDF -->
+
+        <button
+          class="upload-option"
+          id="pdfOption"
+        >
+
+          <span class="upload-option-icon">
+            ▤
+          </span>
+
+          <span class="upload-option-title">
+            Upload PDF
+          </span>
+
+          <span class="upload-option-description">
+            Import a document
+          </span>
+
+        </button>
+
+
+        <!-- Text -->
+
+        <button
+          class="upload-option"
+          id="textOption"
+        >
+
+          <span class="upload-option-icon">
+            Aa
+          </span>
+
+          <span class="upload-option-title">
+            Paste text
+          </span>
+
+          <span class="upload-option-description">
+            Add teacher instructions
+          </span>
+
+        </button>
+
+      </div>
+
+
+      <!-- Hidden file inputs -->
+
+      <input
+        type="file"
+        id="cameraInput"
+        accept="image/*"
+        capture="environment"
+        hidden
+      >
+
+      <input
+        type="file"
+        id="imageInput"
+        accept="image/*"
+        hidden
+      >
+
+      <input
+        type="file"
+        id="pdfInput"
+        accept="application/pdf"
+        hidden
+      >
 
     </div>
 
