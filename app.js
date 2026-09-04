@@ -65,7 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   ];
 
-
   let tasks = loadTasks();
 
 
@@ -169,16 +168,58 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!file) return;
 
     closeModal();
-
     showProcessing();
 
-    await wait(1200);
+    try {
+      /*
+       * Images can be sent directly to Gemini.
+       * PDFs are left supported by the UI, but we don't
+       * send them yet because we'll add PDF handling next.
+       */
 
-    hideProcessing();
+      if (file.type === "application/pdf") {
+        hideProcessing();
 
-    alert(
-      `"${file.name}" was added.\n\nAI processing will be connected next.`
-    );
+        alert(
+          "PDF upload is coming next. For now, use a photo, screenshot, or pasted text."
+        );
+
+        event.target.value = "";
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        hideProcessing();
+
+        alert("Please select an image or screenshot.");
+
+        event.target.value = "";
+        return;
+      }
+
+      const dataUrl = await readFileAsDataURL(file);
+
+      const base64 = dataUrl.split(",")[1];
+
+      const result = await analyzeSchoolwork({
+        imageBase64: base64,
+        mimeType: file.type
+      });
+
+      hideProcessing();
+
+      addAIResults(result);
+
+    } catch (error) {
+      console.error("AI processing error:", error);
+
+      hideProcessing();
+
+      alert(
+        error.message ||
+        "Something went wrong while reading your schoolwork."
+      );
+    }
 
     event.target.value = "";
   }
@@ -188,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
      TEXT INPUT
   ===================================================== */
 
-  textOption?.addEventListener("click", () => {
+  textOption?.addEventListener("click", async () => {
     const text = prompt(
       "Paste your teacher's instructions or assignment here:"
     );
@@ -198,29 +239,254 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     closeModal();
+    showProcessing();
 
-    createTaskFromText(text.trim());
+    try {
+      const result = await analyzeSchoolwork({
+        text: text.trim()
+      });
+
+      hideProcessing();
+
+      addAIResults(result);
+
+    } catch (error) {
+      console.error("AI text processing error:", error);
+
+      hideProcessing();
+
+      alert(
+        error.message ||
+        "Something went wrong while reading the assignment."
+      );
+    }
   });
 
 
-  function createTaskFromText(text) {
-    const task = {
-      id: `task-${Date.now()}`,
-      subject: "New assignment",
-      title: text.length > 90
-        ? `${text.substring(0, 87)}...`
-        : text,
-      duration: "—",
-      due: "Not set",
-      completed: false
-    };
+  /* =====================================================
+     GEMINI API
+  ===================================================== */
 
-    tasks.unshift(task);
+  async function analyzeSchoolwork(input) {
+
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify(input)
+    });
+
+
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error(
+        "The server returned an invalid response."
+      );
+    }
+
+
+    if (!response.ok) {
+      console.error("Analyze API error:", data);
+
+      throw new Error(
+        data?.error ||
+        "AI analysis failed."
+      );
+    }
+
+
+    if (!data?.tasks || !Array.isArray(data.tasks)) {
+      throw new Error(
+        "The AI returned an unexpected result."
+      );
+    }
+
+
+    return data;
+  }
+
+
+  /* =====================================================
+     ADD AI RESULTS
+  ===================================================== */
+
+  function addAIResults(result) {
+
+    if (!result.tasks.length) {
+      alert(
+        "I couldn't find any clear assignments in that."
+      );
+
+      return;
+    }
+
+
+    const newTasks = result.tasks.map((task, index) => {
+
+      const estimatedMinutes =
+        Number.isFinite(task.estimatedMinutes)
+          ? task.estimatedMinutes
+          : null;
+
+
+      return {
+        id: `ai-${Date.now()}-${index}`,
+
+        subject:
+          task.subject?.trim() ||
+          "Schoolwork",
+
+        title:
+          task.title?.trim() ||
+          "New assignment",
+
+        duration:
+          estimatedMinutes
+            ? `${estimatedMinutes} min`
+            : "—",
+
+        due:
+          formatDueDate(task.dueDate),
+
+        priority:
+          task.priority ||
+          "medium",
+
+        completed: false
+      };
+
+    });
+
+
+    tasks = [
+      ...newTasks,
+      ...tasks
+    ];
+
 
     saveTasks();
     renderTasks();
 
-    alert("Assignment added to your tasks.");
+
+    if (newTasks.length === 1) {
+
+      alert(
+        `Added: ${newTasks[0].subject} — ${newTasks[0].title}`
+      );
+
+    } else {
+
+      alert(
+        `Added ${newTasks.length} assignments to your schoolwork.`
+      );
+
+    }
+  }
+
+
+  /* =====================================================
+     FILE READER
+  ===================================================== */
+
+  function readFileAsDataURL(file) {
+
+    return new Promise((resolve, reject) => {
+
+      const reader = new FileReader();
+
+
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+
+
+      reader.onerror = () => {
+        reject(
+          new Error("Could not read the selected file.")
+        );
+      };
+
+
+      reader.readAsDataURL(file);
+
+    });
+
+  }
+
+
+  /* =====================================================
+     DUE DATE FORMATTING
+  ===================================================== */
+
+  function formatDueDate(dateString) {
+
+    if (!dateString) {
+      return "Not set";
+    }
+
+
+    const date = new Date(dateString);
+
+
+    if (Number.isNaN(date.getTime())) {
+      return dateString;
+    }
+
+
+    const today = new Date();
+
+    const todayDate =
+      new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
+
+    const targetDate =
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+
+
+    const difference =
+      Math.round(
+        (targetDate - todayDate) /
+        (1000 * 60 * 60 * 24)
+      );
+
+
+    if (difference === 0) {
+      return "Due today";
+    }
+
+
+    if (difference === 1) {
+      return "Due tomorrow";
+    }
+
+
+    if (difference === -1) {
+      return "Due yesterday";
+    }
+
+
+    return `Due ${date.toLocaleDateString(
+      undefined,
+      {
+        month: "short",
+        day: "numeric"
+      }
+    )}`;
+
   }
 
 
@@ -229,42 +495,79 @@ document.addEventListener("DOMContentLoaded", () => {
   ===================================================== */
 
   function showProcessing() {
+
     if (!modal) return;
 
-    const content = modal.querySelector(".modal-content");
+
+    const content =
+      modal.querySelector(".modal-content");
+
 
     if (!content) return;
 
-    content.dataset.originalHTML = content.innerHTML;
+
+    content.dataset.originalHTML =
+      content.innerHTML;
+
 
     content.innerHTML = `
       <div class="processing">
+
         <div class="processing-spinner"></div>
 
         <p>
           Reading your schoolwork...
         </p>
+
+        <small>
+          AI is extracting your assignments
+        </small>
+
       </div>
     `;
+
+
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+
+    document.body.style.overflow = "hidden";
+
   }
 
 
   function hideProcessing() {
+
     if (!modal) return;
 
-    const content = modal.querySelector(".modal-content");
+
+    const content =
+      modal.querySelector(".modal-content");
+
 
     if (!content) return;
 
+
     if (content.dataset.originalHTML) {
-      content.innerHTML = content.dataset.originalHTML;
+
+      content.innerHTML =
+        content.dataset.originalHTML;
+
+
+      delete content.dataset.originalHTML;
+
 
       reconnectModalButtons();
+
     }
+
+
+    closeModal();
+
   }
 
 
   function reconnectModalButtons() {
+
     const newClose =
       document.getElementById("modalClose");
 
@@ -280,30 +583,74 @@ document.addEventListener("DOMContentLoaded", () => {
     const newText =
       document.getElementById("textOption");
 
-    newClose?.addEventListener("click", closeModal);
 
-    newCamera?.addEventListener("click", () => {
-      cameraInput?.click();
-    });
+    newClose?.addEventListener(
+      "click",
+      closeModal
+    );
 
-    newImage?.addEventListener("click", () => {
-      imageInput?.click();
-    });
 
-    newPdf?.addEventListener("click", () => {
-      pdfInput?.click();
-    });
+    newCamera?.addEventListener(
+      "click",
+      () => {
+        cameraInput?.click();
+      }
+    );
 
-    newText?.addEventListener("click", () => {
-      const text = prompt(
-        "Paste your teacher's instructions or assignment here:"
-      );
 
-      if (!text?.trim()) return;
+    newImage?.addEventListener(
+      "click",
+      () => {
+        imageInput?.click();
+      }
+    );
 
-      closeModal();
-      createTaskFromText(text.trim());
-    });
+
+    newPdf?.addEventListener(
+      "click",
+      () => {
+        pdfInput?.click();
+      }
+    );
+
+
+    newText?.addEventListener(
+      "click",
+      () => {
+
+        const text =
+          prompt(
+            "Paste your teacher's instructions or assignment here:"
+          );
+
+
+        if (!text?.trim()) return;
+
+
+        closeModal();
+
+        showProcessing();
+
+
+        analyzeSchoolwork({
+          text: text.trim()
+        })
+          .then(addAIResults)
+          .catch(error => {
+
+            console.error(error);
+
+            alert(
+              error.message ||
+              "AI analysis failed."
+            );
+
+          })
+          .finally(hideProcessing);
+
+      }
+    );
+
   }
 
 
@@ -312,18 +659,25 @@ document.addEventListener("DOMContentLoaded", () => {
   ===================================================== */
 
   function renderTasks() {
+
     if (!taskList) return;
+
 
     taskList.innerHTML = "";
 
+
     if (tasks.length === 0) {
+
       if (emptyState) {
         emptyState.style.display = "block";
       }
 
+
       updateStats();
+
       return;
     }
+
 
     if (emptyState) {
       emptyState.style.display = "none";
@@ -331,14 +685,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     tasks.forEach((task) => {
-      const label = document.createElement("label");
+
+      const label =
+        document.createElement("label");
+
 
       label.className =
         `task${task.completed ? " completed" : ""}`;
 
-      label.dataset.id = task.id;
+
+      label.dataset.id =
+        task.id;
+
 
       label.innerHTML = `
+
         <input
           type="checkbox"
           class="task-checkbox"
@@ -360,37 +721,52 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="task-date">
           ${escapeHTML(task.duration)}
         </span>
+
       `;
 
 
       const checkbox =
-        label.querySelector(".task-checkbox");
+        label.querySelector(
+          ".task-checkbox"
+        );
 
 
-      checkbox.addEventListener("change", () => {
-        toggleTask(task.id);
-      });
+      checkbox.addEventListener(
+        "change",
+        () => {
+          toggleTask(task.id);
+        }
+      );
 
 
       taskList.appendChild(label);
+
     });
 
 
     updateStats();
+
   }
 
 
   function toggleTask(id) {
-    const task = tasks.find(
-      (item) => item.id === id
-    );
+
+    const task =
+      tasks.find(
+        item => item.id === id
+      );
+
 
     if (!task) return;
 
-    task.completed = !task.completed;
+
+    task.completed =
+      !task.completed;
+
 
     saveTasks();
     renderTasks();
+
   }
 
 
@@ -399,33 +775,48 @@ document.addEventListener("DOMContentLoaded", () => {
   ===================================================== */
 
   function updateStats() {
-    const total = tasks.length;
+
+    const total =
+      tasks.length;
+
 
     const completed =
-      tasks.filter(task => task.completed).length;
+      tasks.filter(
+        task => task.completed
+      ).length;
+
 
     const percentage =
       total === 0
         ? 0
-        : Math.round((completed / total) * 100);
+        : Math.round(
+            (completed / total) * 100
+          );
 
 
     if (taskCount) {
+
       taskCount.textContent =
         `· ${total}`;
+
     }
 
 
     if (progressNumber) {
+
       progressNumber.textContent =
         `${completed} / ${total} completed`;
+
     }
 
 
     if (progressFill) {
+
       progressFill.style.width =
         `${percentage}%`;
+
     }
+
   }
 
 
@@ -438,26 +829,62 @@ document.addEventListener("DOMContentLoaded", () => {
     () => {
 
       const priorityTask =
-        tasks.find(task =>
-          !task.completed &&
-          task.subject === "Mathematics"
-        );
+        findPriorityTask();
+
 
       if (!priorityTask) {
-        alert("You're all caught up.");
+
+        alert(
+          "You're all caught up."
+        );
+
         return;
+
       }
 
+
       priorityTask.completed = true;
+
 
       saveTasks();
       renderTasks();
 
+
       alert(
-        "Great. Mathematics is marked as completed."
+        `${priorityTask.subject} is marked as completed.`
       );
+
     }
   );
+
+
+  function findPriorityTask() {
+
+    const incomplete =
+      tasks.filter(
+        task => !task.completed
+      );
+
+
+    if (!incomplete.length) {
+      return null;
+    }
+
+
+    const priorityScore = {
+      high: 3,
+      medium: 2,
+      low: 1
+    };
+
+
+    return incomplete.sort(
+      (a, b) =>
+        (priorityScore[b.priority] || 2) -
+        (priorityScore[a.priority] || 2)
+    )[0];
+
+  }
 
 
   viewAllButton?.addEventListener(
@@ -479,61 +906,84 @@ document.addEventListener("DOMContentLoaded", () => {
   ===================================================== */
 
   const navButtons =
-    document.querySelectorAll(".nav-button");
+    document.querySelectorAll(
+      ".nav-button"
+    );
 
 
   navButtons.forEach(button => {
 
-    button.addEventListener("click", () => {
+    button.addEventListener(
+      "click",
+      () => {
 
-      const page =
-        button.dataset.page;
-
-
-      if (page === "add") {
-        openModal();
-        return;
-      }
+        const page =
+          button.dataset.page;
 
 
-      navButtons.forEach(item => {
-        item.classList.remove("active");
-      });
+        if (page === "add") {
 
-      button.classList.add("active");
+          openModal();
+
+          return;
+
+        }
 
 
-      if (page === "home") {
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
+        navButtons.forEach(item => {
+
+          item.classList.remove(
+            "active"
+          );
+
         });
-      }
 
 
-      if (page === "tasks") {
-        document
-          .querySelector(".tasks-section")
-          ?.scrollIntoView({
+        button.classList.add(
+          "active"
+        );
+
+
+        if (page === "home") {
+
+          window.scrollTo({
+            top: 0,
             behavior: "smooth"
           });
+
+        }
+
+
+        if (page === "tasks") {
+
+          document
+            .querySelector(".tasks-section")
+            ?.scrollIntoView({
+              behavior: "smooth"
+            });
+
+        }
+
+
+        if (page === "calendar") {
+
+          document
+            .querySelector(".upcoming-section")
+            ?.scrollIntoView({
+              behavior: "smooth"
+            });
+
+        }
+
+
+        if (page === "profile") {
+
+          openSettings();
+
+        }
+
       }
-
-
-      if (page === "calendar") {
-        document
-          .querySelector(".upcoming-section")
-          ?.scrollIntoView({
-            behavior: "smooth"
-          });
-      }
-
-
-      if (page === "profile") {
-        openSettings();
-      }
-
-    });
+    );
 
   });
 
@@ -554,16 +1004,21 @@ document.addEventListener("DOMContentLoaded", () => {
       document.documentElement.dataset.theme !== "light";
 
 
-    const choice = prompt(
-      `Settings\n\n` +
-      `1 — ${darkMode ? "Switch to light mode" : "Switch to dark mode"}\n` +
-      `2 — Clear all tasks\n` +
-      `3 — Cancel`
-    );
+    const choice =
+      prompt(
+        `Settings\n\n` +
+        `1 — ${darkMode
+          ? "Switch to light mode"
+          : "Switch to dark mode"}\n` +
+        `2 — Clear all tasks\n` +
+        `3 — Cancel`
+      );
 
 
     if (choice === "1") {
+
       toggleTheme();
+
     }
 
 
@@ -573,6 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
         confirm(
           "Delete all your tasks?"
         );
+
 
       if (confirmed) {
 
@@ -593,17 +1049,23 @@ document.addEventListener("DOMContentLoaded", () => {
   ===================================================== */
 
   function getSavedTheme() {
-    return localStorage.getItem("school_theme");
+
+    return localStorage.getItem(
+      "school_theme"
+    );
+
   }
 
 
   function getSystemTheme() {
+
     return window.matchMedia &&
       window.matchMedia(
         "(prefers-color-scheme: light)"
       ).matches
       ? "light"
       : "dark";
+
   }
 
 
@@ -611,6 +1073,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.documentElement.dataset.theme =
       theme;
+
 
     localStorage.setItem(
       "school_theme",
@@ -626,10 +1089,12 @@ document.addEventListener("DOMContentLoaded", () => {
       document.documentElement.dataset.theme ||
       "dark";
 
+
     const next =
       current === "dark"
         ? "light"
         : "dark";
+
 
     applyTheme(next);
 
@@ -641,7 +1106,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   applyTheme(
-    savedTheme || getSystemTheme()
+    savedTheme ||
+    getSystemTheme()
   );
 
 
@@ -661,10 +1127,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         event.preventDefault();
 
-        const query =
-          prompt("Search your schoolwork:");
 
-        if (!query?.trim()) return;
+        const query =
+          prompt(
+            "Search your schoolwork:"
+          );
+
+
+        if (!query?.trim()) {
+          return;
+        }
 
 
         const search =
@@ -685,14 +1157,17 @@ document.addEventListener("DOMContentLoaded", () => {
             `No schoolwork found for "${query}".`
           );
 
+
           return;
+
         }
 
 
         alert(
           matches
-            .map(task =>
-              `• ${task.subject} — ${task.title}`
+            .map(
+              task =>
+                `• ${task.subject} — ${task.title}`
             )
             .join("\n")
         );
@@ -700,36 +1175,3 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
     }
-  );
-
-
-  /* =====================================================
-     UTILITIES
-  ===================================================== */
-
-  function wait(ms) {
-    return new Promise(resolve =>
-      setTimeout(resolve, ms)
-    );
-  }
-
-
-  function escapeHTML(value) {
-
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-
-  }
-
-
-  /* =====================================================
-     START
-  ===================================================== */
-
-  renderTasks();
-
-});
