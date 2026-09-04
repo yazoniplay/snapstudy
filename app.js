@@ -1,504 +1,735 @@
-// ================================
-// SnapStudy — App Logic
-// ================================
-
 document.addEventListener("DOMContentLoaded", () => {
+  /* =====================================================
+     ELEMENTS
+  ===================================================== */
 
-  // --------------------------------
-  // ELEMENTS
-  // --------------------------------
+  const modal = document.getElementById("addSchoolworkModal");
+  const addButton = document.getElementById("addSchoolworkButton");
+  const navAddButton = document.getElementById("navAddButton");
+  const modalClose = document.getElementById("modalClose");
 
-  const modal = document.getElementById("addModal");
-  const modalClose = document.querySelector(".modal-close");
+  const cameraOption = document.getElementById("cameraOption");
+  const imageOption = document.getElementById("imageOption");
+  const pdfOption = document.getElementById("pdfOption");
+  const textOption = document.getElementById("textOption");
 
-  const addSchoolworkButton = document.querySelector(".add-schoolwork");
-  const bottomAddButton = document.querySelector(".nav-add");
+  const cameraInput = document.getElementById("cameraInput");
+  const imageInput = document.getElementById("imageInput");
+  const pdfInput = document.getElementById("pdfInput");
 
-  const uploadOptions = document.querySelectorAll(".upload-option");
-  const checkboxes = document.querySelectorAll(".checkbox");
+  const taskList = document.getElementById("taskList");
+  const taskCount = document.getElementById("taskCount");
+  const emptyState = document.getElementById("emptyState");
 
-  const taskCount = document.querySelector(".task-count");
+  const progressFill = document.getElementById("progressFill");
+  const progressNumber = document.getElementById("progressNumber");
 
-  // --------------------------------
-  // MODAL
-  // --------------------------------
+  const startAssignmentButton =
+    document.getElementById("startAssignmentButton");
+
+  const viewAllButton =
+    document.getElementById("viewAllButton");
+
+  const profileButton =
+    document.getElementById("profileButton");
+
+
+  /* =====================================================
+     DATA
+  ===================================================== */
+
+  const DEFAULT_TASKS = [
+    {
+      id: "math-1",
+      subject: "Mathematics",
+      title: "Complete exercises 1–20",
+      duration: "35 min",
+      due: "Due today",
+      completed: false
+    },
+    {
+      id: "english-1",
+      subject: "English",
+      title: "Read pages 42–48",
+      duration: "20 min",
+      due: "Today",
+      completed: false
+    },
+    {
+      id: "biology-1",
+      subject: "Biology",
+      title: "Finish questions 1–8",
+      duration: "15 min",
+      due: "Today",
+      completed: false
+    }
+  ];
+
+
+  let tasks = loadTasks();
+
+
+  /* =====================================================
+     STORAGE
+  ===================================================== */
+
+  function loadTasks() {
+    try {
+      const saved = localStorage.getItem("school_tasks");
+
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error("Could not load tasks:", error);
+    }
+
+    return DEFAULT_TASKS;
+  }
+
+
+  function saveTasks() {
+    localStorage.setItem(
+      "school_tasks",
+      JSON.stringify(tasks)
+    );
+  }
+
+
+  /* =====================================================
+     MODAL
+  ===================================================== */
 
   function openModal() {
-    modal.classList.add("open");
+    if (!modal) return;
+
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+
     document.body.style.overflow = "hidden";
   }
 
+
   function closeModal() {
-    modal.classList.remove("open");
+    if (!modal) return;
+
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+
     document.body.style.overflow = "";
   }
 
-  // Open from main button
-  if (addSchoolworkButton) {
-    addSchoolworkButton.addEventListener("click", openModal);
-  }
 
-  // Open from bottom navigation
-  if (bottomAddButton) {
-    bottomAddButton.addEventListener("click", openModal);
-  }
+  addButton?.addEventListener("click", openModal);
+  navAddButton?.addEventListener("click", openModal);
+  modalClose?.addEventListener("click", closeModal);
 
-  // Close button
-  if (modalClose) {
-    modalClose.addEventListener("click", closeModal);
-  }
 
-  // Close by tapping outside modal
-  if (modal) {
-    modal.addEventListener("click", (event) => {
-      if (event.target === modal) {
-        closeModal();
-      }
-    });
-  }
-
-  // --------------------------------
-  // UPLOAD OPTIONS
-  // --------------------------------
-
-  uploadOptions.forEach((option) => {
-
-    option.addEventListener("click", () => {
-
-      const title =
-        option.querySelector("strong")?.textContent || "";
-
-      if (title === "Take a photo") {
-        openCamera();
-      }
-
-      else if (title === "Choose image") {
-        openImagePicker();
-      }
-
-      else if (title === "Upload PDF") {
-        openPDFPicker();
-      }
-
-      else if (title === "Paste text") {
-        openTextInput();
-      }
-
-    });
-
+  modal?.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
   });
 
 
-  // --------------------------------
-  // CAMERA
-  // --------------------------------
-
-  function openCamera() {
-
-    const input = document.createElement("input");
-
-    input.type = "file";
-    input.accept = "image/*";
-    input.capture = "environment";
-
-    input.addEventListener("change", () => {
-
-      if (!input.files || !input.files[0]) {
-        return;
-      }
-
-      handleFile(input.files[0]);
-
-    });
-
-    input.click();
-
-  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeModal();
+    }
+  });
 
 
-  // --------------------------------
-  // IMAGE PICKER
-  // --------------------------------
+  /* =====================================================
+     FILE PICKERS
+  ===================================================== */
 
-  function openImagePicker() {
-
-    const input = document.createElement("input");
-
-    input.type = "file";
-    input.accept = "image/*";
-
-    input.addEventListener("change", () => {
-
-      if (!input.files || !input.files[0]) {
-        return;
-      }
-
-      handleFile(input.files[0]);
-
-    });
-
-    input.click();
-
-  }
+  cameraOption?.addEventListener("click", () => {
+    cameraInput?.click();
+  });
 
 
-  // --------------------------------
-  // PDF PICKER
-  // --------------------------------
-
-  function openPDFPicker() {
-
-    const input = document.createElement("input");
-
-    input.type = "file";
-    input.accept = "application/pdf";
-
-    input.addEventListener("change", () => {
-
-      if (!input.files || !input.files[0]) {
-        return;
-      }
-
-      handleFile(input.files[0]);
-
-    });
-
-    input.click();
-
-  }
+  imageOption?.addEventListener("click", () => {
+    imageInput?.click();
+  });
 
 
-  // --------------------------------
-  // HANDLE FILE
-  // --------------------------------
+  pdfOption?.addEventListener("click", () => {
+    pdfInput?.click();
+  });
 
-  function handleFile(file) {
 
-    console.log("Selected file:", file.name);
+  cameraInput?.addEventListener("change", handleFile);
+  imageInput?.addEventListener("change", handleFile);
+  pdfInput?.addEventListener("change", handleFile);
+
+
+  async function handleFile(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
 
     closeModal();
 
-    showProcessingState(file);
+    showProcessing();
 
-    /*
-      IMPORTANT:
+    await wait(1200);
 
-      We are NOT sending the file to Gemini yet.
+    hideProcessing();
 
-      Later this function will:
+    alert(
+      `"${file.name}" was added.\n\nAI processing will be connected next.`
+    );
 
-      1. Upload the image/PDF
-      2. Send it to our backend
-      3. Backend sends it to Gemini
-      4. Gemini extracts assignments
-      5. We save them to Supabase
-      6. UI displays the real tasks
-    */
-
+    event.target.value = "";
   }
 
 
-  // --------------------------------
-  // PROCESSING STATE
-  // --------------------------------
+  /* =====================================================
+     TEXT INPUT
+  ===================================================== */
 
-  function showProcessingState(file) {
-
-    const card = document.querySelector(".priority-card");
-
-    if (!card) return;
-
-    const title = card.querySelector("h3");
-    const subject = card.querySelector(".subject");
-    const description = card.querySelector(".priority-details");
-
-    if (subject) {
-      subject.textContent = "SNAPSTUDY AI";
-    }
-
-    if (title) {
-      title.textContent = "Analyzing your schoolwork…";
-    }
-
-    if (description) {
-      description.innerHTML = `
-        <div class="detail">
-          <span class="detail-icon">🤖</span>
-          <div>
-            <small>File</small>
-            <strong>${escapeHTML(file.name)}</strong>
-          </div>
-        </div>
-
-        <div class="detail">
-          <span class="detail-icon">⏳</span>
-          <div>
-            <small>Status</small>
-            <strong>Processing</strong>
-          </div>
-        </div>
-
-        <div class="detail">
-          <span class="detail-icon">✦</span>
-          <div>
-            <small>AI</small>
-            <strong>Reading</strong>
-          </div>
-        </div>
-      `;
-    }
-
-  }
-
-
-  // --------------------------------
-  // PASTE TEXT
-  // --------------------------------
-
-  function openTextInput() {
-
-    closeModal();
-
+  textOption?.addEventListener("click", () => {
     const text = prompt(
-      "Paste your school assignment, teacher message, or schoolwork here:"
+      "Paste your teacher's instructions or assignment here:"
     );
 
     if (!text || !text.trim()) {
       return;
     }
 
-    handleText(text.trim());
+    closeModal();
 
+    createTaskFromText(text.trim());
+  });
+
+
+  function createTaskFromText(text) {
+    const task = {
+      id: `task-${Date.now()}`,
+      subject: "New assignment",
+      title: text.length > 90
+        ? `${text.substring(0, 87)}...`
+        : text,
+      duration: "—",
+      due: "Not set",
+      completed: false
+    };
+
+    tasks.unshift(task);
+
+    saveTasks();
+    renderTasks();
+
+    alert("Assignment added to your tasks.");
   }
 
 
-  function handleText(text) {
+  /* =====================================================
+     PROCESSING UI
+  ===================================================== */
 
-    console.log("Schoolwork text:", text);
+  function showProcessing() {
+    if (!modal) return;
 
-    showTextProcessingState();
+    const content = modal.querySelector(".modal-content");
 
-    /*
-      Later:
+    if (!content) return;
 
-      text → backend → Gemini → structured tasks
-    */
+    content.dataset.originalHTML = content.innerHTML;
 
+    content.innerHTML = `
+      <div class="processing">
+        <div class="processing-spinner"></div>
+
+        <p>
+          Reading your schoolwork...
+        </p>
+      </div>
+    `;
   }
 
 
-  function showTextProcessingState() {
+  function hideProcessing() {
+    if (!modal) return;
 
-    const card = document.querySelector(".priority-card");
+    const content = modal.querySelector(".modal-content");
 
-    if (!card) return;
+    if (!content) return;
 
-    const subject = card.querySelector(".subject");
-    const title = card.querySelector("h3");
+    if (content.dataset.originalHTML) {
+      content.innerHTML = content.dataset.originalHTML;
 
-    if (subject) {
-      subject.textContent = "SNAPSTUDY AI";
+      reconnectModalButtons();
     }
-
-    if (title) {
-      title.textContent = "Understanding your assignment…";
-    }
-
   }
 
 
-  // --------------------------------
-  // TASK CHECKBOXES
-  // --------------------------------
+  function reconnectModalButtons() {
+    const newClose =
+      document.getElementById("modalClose");
 
-  checkboxes.forEach((checkbox) => {
+    const newCamera =
+      document.getElementById("cameraOption");
 
-    checkbox.addEventListener("click", () => {
+    const newImage =
+      document.getElementById("imageOption");
 
-      const task = checkbox.closest(".task-card");
+    const newPdf =
+      document.getElementById("pdfOption");
 
-      if (!task) return;
+    const newText =
+      document.getElementById("textOption");
 
-      const alreadyCompleted =
-        task.classList.contains("completed");
+    newClose?.addEventListener("click", closeModal);
 
-      if (alreadyCompleted) {
+    newCamera?.addEventListener("click", () => {
+      cameraInput?.click();
+    });
 
-        task.classList.remove("completed");
+    newImage?.addEventListener("click", () => {
+      imageInput?.click();
+    });
 
-        checkbox.innerHTML = "";
+    newPdf?.addEventListener("click", () => {
+      pdfInput?.click();
+    });
 
-      } else {
+    newText?.addEventListener("click", () => {
+      const text = prompt(
+        "Paste your teacher's instructions or assignment here:"
+      );
 
-        task.classList.add("completed");
+      if (!text?.trim()) return;
 
-        checkbox.innerHTML = "✓";
+      closeModal();
+      createTaskFromText(text.trim());
+    });
+  }
 
+
+  /* =====================================================
+     TASK RENDERING
+  ===================================================== */
+
+  function renderTasks() {
+    if (!taskList) return;
+
+    taskList.innerHTML = "";
+
+    if (tasks.length === 0) {
+      if (emptyState) {
+        emptyState.style.display = "block";
       }
 
-      updateTaskCount();
-
-    });
-
-  });
-
-
-  // --------------------------------
-  // UPDATE TASK COUNT
-  // --------------------------------
-
-  function updateTaskCount() {
-
-    const tasks = document.querySelectorAll(".task-card");
-
-    const completed =
-      document.querySelectorAll(".task-card.completed").length;
-
-    const remaining = tasks.length - completed;
-
-    if (taskCount) {
-
-      taskCount.textContent =
-        `${remaining} ${remaining === 1 ? "task" : "tasks"}`;
-
+      updateStats();
+      return;
     }
 
+    if (emptyState) {
+      emptyState.style.display = "none";
+    }
+
+
+    tasks.forEach((task) => {
+      const label = document.createElement("label");
+
+      label.className =
+        `task${task.completed ? " completed" : ""}`;
+
+      label.dataset.id = task.id;
+
+      label.innerHTML = `
+        <input
+          type="checkbox"
+          class="task-checkbox"
+          ${task.completed ? "checked" : ""}
+        >
+
+        <div class="task-content">
+
+          <div class="task-title">
+            ${escapeHTML(task.subject)}
+          </div>
+
+          <div class="task-subtitle">
+            ${escapeHTML(task.title)}
+          </div>
+
+        </div>
+
+        <span class="task-date">
+          ${escapeHTML(task.duration)}
+        </span>
+      `;
+
+
+      const checkbox =
+        label.querySelector(".task-checkbox");
+
+
+      checkbox.addEventListener("change", () => {
+        toggleTask(task.id);
+      });
+
+
+      taskList.appendChild(label);
+    });
+
+
+    updateStats();
   }
 
 
-  // --------------------------------
-  // NAVIGATION
-  // --------------------------------
+  function toggleTask(id) {
+    const task = tasks.find(
+      (item) => item.id === id
+    );
 
-  const navItems =
-    document.querySelectorAll(".nav-item");
+    if (!task) return;
 
-  navItems.forEach((item) => {
+    task.completed = !task.completed;
 
-    item.addEventListener("click", () => {
-
-      navItems.forEach((nav) => {
-        nav.classList.remove("active");
-      });
-
-      item.classList.add("active");
-
-    });
-
-  });
+    saveTasks();
+    renderTasks();
+  }
 
 
-  // --------------------------------
-  // SEARCH
-  // --------------------------------
+  /* =====================================================
+     STATS
+  ===================================================== */
 
-  const searchButton =
-    document.querySelector(".icon-button");
+  function updateStats() {
+    const total = tasks.length;
 
-  if (searchButton) {
+    const completed =
+      tasks.filter(task => task.completed).length;
 
-    searchButton.addEventListener("click", () => {
+    const percentage =
+      total === 0
+        ? 0
+        : Math.round((completed / total) * 100);
 
-      const query = prompt("Search your schoolwork:");
 
-      if (!query || !query.trim()) {
+    if (taskCount) {
+      taskCount.textContent =
+        `· ${total}`;
+    }
+
+
+    if (progressNumber) {
+      progressNumber.textContent =
+        `${completed} / ${total} completed`;
+    }
+
+
+    if (progressFill) {
+      progressFill.style.width =
+        `${percentage}%`;
+    }
+  }
+
+
+  /* =====================================================
+     PRIORITY
+  ===================================================== */
+
+  startAssignmentButton?.addEventListener(
+    "click",
+    () => {
+
+      const priorityTask =
+        tasks.find(task =>
+          !task.completed &&
+          task.subject === "Mathematics"
+        );
+
+      if (!priorityTask) {
+        alert("You're all caught up.");
         return;
       }
 
-      console.log(
-        "Searching for:",
-        query.trim()
-      );
+      priorityTask.completed = true;
+
+      saveTasks();
+      renderTasks();
 
       alert(
-        `Search will be connected to your tasks soon.\n\nYou searched for: ${query.trim()}`
+        "Great. Mathematics is marked as completed."
       );
+    }
+  );
+
+
+  viewAllButton?.addEventListener(
+    "click",
+    () => {
+
+      document
+        .querySelector(".tasks-section")
+        ?.scrollIntoView({
+          behavior: "smooth"
+        });
+
+    }
+  );
+
+
+  /* =====================================================
+     BOTTOM NAV
+  ===================================================== */
+
+  const navButtons =
+    document.querySelectorAll(".nav-button");
+
+
+  navButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const page =
+        button.dataset.page;
+
+
+      if (page === "add") {
+        openModal();
+        return;
+      }
+
+
+      navButtons.forEach(item => {
+        item.classList.remove("active");
+      });
+
+      button.classList.add("active");
+
+
+      if (page === "home") {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
+
+
+      if (page === "tasks") {
+        document
+          .querySelector(".tasks-section")
+          ?.scrollIntoView({
+            behavior: "smooth"
+          });
+      }
+
+
+      if (page === "calendar") {
+        document
+          .querySelector(".upcoming-section")
+          ?.scrollIntoView({
+            behavior: "smooth"
+          });
+      }
+
+
+      if (page === "profile") {
+        openSettings();
+      }
 
     });
+
+  });
+
+
+  /* =====================================================
+     PROFILE / SETTINGS
+  ===================================================== */
+
+  profileButton?.addEventListener(
+    "click",
+    openSettings
+  );
+
+
+  function openSettings() {
+
+    const darkMode =
+      document.documentElement.dataset.theme !== "light";
+
+
+    const choice = prompt(
+      `Settings\n\n` +
+      `1 — ${darkMode ? "Switch to light mode" : "Switch to dark mode"}\n` +
+      `2 — Clear all tasks\n` +
+      `3 — Cancel`
+    );
+
+
+    if (choice === "1") {
+      toggleTheme();
+    }
+
+
+    if (choice === "2") {
+
+      const confirmed =
+        confirm(
+          "Delete all your tasks?"
+        );
+
+      if (confirmed) {
+
+        tasks = [];
+
+        saveTasks();
+        renderTasks();
+
+      }
+
+    }
 
   }
 
 
-  // --------------------------------
-  // START ASSIGNMENT
-  // --------------------------------
+  /* =====================================================
+     THEME
+  ===================================================== */
 
-  const startButton =
-    document.querySelector(".primary-button");
+  function getSavedTheme() {
+    return localStorage.getItem("school_theme");
+  }
 
-  if (startButton) {
 
-    startButton.addEventListener("click", () => {
+  function getSystemTheme() {
+    return window.matchMedia &&
+      window.matchMedia(
+        "(prefers-color-scheme: light)"
+      ).matches
+      ? "light"
+      : "dark";
+  }
 
-      alert(
-        "Assignment mode is coming next. 🚀"
-      );
 
-    });
+  function applyTheme(theme) {
+
+    document.documentElement.dataset.theme =
+      theme;
+
+    localStorage.setItem(
+      "school_theme",
+      theme
+    );
 
   }
 
 
-  // --------------------------------
-  // VIEW ALL
-  // --------------------------------
+  function toggleTheme() {
 
-  const viewAllButton =
-    document.querySelector(".view-all");
+    const current =
+      document.documentElement.dataset.theme ||
+      "dark";
 
-  if (viewAllButton) {
+    const next =
+      current === "dark"
+        ? "light"
+        : "dark";
 
-    viewAllButton.addEventListener("click", () => {
-
-      alert(
-        "Full calendar and assignment history are coming next."
-      );
-
-    });
+    applyTheme(next);
 
   }
 
 
-  // --------------------------------
-  // PROFILE
-  // --------------------------------
+  const savedTheme =
+    getSavedTheme();
 
-  const profileButton =
-    document.querySelector(".profile-button");
 
-  if (profileButton) {
+  applyTheme(
+    savedTheme || getSystemTheme()
+  );
 
-    profileButton.addEventListener("click", () => {
 
-      alert(
-        "Profile settings are coming soon."
-      );
+  /* =====================================================
+     SEARCH
+  ===================================================== */
 
-    });
+  document.addEventListener(
+    "keydown",
+    (event) => {
 
+      if (
+        event.key === "/" &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA"
+      ) {
+
+        event.preventDefault();
+
+        const query =
+          prompt("Search your schoolwork:");
+
+        if (!query?.trim()) return;
+
+
+        const search =
+          query.toLowerCase();
+
+
+        const matches =
+          tasks.filter(task =>
+            `${task.subject} ${task.title}`
+              .toLowerCase()
+              .includes(search)
+          );
+
+
+        if (matches.length === 0) {
+
+          alert(
+            `No schoolwork found for "${query}".`
+          );
+
+          return;
+        }
+
+
+        alert(
+          matches
+            .map(task =>
+              `• ${task.subject} — ${task.title}`
+            )
+            .join("\n")
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     UTILITIES
+  ===================================================== */
+
+  function wait(ms) {
+    return new Promise(resolve =>
+      setTimeout(resolve, ms)
+    );
   }
 
-
-  // --------------------------------
-  // ESCAPE HTML
-  // --------------------------------
 
   function escapeHTML(value) {
 
-    const div =
-      document.createElement("div");
-
-    div.textContent = value;
-
-    return div.innerHTML;
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
 
   }
 
 
-  // --------------------------------
-  // INITIAL STATE
-  // --------------------------------
+  /* =====================================================
+     START
+  ===================================================== */
 
-  updateTaskCount();
+  renderTasks();
 
 });
