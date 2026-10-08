@@ -1,0 +1,11 @@
+{
+  "expo":{
+    "name":"SnapStudy",
+    "slug":"snapstudy",
+    "version":"1.0.0",
+    "orientation":"portrait",
+    "scheme":"snapstudy",
+    "userInterfaceStyle":"dark",
+    "plugins":["expo-router","expo-image-picker"]
+  }
+}
