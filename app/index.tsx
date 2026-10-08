@@ -4,7 +4,6 @@ import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { imageToBase64, setPendingImage } from "../lib/image";
-import { supabase } from "../lib/supabase";
 import BottomNav from "../components/BottomNav";
 
 type Session = { id:string; title:string; subject:string|null; created_at:string; result?:any };
@@ -27,61 +26,10 @@ function calculateStreak(rows: Array<{created_at:string}>) {
 export default function Home() {
   const [busy, setBusy] = useState(false);
   const [camera, setCamera] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [email, setEmail] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [recent, setRecent] = useState<Session[]>([]);
   const [stats, setStats] = useState({ streak:0, sessions:0, questions:0 });
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
-
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (!mounted) return;
-        if (error || !data.session) {
-          router.replace("/auth");
-          return;
-        }
-
-        setEmail(data.session.user.email ?? "");
-        setDisplayName(data.session.user.user_metadata?.full_name ?? "");
-        setCheckingAuth(false);
-
-        const { data: sessions } = await supabase
-          .from("study_sessions")
-          .select("id,title,subject,created_at,result")
-          .order("created_at", { ascending: false });
-
-        if (sessions && mounted) {
-          setRecent(sessions.slice(0,5));
-          const questions = sessions.reduce((sum:any, item:any) => {
-            const r = item.result || {};
-            return sum + (Array.isArray(r.quiz) ? r.quiz.length : 0) + (Array.isArray(r.practiceTest) ? r.practiceTest.length : 0);
-          }, 0);
-          setStats({ streak: calculateStreak(sessions), sessions:sessions.length, questions });
-        }
-      } catch {
-        if (mounted) {
-          setCheckingAuth(false);
-          router.replace("/auth");
-        }
-      }
-    };
-
-    load();
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-      if (event === "SIGNED_OUT") router.replace("/auth");
-    });
-
-    return () => {
-      mounted = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
 
   async function openImage(uri: string) {
     try { setBusy(true); const image = await imageToBase64(uri); setPendingImage(image.base64, image.mimeType); router.push("/study"); }
@@ -104,10 +52,9 @@ export default function Home() {
     setCamera(true);
   }
 
-  if (checkingAuth) return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator color="#A78BFA" /><Text style={s.muted}>Loading SnapStudy…</Text></View></SafeAreaView>;
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>Frame your notes</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
-  const firstName = displayName.split(" ")[0] || email.split("@")[0] || "there";
+  const firstName = "there";
   const formatDate = (d:string) => new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric"});
 
   return <SafeAreaView style={s.safe}>
