@@ -37,24 +37,50 @@ export default function Home() {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!mounted) return;
-      if (!data.user) { router.replace("/auth"); return; }
-      setEmail(data.user.email ?? "");
-      setDisplayName(data.user.user_metadata?.full_name ?? "");
-      const { data: sessions } = await supabase.from("study_sessions").select("id,title,subject,created_at,result").order("created_at", { ascending: false });
-      if (sessions && mounted) {
-        setRecent(sessions.slice(0,5));
-        const questions = sessions.reduce((sum:any, item:any) => {
-          const r = item.result || {};
-          return sum + (Array.isArray(r.quiz) ? r.quiz.length : 0) + (Array.isArray(r.practiceTest) ? r.practiceTest.length : 0);
-        }, 0);
-        setStats({ streak: calculateStreak(sessions), sessions:sessions.length, questions });
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (!mounted) return;
+        if (error || !data.session) {
+          router.replace("/auth");
+          return;
+        }
+
+        setEmail(data.session.user.email ?? "");
+        setDisplayName(data.session.user.user_metadata?.full_name ?? "");
+        setCheckingAuth(false);
+
+        const { data: sessions } = await supabase
+          .from("study_sessions")
+          .select("id,title,subject,created_at,result")
+          .order("created_at", { ascending: false });
+
+        if (sessions && mounted) {
+          setRecent(sessions.slice(0,5));
+          const questions = sessions.reduce((sum:any, item:any) => {
+            const r = item.result || {};
+            return sum + (Array.isArray(r.quiz) ? r.quiz.length : 0) + (Array.isArray(r.practiceTest) ? r.practiceTest.length : 0);
+          }, 0);
+          setStats({ streak: calculateStreak(sessions), sessions:sessions.length, questions });
+        }
+      } catch {
+        if (mounted) {
+          setCheckingAuth(false);
+          router.replace("/auth");
+        }
       }
-      setCheckingAuth(false);
-    })();
-    return () => { mounted = false; };
+    };
+
+    load();
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if (event === "SIGNED_OUT" || !session) router.replace("/auth");
+    });
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   async function openImage(uri: string) {
@@ -111,8 +137,7 @@ export default function Home() {
 }
 
 const s=StyleSheet.create({
-  safe:{flex:1,backgroundColor:"#070A12"},container:{padding:20,paddingTop:22,paddingBottom:24},center:{flex:1,alignItems:"center",justifyContent:"center",gap:10},
-  header:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:18},eyebrow:{color:"#8F89A0",fontSize:11,fontWeight:"900",letterSpacing:2.2},title:{color:"#F7F5FF",fontSize:35,fontWeight:"900",letterSpacing:-1.6,marginTop:5},sub:{color:"#9691A4",fontSize:13,marginTop:6},avatar:{width:45,height:45,borderRadius:16,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center"},avatarText:{color:"#fff",fontSize:17,fontWeight:"900"},
+  safe:{flex:1,backgroundColor:"#070A12"},container:{padding:20,paddingTop:22,paddingBottom:24},center:{flex:1,alignItems:"center",justifyContent:"center",gap:10},header:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:18},eyebrow:{color:"#8F89A0",fontSize:11,fontWeight:"900",letterSpacing:2.2},title:{color:"#F7F5FF",fontSize:35,fontWeight:"900",letterSpacing:-1.6,marginTop:5},sub:{color:"#9691A4",fontSize:13,marginTop:6},avatar:{width:45,height:45,borderRadius:16,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center"},avatarText:{color:"#fff",fontSize:17,fontWeight:"900"},
   stats:{height:76,borderRadius:19,backgroundColor:"#0F1320",borderWidth:1,borderColor:"#242A3A",flexDirection:"row",alignItems:"center",justifyContent:"space-around",marginBottom:16},stat:{flex:1,alignItems:"center",justifyContent:"center",flexDirection:"row",gap:5,flexWrap:"wrap"},statIcon:{fontSize:13},statValue:{color:"#F4F1FF",fontSize:16,fontWeight:"900"},statLabel:{color:"#777286",fontSize:10,fontWeight:"800",width:"100%",textAlign:"center",marginTop:-2},statDivider:{width:1,height:32,backgroundColor:"#252B3A"},
   hero:{backgroundColor:"#101522",borderWidth:1,borderColor:"#242B3D",borderRadius:25,padding:19,marginBottom:25},heroTop:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:16},spark:{width:47,height:47,borderRadius:15,backgroundColor:"#1B1730",alignItems:"center",justifyContent:"center"},sparkText:{color:"#B49AFF",fontSize:22},aiBadge:{borderWidth:1,borderColor:"#35304C",paddingHorizontal:9,paddingVertical:6,borderRadius:999},aiText:{color:"#AFA3D2",fontSize:9,fontWeight:"900",letterSpacing:1},heroTitle:{color:"#F7F5FF",fontSize:22,fontWeight:"900",lineHeight:27},heroSub:{color:"#9691A4",fontSize:13,lineHeight:20,marginTop:7,marginBottom:18},primary:{height:49,borderRadius:14,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center"},primaryText:{color:"#fff",fontSize:14,fontWeight:"900"},secondary:{height:46,borderRadius:14,borderWidth:1,borderColor:"#353B4D",alignItems:"center",justifyContent:"center",marginTop:9},secondaryText:{color:"#F1EEFA",fontSize:13,fontWeight:"800"},
   sectionRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:11},section:{color:"#F0EDF8",fontSize:16,fontWeight:"900"},sectionHint:{color:"#716B80",fontSize:11,fontWeight:"800"},grid:{flexDirection:"row",flexWrap:"wrap",gap:9},card:{width:"48.5%",minHeight:122,backgroundColor:"#0F1320",borderWidth:1,borderColor:"#242A3A",borderRadius:18,padding:14},cardIcon:{width:31,height:31,borderRadius:10,backgroundColor:"#171B29",alignItems:"center",justifyContent:"center",marginBottom:12},icon:{color:"#C6B7FF",fontSize:15,fontWeight:"900"},cardTitle:{color:"#F4F1FF",fontSize:13,fontWeight:"900"},cardDesc:{color:"#7F7A8E",fontSize:11,marginTop:4},
