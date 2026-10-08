@@ -74,7 +74,7 @@ export default function Home() {
     load();
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-      if (event === "SIGNED_OUT" || !session) router.replace("/auth");
+      if (event === "SIGNED_OUT") router.replace("/auth");
     });
 
     return () => {
