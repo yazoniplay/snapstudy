@@ -3,7 +3,7 @@ import {ActivityIndicator,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,View
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {router, useLocalSearchParams} from "expo-router";
 import {takePendingImage} from "../lib/image";
-import {analyzeNotes} from "../lib/api";\nimport { supabase } from "../lib/supabase";
+import {analyzeNotes} from "../lib/api";
 import type {StudyResult} from "../lib/api";
 
 type Mode="summary"|"flashcards"|"quiz"|"test";
