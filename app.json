@@ -7,9 +7,7 @@
     "scheme": "snapstudy",
     "userInterfaceStyle": "dark",
     "plugins": [
-      [
-        "expo-router"
-      ],
+      ["expo-router"],
       [
         "expo-image-picker",
         {
@@ -26,9 +24,6 @@
     "web": {
       "output": "single",
       "bundler": "metro"
-    },
-    "experiments": {
-      "baseUrl": "/snapstudy"
     }
   }
 }
