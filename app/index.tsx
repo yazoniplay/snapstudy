@@ -5,6 +5,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { imageToBase64, setPendingImage } from "../lib/image";
 import { supabase } from "../lib/supabase";
+import BottomNav from "../components/BottomNav";
 
 export default function Home() {
   const [busy, setBusy] = useState(false);
@@ -140,12 +141,13 @@ export default function Home() {
 
         <Pressable style={s.accountLink} onPress={() => router.push("/account")}><Text style={s.accountLinkText}>Account & settings  →</Text></Pressable>
       </ScrollView>
+      <BottomNav />
     </SafeAreaView>
   );
 }
 
 const s=StyleSheet.create({
-  safe:{flex:1,backgroundColor:"#070A12"},container:{padding:20,paddingTop:22,paddingBottom:45},center:{flex:1,alignItems:"center",justifyContent:"center",gap:10},
+  safe:{flex:1,backgroundColor:"#070A12"},container:{padding:20,paddingTop:22,paddingBottom:24},center:{flex:1,alignItems:"center",justifyContent:"center",gap:10},
   header:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:24},eyebrow:{color:"#8F89A0",fontSize:11,fontWeight:"900",letterSpacing:2.2},title:{color:"#F7F5FF",fontSize:35,fontWeight:"900",letterSpacing:-1.6,marginTop:5},sub:{color:"#9691A4",fontSize:13,marginTop:6},
   avatar:{width:45,height:45,borderRadius:16,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center"},avatarText:{color:"#fff",fontSize:17,fontWeight:"900"},
   hero:{backgroundColor:"#101522",borderWidth:1,borderColor:"#242B3D",borderRadius:25,padding:19,marginBottom:25},heroTop:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:16},
