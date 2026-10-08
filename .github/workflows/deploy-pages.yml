@@ -35,6 +35,9 @@ jobs:
       - name: Export Expo web app
         run: npx expo export --platform web
 
+      - name: Add SPA fallback for GitHub Pages
+        run: cp dist/index.html dist/404.html
+
       - name: Add nojekyll
         run: touch dist/.nojekyll
 
