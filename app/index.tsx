@@ -6,11 +6,13 @@ import {router} from "expo-router";
 import {imageToBase64,setPendingImage} from "../lib/image";
 
 export default function Home(){
- const [busy,setBusy]=useState(false),[camera,setCamera]=useState(false);\n const cameraRef=useRef<CameraView>(null);
+ const [busy,setBusy]=useState(false),[camera,setCamera]=useState(false);
+ const cameraRef=useRef<CameraView>(null);
  const [permission,requestPermission]=useCameraPermissions();
  async function openImage(uri:string){try{setBusy(true);const image=await imageToBase64(uri);setPendingImage(image.base64,image.mimeType);router.push("/study");}catch{Alert.alert("Couldn't read the photo","Try a clearer photo of your notes.");}finally{setBusy(false);}}
  async function library(){const p=await ImagePicker.requestMediaLibraryPermissionsAsync();if(!p.granted){Alert.alert("Photos permission needed","Allow photo access to choose notes.");return;}const r=await ImagePicker.launchImageLibraryAsync({mediaTypes:["images"],quality:0.85,allowsEditing:true});if(!r.canceled)await openImage(r.assets[0].uri);}
- async function capture(){try{setBusy(true);const photo=await cameraRef.current?.takePictureAsync({quality:0.85});if(photo?.uri)await openImage(photo.uri);}catch{Alert.alert("Couldn’t capture the page","Try again with the page centered and well lit.");}finally{setBusy(false);setCamera(false);}}\n async function cameraOpen(){if(!permission?.granted){const p=await requestPermission();if(!p.granted)return;}setCamera(true);}
+ async function capture(){try{setBusy(true);const photo=await cameraRef.current?.takePictureAsync({quality:0.85});if(photo?.uri)await openImage(photo.uri);}catch{Alert.alert("Couldn’t capture the page","Try again with the page centered and well lit.");}finally{setBusy(false);setCamera(false);}}
+ async function cameraOpen(){if(!permission?.granted){const p=await requestPermission();if(!p.granted)return;}setCamera(true);}
  if(camera)return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back"/><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>Line up your notes in the frame</Text><Pressable style={s.capture} onPress={capture}><View style={s.captureRing}/></Pressable></View></View>;
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container}>
   <View style={s.header}><View><Text style={s.eyebrow}>SNAPSTUDY</Text><Text style={s.title}>Study smarter.</Text><Text style={s.sub}>One photo. A complete study session.</Text></View><View style={s.logo}><Text style={s.logoText}>S</Text></View></View>
