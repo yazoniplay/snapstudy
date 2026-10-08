@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { supabase } from "../lib/supabase";
 
 export default function Layout() {
   const pathname = usePathname();
