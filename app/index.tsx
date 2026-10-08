@@ -129,8 +129,8 @@ export default function Home() {
         </View>
 
         {recent.length > 0 && <View style={s.recentBox}>
-          <View style={s.sectionRow}><Text style={s.section}>Recent sessions</Text><Text style={s.sectionHint}>{recent.length} saved</Text></View>
-          {recent.map(item => <View key={item.id} style={s.recentRow}><View style={s.recentIcon}><Text style={s.icon}>↗</Text></View><View style={{flex:1}}><Text style={s.recentTitle} numberOfLines={1}>{item.title}</Text><Text style={s.recentMeta}>{item.subject || "Study"} · {formatDate(item.created_at)}</Text></View></View>)}
+          <View style={s.sectionRow}><Text style={s.section}>Recent sessions</Text><Pressable onPress={() => router.push("/history")}><Text style={s.sectionHint}>View all →</Text></Pressable></View>
+          {recent.map(item => <Pressable key={item.id} style={s.recentRow} onPress={() => router.push({pathname:"/study",params:{id:item.id}})}><View style={s.recentIcon}><Text style={s.icon}>↗</Text></View><View style={{flex:1}}><Text style={s.recentTitle} numberOfLines={1}>{item.title}</Text><Text style={s.recentMeta}>{item.subject || "Study"} · {formatDate(item.created_at)}</Text></View></View>)}
         </View>}
 
         <View style={s.tip}>
