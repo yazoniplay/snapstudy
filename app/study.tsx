@@ -3,14 +3,21 @@ import {ActivityIndicator,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,View
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {router} from "expo-router";
 import {takePendingImage} from "../lib/image";
-import {analyzeNotes} from "../lib/api";
+import {analyzeNotes} from "../lib/api";\nimport { supabase } from "../lib/supabase";
 import type {StudyResult} from "../lib/api";
 
 type Mode="summary"|"flashcards"|"quiz"|"test";
 export default function Study(){
  const [image]=useState(()=>takePendingImage()),[data,setData]=useState<StudyResult|null>(null),[error,setError]=useState(""),[mode,setMode]=useState<Mode>("summary");
  const [card,setCard]=useState(0),[showAnswer,setShowAnswer]=useState(false),[quizIndex,setQuizIndex]=useState(0),[score,setScore]=useState(0),[selected,setSelected]=useState<number|null>(null),[testIndex,setTestIndex]=useState(0),[showTestAnswer,setShowTestAnswer]=useState(false);
- useEffect(()=>{if(image.base64)analyzeNotes(image).then(async x=>{setData(x);try{await AsyncStorage.setItem("snapstudy:last",JSON.stringify({topic:x.topic,summary:x.summary,createdAt:Date.now()}));}catch{}}).catch(e=>setError(e.message));},[image]);
+ useEffect(()=>{if(image.base64)analyzeNotes(image).then(async x=>{
+ setData(x);
+ try{
+  await AsyncStorage.setItem("snapstudy:last",JSON.stringify({topic:x.topic,summary:x.summary,createdAt:Date.now()}));
+  const { data: user } = await supabase.auth.getUser();
+  if(user.user) await supabase.from("study_sessions").insert({user_id:user.user.id,title:x.topic,subject:x.topic});
+ }catch{}
+}).catch(e=>setError(e.message));},[image]);
  const quizDone=!!data&&quizIndex>=data.quiz.length; const currentQuiz=data?.quiz[quizIndex];
  if(error)return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.title}>Couldn't analyze notes</Text><Text style={s.error}>{error}</Text><Text style={s.muted}>Check your connection and that the AI service is configured.</Text><Pressable style={s.button} onPress={()=>router.replace("/")}><Text style={s.buttonText}>Back home</Text></Pressable></View></SafeAreaView>;
  if(!data)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator size="large" color="#fff"/><Text style={s.loading}>Building your study session…</Text><Text style={s.muted}>Reading handwriting and creating practice.</Text></View></SafeAreaView>;
