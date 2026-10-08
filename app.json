@@ -24,6 +24,9 @@
     "web": {
       "output": "single",
       "bundler": "metro"
+    },
+    "experiments": {
+      "baseUrl": "/snapstudy"
     }
   }
 }
