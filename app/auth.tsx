@@ -17,27 +17,39 @@ export default function Auth() {
     }
 
     setLoading(true);
-    const result = mode === "signin"
-      ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
-      : await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { data: { full_name: name.trim() } },
-        });
-    setLoading(false);
+    try {
+      const authPromise = mode === "signin"
+        ? supabase.auth.signInWithPassword({ email: email.trim(), password })
+        : supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: { data: { full_name: name.trim() } },
+          });
 
-    if (result.error) {
-      Alert.alert("Couldn't continue", result.error.message);
-      return;
+      const result = await Promise.race([
+        authPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("The sign-in request timed out. Check your internet connection and try again.")), 15000)
+        ),
+      ]);
+
+      if (result.error) {
+        Alert.alert("Couldn't continue", result.error.message);
+        return;
+      }
+
+      if (mode === "signup" && !result.data.session) {
+        Alert.alert("Check your email", "Your account was created. Confirm your email, then sign in.");
+        setMode("signin");
+        return;
+      }
+
+      router.replace("/");
+    } catch (error) {
+      Alert.alert("Sign-in failed", error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    if (mode === "signup" && !result.data.session) {
-      Alert.alert("Check your email", "Your account was created. Confirm your email, then sign in.");
-      setMode("signin");
-      return;
-    }
-
-    router.replace("/");
   }
 
   return (
@@ -73,7 +85,7 @@ export default function Auth() {
           <Text style={s.label}>Password</Text>
           <TextInput value={password} onChangeText={setPassword} placeholder="At least 6 characters" placeholderTextColor="#696476" style={s.input} secureTextEntry autoCapitalize="none" />
           <Pressable style={[s.button, loading && { opacity: 0.6 }]} onPress={submit} disabled={loading}>
-            <Text style={s.buttonText}>{loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}</Text>
+            <Text style={s.buttonText}>{loading ? "Signing in…" : mode === "signin" ? "Sign in" : "Create account"}</Text>
           </Pressable>
           <Text style={s.note}>Your account uses Supabase Auth. Never share your password with anyone.</Text>
         </View>
