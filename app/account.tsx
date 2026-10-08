@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
+import BottomNav from "../components/BottomNav";
 
 export default function Account() {
   const [email, setEmail] = useState("");
@@ -65,13 +66,14 @@ export default function Account() {
           </Pressable>
         </View>
       </ScrollView>
+      <BottomNav />
     </SafeAreaView>
   );
 }
 
 const s=StyleSheet.create({
   safe:{flex:1,backgroundColor:"#070A12"},
-  container:{padding:20,paddingTop:22,paddingBottom:50},
+  container:{padding:20,paddingTop:22,paddingBottom:25},
   center:{flex:1,alignItems:"center",justifyContent:"center"},
   back:{color:"#9691A4",fontSize:13,fontWeight:"700",marginBottom:25},
   eyebrow:{color:"#918BA1",fontSize:10,fontWeight:"900",letterSpacing:2},
