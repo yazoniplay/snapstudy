@@ -3,7 +3,7 @@ import {ActivityIndicator,Animated,Pressable,SafeAreaView,ScrollView,StyleSheet,
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {router, useLocalSearchParams} from "expo-router";
 import {takePendingImage} from "../lib/image";
-import {analyzeNotes} from "../lib/api";
+import {analyzeNotes, translateStudyResult} from "../lib/api";
 import type {StudyResult} from "../lib/api";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
@@ -23,7 +23,9 @@ export default function Study(){
  const [teachText,setTeachText]=useState("");
  const [focusSeconds,setFocusSeconds]=useState(1500),[focusRunning,setFocusRunning]=useState(false);
  const modeMotion=useRef(new Animated.Value(1)).current;
- useEffect(()=>{modeMotion.setValue(0);Animated.timing(modeMotion,{toValue:1,duration:220,useNativeDriver:true}).start();},[mode,modeMotion]);
+ const flashMotion=useRef(new Animated.Value(1)).current;
+ useEffect(()=>{modeMotion.setValue(0);Animated.spring(modeMotion,{toValue:1,friction:10,tension:75,useNativeDriver:true}).start();},[mode,modeMotion]);
+ useEffect(()=>{flashMotion.setValue(0);Animated.spring(flashMotion,{toValue:1,friction:9,tension:95,useNativeDriver:true}).start();},[card,showAnswer,flashMotion]);
  useEffect(()=>{if(!focusRunning)return;const timer=setInterval(()=>setFocusSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(timer);},[focusRunning]);
  useEffect(()=>{if(focusSeconds===0)setFocusRunning(false);},[focusSeconds]);
  useEffect(()=>{
@@ -31,9 +33,20 @@ export default function Study(){
   async function load(){
    try{
     if(id){
+      const translatedKey = "snapstudy:session:"+id+":lang:"+language;
+      const cachedTranslation = await AsyncStorage.getItem(translatedKey);
+      if(cachedTranslation){if(active)setData(JSON.parse(cachedTranslation) as StudyResult);return;}
       const saved = await AsyncStorage.getItem("snapstudy:session:"+id);
       if(!saved) throw new Error("This saved study session could not be found on this device.");
-      if(active) setData(JSON.parse(saved) as StudyResult);
+      const original = JSON.parse(saved) as StudyResult;
+      const sourceLanguage = await AsyncStorage.getItem("snapstudy:session-language:"+id);
+      if(sourceLanguage === language || (!sourceLanguage && language === "en")){
+        if(active)setData(original);
+      }else{
+        const translated = await translateStudyResult(original,language);
+        await AsyncStorage.setItem(translatedKey,JSON.stringify(translated));
+        if(active)setData(translated);
+      }
       return;
     }
     if(image.base64){
@@ -50,6 +63,7 @@ export default function Study(){
        sessions.unshift({id:sessionId,topic:x.topic,summary:x.summary,createdAt});
        await AsyncStorage.setItem("snapstudy:sessions",JSON.stringify(sessions.slice(0,50)));
        await AsyncStorage.setItem("snapstudy:session:"+sessionId,JSON.stringify(x));
+       await AsyncStorage.setItem("snapstudy:session-language:"+sessionId,language);
       }catch{}
     }else{
       throw new Error("No scan was found. Go back and scan your notes again.");
