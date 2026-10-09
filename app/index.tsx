@@ -16,6 +16,7 @@ export default function Home() {
   const [camera, setCamera] = useState(false);
   const [firstName, setFirstName] = useState("there");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const entrance = useRef(new Animated.Value(0)).current;
   const sparkle = useRef(new Animated.Value(0)).current;
@@ -32,9 +33,10 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getSession().then(({ data, error }) => {
+    supabase.auth.getSession().then(async ({ data, error }) => {
       if (!active) return;
       const user = data.session?.user;
+      if (user) { const profile = await supabase.from("profiles").select("avatar_url,display_name").eq("id",user.id).maybeSingle(); if (profile.data?.avatar_url) setAvatarUrl(profile.data.avatar_url); if (profile.data?.display_name) setFirstName(profile.data.display_name.trim().split(/\s+/)[0] || "there"); }
       if (error || !user) router.replace("/auth");
       else if (!user.user_metadata?.onboarding_completed) router.replace("/onboarding");
       else if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) setFirstName(user.user_metadata.full_name.trim().split(/\s+/)[0]);
