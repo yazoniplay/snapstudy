@@ -41,10 +41,50 @@ export default function Account() {
 
   async function save() {
     setSaving(true);
-    const { error } = await supabase.auth.updateUser({ data: { full_name: name.trim() } });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSaving(false); return; }
+    const cleanName = name.trim().slice(0, 60) || "Student";
+    const cleanHandle = handle.trim().toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24);
+    const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanName } });
+    const { error: profileError } = await supabase.from("profiles").update({ display_name: cleanName, ...(cleanHandle.length >= 3 ? { username: cleanHandle } : {}) }).eq("id", user.id);
     setSaving(false);
-    if (error) Alert.alert(t("couldntSave"), error.message);
-    else Alert.alert(t("saved"), t("profileUpdated"));
+    if (authError || profileError) Alert.alert(t("couldntSave"), authError?.message || profileError?.message || "Couldn't update profile.");
+    else { setName(cleanName); if (cleanHandle.length >= 3) setHandle(cleanHandle); Alert.alert(t("saved"), t("profileUpdated")); }
+  }
+
+  async function chooseAvatar() {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.82 });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) { Alert.alert("Image too large", "Choose an image smaller than 5 MB."); return; }
+    setAvatarBusy(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Please sign in again.");
+      const response = await fetch(asset.uri);
+      const body = await response.arrayBuffer();
+      const mime = asset.mimeType || "image/jpeg";
+      const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : mime === "image/gif" ? "gif" : "jpg";
+      const path = user.id + "/avatar-" + Date.now() + "." + ext;
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, body, { contentType: mime, upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = publicData.publicUrl;
+      const { error: profileError } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      if (profileError) throw profileError;
+      setAvatarUrl(url);
+      Alert.alert("Avatar updated", "Your new profile picture is saved.");
+    } catch (e: any) {
+      Alert.alert("Couldn't upload avatar", e?.message || "Try a different image.");
+    } finally { setAvatarBusy(false); }
+  }
+
+  async function toggleLeaderboard(value: boolean) {
+    setLeaderboardOptIn(value);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLeaderboardOptIn(!value); return; }
+    const { error } = await supabase.from("profiles").update({ leaderboard_opt_in: value }).eq("id", user.id);
+    if (error) { setLeaderboardOptIn(!value); Alert.alert("Couldn't update leaderboard setting", error.message); }
   }
 
   async function signOut() {
