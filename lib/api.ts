@@ -1,4 +1,4 @@
-export type StudyResult={topic:string;summary:string;flashcards:{question:string;answer:string}[];quiz:{question:string;options:string[];answer:number;explanation:string}[];practiceTest:{question:string;answer:string}[]};
+export type StudyResult={topic:string;summary:string;flashcards:{question:string;answer:string}[];quiz:{question:string;options:string[];answer:number;explanation:string;topic?:string}[];practiceTest:{question:string;answer:string}[]};
 export type StudyLanguage = "en" | "sv" | "ar";
 const API_URL=process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL||"https://thqxjxrtcvcrnqnnmjzi.supabase.co/functions/v1/analyze-notes";
 async function postStudy(body:Record<string,unknown>):Promise<StudyResult>{
