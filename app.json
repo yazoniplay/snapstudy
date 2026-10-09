@@ -7,7 +7,9 @@
     "scheme": "snapstudy",
     "userInterfaceStyle": "dark",
     "plugins": [
-      ["expo-router"],
+      [
+        "expo-router"
+      ],
       [
         "expo-image-picker",
         {
@@ -27,6 +29,13 @@
     },
     "experiments": {
       "baseUrl": "/snapstudy"
+    },
+    "android": {
+      "package": "com.yazoniplay.snapstudy"
+    },
+    "ios": {
+      "bundleIdentifier": "com.yazoniplay.snapstudy",
+      "supportsTablet": true
     }
   }
 }
