@@ -54,7 +54,7 @@ export default function Home() {
       const user = data.session?.user;
       if (error || !user) router.replace("/auth");
       else if (!user.user_metadata?.onboarding_completed) router.replace("/onboarding");
-      else if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) setFirstName(user.user_metadata.full_name.trim().split(/\\s+/)[0]);
+      else if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) setFirstName(user.user_metadata.full_name.trim().split(/\s+/)[0]);
       else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
         // The saved device preference remains the source of truth for the current appearance.
       }
