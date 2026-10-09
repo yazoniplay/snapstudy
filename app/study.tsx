@@ -21,7 +21,8 @@ export default function Study(){
  const [focusSeconds,setFocusSeconds]=useState(1500),[focusRunning,setFocusRunning]=useState(false);
  const modeMotion=useRef(new Animated.Value(1)).current;
  useEffect(()=>{modeMotion.setValue(0);Animated.timing(modeMotion,{toValue:1,duration:220,useNativeDriver:true}).start();},[mode,modeMotion]);
- useEffect(()=>{if(!focusRunning)return;const timer=setInterval(()=>setFocusSeconds(v=>{if(v<=1){setFocusRunning(false);return 0;}return v-1;}),1000);return()=>clearInterval(timer);},[focusRunning]);
+ useEffect(()=>{if(!focusRunning)return;const timer=setInterval(()=>setFocusSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(timer);},[focusRunning]);
+ useEffect(()=>{if(focusSeconds===0)setFocusRunning(false);},[focusSeconds]);
  useEffect(()=>{
   let active=true;
   async function load(){
