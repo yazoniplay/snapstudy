@@ -1,5 +1,5 @@
 export type PlusFeature = "extra_scans" | "extended_history" | "ad_free" | "customization";
-export type SubscriptionSource = "none" | "webhook" | "app_store" | "play_store";
+export type SubscriptionSource = "none" | "stripe" | "webhook" | "app_store" | "play_store";
 export type PlusEntitlement = { active: boolean; verified: boolean; source: SubscriptionSource; expiresAt?: string | null };
 export const FREE_PLAN = { id: "free", name: "SnapStudy Free" } as const;
 export const PLUS_PLAN_PREVIEW = {
