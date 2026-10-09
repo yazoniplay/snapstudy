@@ -54,7 +54,7 @@ export default function Account() {
 
         <View style={s.card}>
           <Text style={s.label}>Name</Text>
-          <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor=c.subtle style={s.input} />
+          <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor={c.subtle} style={s.input} />
           <Text style={s.label}>Email</Text>
           <TextInput value={email} editable={false} style={[s.input, s.disabled]} />
           <Pressable style={s.primary} onPress={save} disabled={saving}>
