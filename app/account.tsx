@@ -7,18 +7,13 @@ import BottomNav from "../components/BottomNav";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage, type AppLanguage } from "../lib/language";
 export default function Account() {
-  const { colors:c, mode, setMode, accentColor, setAccentColor } = useTheme();
+  const { colors:c, mode, setMode } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const s = makeStyles(c);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [colorDraft, setColorDraft] = useState(accentColor);
-  const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#6366F1","#A855F7","#F8FAFC"];
-
-  useEffect(() => { setColorDraft(accentColor); }, [accentColor]);
-
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const user = data.user;
@@ -28,11 +23,6 @@ export default function Account() {
       }
       setEmail(user.email ?? "");
       setName((user.user_metadata?.full_name as string) ?? "");
-      const savedAccent = user.user_metadata?.accent_color;
-      if (typeof savedAccent === "string" && /^#[0-9A-Fa-f]{6}$/.test(savedAccent)) {
-        setAccentColor(savedAccent);
-        setColorDraft(savedAccent.toUpperCase());
-      }
       setLoading(false);
     });
   }, []);
@@ -91,44 +81,6 @@ export default function Account() {
         </View>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>Theme color</Text>
-          <Text style={s.cardText}>Make SnapStudy yours. Pick a color or enter any HEX color code.</Text>
-          <View style={s.colorPreviewRow}>
-            <View style={[s.colorPreview,{backgroundColor:accentColor}]} />
-            <Text style={s.colorCode}>{accentColor}</Text>
-          </View>
-          <View style={s.swatchGrid}>
-            {colorPresets.map(color => <Pressable
-              key={color}
-              accessibilityLabel={"Use theme color " + color}
-              onPress={() => { setAccentColor(color); setColorDraft(color); supabase.auth.updateUser({data:{accent_color:color}}).catch(()=>{}); }}
-              style={[s.swatch,{backgroundColor:color},accentColor===color&&s.swatchSelected]}
-            />)}
-          </View>
-          <Text style={s.label}>Custom HEX color</Text>
-          <TextInput
-            value={colorDraft}
-            onChangeText={setColorDraft}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            maxLength={7}
-            placeholder="#22C55E"
-            placeholderTextColor={c.subtle}
-            style={s.input}
-          />
-          <Pressable
-            style={[s.primary, !/^#[0-9A-Fa-f]{6}$/.test(colorDraft) && {opacity:0.45}]}
-            disabled={!/^#[0-9A-Fa-f]{6}$/.test(colorDraft)}
-            onPress={() => { const next=colorDraft.toUpperCase(); setAccentColor(next); supabase.auth.updateUser({data:{accent_color:next}}).catch(()=>{}); }}
-          >
-            <Text style={s.primaryText}>Apply color</Text>
-          </Pressable>
-          <Pressable style={s.resetColor} onPress={() => {setAccentColor("#8B5CF6");setColorDraft("#8B5CF6");supabase.auth.updateUser({data:{accent_color:"#8B5CF6"}}).catch(()=>{});}}>
-            <Text style={s.themeButtonText}>Reset to purple</Text>
-          </Pressable>
-        </View>
-
-        <View style={s.card}>
           <Text style={s.cardTitle}>{t("session")}</Text>
           <Text style={s.cardText}>{t("sessionSub")}</Text>
           <Pressable style={s.danger} onPress={signOut}>
@@ -158,13 +110,6 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   primary:{height:48,borderRadius:13,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},
   primaryText:{color:c.onAccent,fontWeight:"900"},
   themeRow:{flexDirection:"row",gap:9,marginTop:13},themeButton:{flex:1,paddingVertical:12,borderRadius:12,borderWidth:1,borderColor:c.border,alignItems:"center",backgroundColor:c.input},themeButtonActive:{backgroundColor:c.accentSoft,borderColor:c.accent},themeButtonText:{color:c.muted,fontWeight:"900",fontSize:12},themeButtonTextActive:{color:c.text},
-  colorPreviewRow:{flexDirection:"row",alignItems:"center",gap:10,marginTop:14,marginBottom:12},
-  colorPreview:{width:28,height:28,borderRadius:10,borderWidth:1,borderColor:c.border},
-  colorCode:{color:c.text,fontSize:13,fontWeight:"900",letterSpacing:1},
-  swatchGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginBottom:18},
-  swatch:{width:34,height:34,borderRadius:12,borderWidth:2,borderColor:"transparent"},
-  swatchSelected:{borderColor:c.text,transform:[{scale:1.08}]},
-  resetColor:{alignItems:"center",paddingVertical:12,marginTop:4},
   cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
   cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
   danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
