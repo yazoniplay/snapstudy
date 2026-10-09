@@ -86,6 +86,24 @@ export default function Account() {
         </View>
 
         <View style={s.card}>
+          <Text style={s.cardTitle}>Accent color</Text>
+          <Text style={s.cardText}>Make SnapStudy yours. Pick a color or enter any HEX color.</Text>
+          <View style={s.swatchGrid}>
+            {colorPresets.map(color => <Pressable accessibilityLabel={`Use accent color ${color}`} key={color} onPress={() => { setColorDraft(color); setAccentColor(color); supabase.auth.updateUser({data:{accent_color:color}}).catch(()=>{}); }} style={[s.swatch,{backgroundColor:color},accentColor.toUpperCase()===color&&s.swatchSelected]} />)}
+          </View>
+          <View style={s.colorInputRow}>
+            <View style={[s.colorPreview,{backgroundColor:/^#[0-9A-Fa-f]{6}$/.test(colorDraft)?colorDraft:c.accent}]} />
+            <TextInput value={colorDraft} onChangeText={setColorDraft} autoCapitalize="characters" autoCorrect={false} maxLength={7} placeholder="#8B5CF6" placeholderTextColor={c.subtle} style={s.colorInput} />
+          </View>
+          <Pressable style={[s.primary,{opacity:/^#[0-9A-Fa-f]{6}$/.test(colorDraft)?1:0.45}]} disabled={!/^#[0-9A-Fa-f]{6}$/.test(colorDraft)} onPress={() => { const next=colorDraft.toUpperCase(); setAccentColor(next); supabase.auth.updateUser({data:{accent_color:next}}).catch(()=>{}); Alert.alert("Color updated","Your accent color has been applied."); }}>
+            <Text style={s.primaryText}>Apply custom color</Text>
+          </Pressable>
+          <Pressable style={s.resetColor} onPress={() => { setColorDraft("#8B5CF6"); setAccentColor("#8B5CF6"); supabase.auth.updateUser({data:{accent_color:"#8B5CF6"}}).catch(()=>{}); }}>
+            <Text style={{color:c.muted,fontSize:12,fontWeight:"800"}}>Reset to default purple</Text>
+          </Pressable>
+        </View>
+
+        <View style={s.card}>
           <Text style={s.cardTitle}>{t("session")}</Text>
           <Text style={s.cardText}>{t("sessionSub")}</Text>
           <Pressable style={s.danger} onPress={signOut}>
