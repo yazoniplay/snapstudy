@@ -61,10 +61,15 @@ export default function Study(){
       } else if(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
         const { data: cloudSession, error: cloudError } = await supabase.from("study_sessions").select("result").eq("id", id).maybeSingle();
         if(cloudError) throw cloudError;
-        if(!cloudSession?.result) throw new Error("This saved study session could not be found.");
-        original = cloudSession.result as StudyResult;
-        remoteLanguage = (cloudSession.result as any)._language || "en";
-        await AsyncStorage.setItem("snapstudy:session:"+id, JSON.stringify(original));
+        if(cloudSession?.result) {
+          original = cloudSession.result as StudyResult;
+          remoteLanguage = (cloudSession.result as any)._language || "en";
+          await AsyncStorage.setItem("snapstudy:session:"+id, JSON.stringify(original));
+        } else {
+          const cloudCopy = await loadStudyData<StudyResult | null>("session:"+id, null);
+          if(!cloudCopy) throw new Error("This saved study session could not be found.");
+          original = cloudCopy;
+        }
       } else {
         throw new Error("This saved study session could not be found on this device.");
       }
@@ -97,6 +102,7 @@ export default function Study(){
        sessions.unshift({id:sessionId,topic:x.topic,summary:x.summary,createdAt});
        await saveStudyData("sessions",sessions.slice(0,50));
        await AsyncStorage.setItem("snapstudy:session:"+sessionId,JSON.stringify(x));
+       await saveStudyData("session:"+sessionId,{...x,_language:language});
        await AsyncStorage.setItem("snapstudy:session-language:"+sessionId,language);
       }catch{}
     }else{
