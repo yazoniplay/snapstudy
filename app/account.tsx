@@ -173,7 +173,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   eyebrow:{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:2},
   title:{color:c.text,fontSize:32,fontWeight:"900",letterSpacing:-1,marginTop:7},
   sub:{color:c.muted,fontSize:13,marginTop:6,marginBottom:22},
-  avatar:{width:76,height:76,borderRadius:26,backgroundColor:c.accent,alignItems:"center",justifyContent:"center",marginBottom:18},
+  avatarWrap:{alignItems:"flex-start",marginBottom:18},avatar:{width:86,height:86,borderRadius:28,backgroundColor:c.accent,alignItems:"center",justifyContent:"center",marginBottom:7,overflow:"hidden"},avatarImage:{width:"100%",height:"100%"},avatarEdit:{color:c.accent,fontSize:12,fontWeight:"900"},
   avatarText:{color:c.onAccent,fontSize:27,fontWeight:"900"},
   card:{backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:20,padding:17,marginBottom:12},
   label:{color:c.text,fontSize:11,fontWeight:"800",marginBottom:6,marginTop:2},
