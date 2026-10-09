@@ -14,12 +14,12 @@ const MODES:Mode[]=["summary","flashcards","quiz","test","concepts","plan","teac
 
 export default function Study(){
  const { colors:c } = useTheme(); const {t,language}=useLanguage(); const s=makeStyles(c,language);
- const { id } = useLocalSearchParams<{id?: string}>();
+ const { id, mode: initialMode, due: dueParam } = useLocalSearchParams<{id?: string; mode?: string; due?: string}>();
  const [image]=useState(()=>takePendingImage());
- const [data,setData]=useState<StudyResult|null>(null),[error,setError]=useState(""),[mode,setMode]=useState<Mode>("summary");
+ const [data,setData]=useState<StudyResult|null>(null),[error,setError]=useState(""),[mode,setMode]=useState<Mode>(()=>MODES.includes(initialMode as Mode)?initialMode as Mode:"summary");
  const [card,setCard]=useState(0),[showAnswer,setShowAnswer]=useState(false),[quizIndex,setQuizIndex]=useState(0),[score,setScore]=useState(0),[selected,setSelected]=useState<number|null>(null),[testIndex,setTestIndex]=useState(0),[showTestAnswer,setShowTestAnswer]=useState(false);
  const [reviewSchedule,setReviewSchedule]=useState<Record<string,{dueAt:number;intervalDays:number;repetitions:number;lastRating:string}>>({});
- const [dueOnly,setDueOnly]=useState(false);
+ const [dueOnly,setDueOnly]=useState(dueParam==="1");
  const [teachText,setTeachText]=useState("");
  const [focusSeconds,setFocusSeconds]=useState(1500),[focusRunning,setFocusRunning]=useState(false);
  const modeMotion=useRef(new Animated.Value(1)).current;
