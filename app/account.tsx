@@ -5,8 +5,10 @@ import { supabase } from "../lib/supabase";
 import BottomNav from "../components/BottomNav";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
+import { useLanguage, type AppLanguage } from "../lib/language";
 export default function Account() {
   const { colors:c, mode, setMode } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const s = makeStyles(c);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -30,8 +32,8 @@ export default function Account() {
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ data: { full_name: name.trim() } });
     setSaving(false);
-    if (error) Alert.alert("Couldn't save", error.message);
-    else Alert.alert("Saved", "Your profile was updated.");
+    if (error) Alert.alert(t("couldntSave"), error.message);
+    else Alert.alert(t("saved"), t("profileUpdated"));
   }
 
   async function signOut() {
@@ -45,37 +47,45 @@ export default function Account() {
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container}>
-        <Pressable onPress={() => router.replace("/")}><Text style={s.back}>‹  Back to dashboard</Text></Pressable>
+        <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>
         <Text style={s.eyebrow}>ACCOUNT</Text>
-        <Text style={s.title}>Your profile</Text>
-        <Text style={s.sub}>Manage your SnapStudy account.</Text>
+        <Text style={s.title}>{t("profile")}</Text>
+        <Text style={s.sub}>{t("manageAccount")}</Text>
 
         <View style={s.avatar}><Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text></View>
 
         <View style={s.card}>
-          <Text style={s.label}>Name</Text>
-          <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor={c.subtle} style={s.input} />
-          <Text style={s.label}>Email</Text>
+          <Text style={s.label}>{t("name")}</Text>
+          <TextInput value={name} onChangeText={setName} placeholder={t("yourName")} placeholderTextColor={c.subtle} style={s.input} />
+          <Text style={s.label}>{t("email")}</Text>
           <TextInput value={email} editable={false} style={[s.input, s.disabled]} />
           <Pressable style={s.primary} onPress={save} disabled={saving}>
-            <Text style={s.primaryText}>{saving ? "Saving…" : "Save changes"}</Text>
+            <Text style={s.primaryText}>{saving ? t("saving") : t("saveChanges")}</Text>
           </Pressable>
         </View>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>Appearance</Text>
-          <Text style={s.cardText}>Choose the look you prefer. This setting is saved on this device.</Text>
+          <Text style={s.cardTitle}>{t("language")}</Text>
+          <Text style={s.cardText}>Choose English, svenska or العربية. The app remembers your choice.</Text>
           <View style={s.themeRow}>
-            <Pressable style={[s.themeButton,mode==="light"&&s.themeButtonActive]} onPress={()=>{setMode("light");supabase.auth.updateUser({data:{theme:"light"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="light"&&s.themeButtonTextActive]}>☀ Light</Text></Pressable>
-            <Pressable style={[s.themeButton,mode==="dark"&&s.themeButtonActive]} onPress={()=>{setMode("dark");supabase.auth.updateUser({data:{theme:"dark"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="dark"&&s.themeButtonTextActive]}>☾ Dark</Text></Pressable>
+            {([["en",t("english")],["sv",t("swedish")],["ar",t("arabic")]] as [AppLanguage,string][]).map(([code,label])=><Pressable key={code} style={[s.themeButton,language===code&&s.themeButtonActive]} onPress={()=>{setLanguage(code);supabase.auth.updateUser({data:{language:code}}).catch(()=>{});}}><Text style={[s.themeButtonText,language===code&&s.themeButtonTextActive]}>{label}</Text></Pressable>)}
           </View>
         </View>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>Session</Text>
-          <Text style={s.cardText}>You are signed in and your account session is stored securely on this device.</Text>
+          <Text style={s.cardTitle}>{t("appearance")}</Text>
+          <Text style={s.cardText}>{t("appearanceSub")}</Text>
+          <View style={s.themeRow}>
+            <Pressable style={[s.themeButton,mode==="light"&&s.themeButtonActive]} onPress={()=>{setMode("light");supabase.auth.updateUser({data:{theme:"light"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="light"&&s.themeButtonTextActive]}>{t("light")}</Text></Pressable>
+            <Pressable style={[s.themeButton,mode==="dark"&&s.themeButtonActive]} onPress={()=>{setMode("dark");supabase.auth.updateUser({data:{theme:"dark"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="dark"&&s.themeButtonTextActive]}>{t("dark")}</Text></Pressable>
+          </View>
+        </View>
+
+        <View style={s.card}>
+          <Text style={s.cardTitle}>{t("session")}</Text>
+          <Text style={s.cardText}>{t("sessionSub")}</Text>
           <Pressable style={s.danger} onPress={signOut}>
-            <Text style={s.dangerText}>Sign out</Text>
+            <Text style={s.dangerText}>{t("signOut")}</Text>
           </Pressable>
         </View>
       </ScrollView>
