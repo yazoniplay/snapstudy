@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import {ActivityIndicator,Animated,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,TextInput,View} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
 import {router, useLocalSearchParams} from "expo-router";
 import {takePendingImage} from "../lib/image";
 import {analyzeNotes, translateStudyResult} from "../lib/api";
@@ -35,8 +36,7 @@ export default function Study(){
    setError("");
    try{
     if(weakParam==="1"){
-      const weakRaw=await AsyncStorage.getItem("snapstudy:weakTopics");
-      const weakItems=weakRaw?JSON.parse(weakRaw):[];
+      const weakItems=await loadStudyData<any[]>("weakTopics",[]);
       const activeWeak=Array.isArray(weakItems)?weakItems.filter((item:any)=>!item.mastered):[];
       if(!activeWeak.length) throw new Error(language==="sv"?"Inga svaga ämnen att repetera ännu. Gör ett quiz först.":language==="ar"?"لا توجد موضوعات تحتاج إلى مراجعة بعد. أكمل اختبارًا أولًا.":"No weak topics to review yet. Complete a quiz first.");
       const focused:StudyResult={
@@ -54,9 +54,21 @@ export default function Study(){
       const cachedTranslation = await AsyncStorage.getItem(translatedKey);
       if(cachedTranslation){if(active)setData(JSON.parse(cachedTranslation) as StudyResult);return;}
       const saved = await AsyncStorage.getItem("snapstudy:session:"+id);
-      if(!saved) throw new Error("This saved study session could not be found on this device.");
-      const original = JSON.parse(saved) as StudyResult;
-      const sourceLanguage = await AsyncStorage.getItem("snapstudy:session-language:"+id);
+      let original: StudyResult;
+      let remoteLanguage: string | null = null;
+      if(saved) {
+        original = JSON.parse(saved) as StudyResult;
+      } else if(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+        const { data: cloudSession, error: cloudError } = await supabase.from("study_sessions").select("result").eq("id", id).maybeSingle();
+        if(cloudError) throw cloudError;
+        if(!cloudSession?.result) throw new Error("This saved study session could not be found.");
+        original = cloudSession.result as StudyResult;
+        remoteLanguage = (cloudSession.result as any)._language || "en";
+        await AsyncStorage.setItem("snapstudy:session:"+id, JSON.stringify(original));
+      } else {
+        throw new Error("This saved study session could not be found on this device.");
+      }
+      const sourceLanguage = await AsyncStorage.getItem("snapstudy:session-language:"+id) || remoteLanguage;
       if(sourceLanguage === language || (!sourceLanguage && language === "en")){
         if(active)setData(original);
       }else{
@@ -74,11 +86,16 @@ export default function Study(){
        const createdAt=Date.now();
        const last=JSON.stringify({topic:x.topic,summary:x.summary,createdAt,result:x});
        await AsyncStorage.setItem("snapstudy:last",last);
-       const raw=await AsyncStorage.getItem("snapstudy:sessions");
-       const sessions=raw?JSON.parse(raw):[];
-       const sessionId=String(createdAt);
+       let sessionId=String(createdAt);
+       const {data:authData}=await supabase.auth.getUser();
+       if(authData.user){
+         const {data:cloudSession,error:cloudSaveError}=await supabase.from("study_sessions").insert({user_id:authData.user.id,title:x.topic,subject:x.topic,result:{...x,_language:language}}).select("id").single();
+         if(!cloudSaveError&&cloudSession?.id) sessionId=cloudSession.id;
+         else console.warn("Study session cloud save failed:",cloudSaveError?.message);
+       }
+       const sessions=await loadStudyData<any[]>("sessions",[]);
        sessions.unshift({id:sessionId,topic:x.topic,summary:x.summary,createdAt});
-       await AsyncStorage.setItem("snapstudy:sessions",JSON.stringify(sessions.slice(0,50)));
+       await saveStudyData("sessions",sessions.slice(0,50));
        await AsyncStorage.setItem("snapstudy:session:"+sessionId,JSON.stringify(x));
        await AsyncStorage.setItem("snapstudy:session-language:"+sessionId,language);
       }catch{}
@@ -96,7 +113,7 @@ export default function Study(){
  const visibleCardIndices=useMemo(()=>{if(!data)return [];const all=data.flashcards.map((_,i)=>i);return dueOnly?all.filter(i=>{const entry=reviewSchedule[cardKey(data.flashcards[i].question)];return !entry||entry.dueAt<=Date.now()}):all;},[data,dueOnly,reviewSchedule]);
  const activeCardIndex=visibleCardIndices.length?visibleCardIndices[Math.min(card,visibleCardIndices.length-1)]:0;
  const activeCard=data?.flashcards[activeCardIndex];
- useEffect(()=>{if(!data)return;AsyncStorage.getItem("snapstudy:reviewSchedule").then(raw=>{if(raw){try{setReviewSchedule(JSON.parse(raw));}catch{}}}).catch(()=>{});},[data?.topic]);
+ useEffect(()=>{if(!data)return;let active=true;loadStudyData<typeof reviewSchedule>("reviewSchedule",{}).then(value=>{if(active)setReviewSchedule(value||{});}).catch(()=>{});return()=>{active=false};},[data?.topic]);
  async function rateCard(rating:"again"|"hard"|"good"|"easy"){
   if(!activeCard)return;
   const key=cardKey(activeCard.question),old=reviewSchedule[key];
@@ -105,7 +122,7 @@ export default function Study(){
   const dueAt=Date.now()+(rating==="again"?10*60*1000:intervalDays*24*60*60*1000);
   const next={...reviewSchedule,[key]:{dueAt,intervalDays,repetitions:rating==="again"?0:(old?.repetitions||0)+1,lastRating:rating}};
   setReviewSchedule(next);
-  await AsyncStorage.setItem("snapstudy:reviewSchedule",JSON.stringify(next)).catch(()=>{});
+  await saveStudyData("reviewSchedule",next).catch(()=>{});
   if(visibleCardIndices.length>1){setCard((card+1)%visibleCardIndices.length);setShowAnswer(false);}else if(dueOnly){setShowAnswer(false);}
  }
  const dueCount=data?data.flashcards.filter(x=>{const entry=reviewSchedule[cardKey(x.question)];return !entry||entry.dueAt<=Date.now()}).length:0;
@@ -116,14 +133,13 @@ export default function Study(){
   try{
    const topic=q.topic||fallbackTopic;
    const idKey=topic+"::"+q.question;
-   const raw=await AsyncStorage.getItem("snapstudy:weakTopics");
-   const list:any[]=raw?JSON.parse(raw):[];
+   const list:any[]=await loadStudyData<any[]>("weakTopics",[]);
    const index=list.findIndex((item:any)=>item.id===idKey);
    if(index<0&&choice===q.answer)return;
    const old=index>=0?list[index]:{id:idKey,topic,question:q.question,options:q.options,answer:q.answer,explanation:q.explanation,misses:0,attempts:0,correctStreak:0,mastered:false,lastMissedAt:Date.now()};
    const next={...old,options:q.options,answer:q.answer,explanation:q.explanation,attempts:(old.attempts||0)+1,lastReviewedAt:Date.now(),correctStreak:choice===q.answer?(old.correctStreak||0)+1:0,misses:(old.misses||0)+(choice===q.answer?0:1),lastMissedAt:choice===q.answer?old.lastMissedAt:Date.now(),mastered:choice===q.answer?(old.mastered||((old.correctStreak||0)+1>=2)):false};
    if(index>=0)list[index]=next;else list.push(next);
-   await AsyncStorage.setItem("snapstudy:weakTopics",JSON.stringify(list));
+   await saveStudyData("weakTopics",list);
   }catch(e){console.warn("Could not save weak-topic progress",e);}
  }
  const modeLabel=(m:Mode)=>m==="test"?t("practiceTest"):m==="concepts"?t("keyConcepts"):m==="plan"?t("studyPlan"):m==="teach"?t("teachBack"):m==="focus"?t("focusTimer"):m==="summary"?t("summary"):m==="flashcards"?t("flashcards"):m==="quiz"?t("quiz"):m;
