@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, Switch } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import BottomNav from "../components/BottomNav";
@@ -15,10 +16,14 @@ export default function Account() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [colorDraft, setColorDraft] = useState(accentColor);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [handle, setHandle] = useState("");
   const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#F8FAFC"];
   useEffect(() => { setColorDraft(accentColor); }, [accentColor]);
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       const user = data.user;
       if (!user) {
         router.replace("/auth");
@@ -26,6 +31,8 @@ export default function Account() {
       }
       setEmail(user.email ?? "");
       setName((user.user_metadata?.full_name as string) ?? "");
+      const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,leaderboard_opt_in").eq("id", user.id).maybeSingle();
+      if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setLeaderboardOptIn(!!profileResult.data.leaderboard_opt_in); }
       const savedAccent = user.user_metadata?.accent_color;
       if (typeof savedAccent === "string" && /^#[0-9A-Fa-f]{6}$/.test(savedAccent)) { setAccentColor(savedAccent); setColorDraft(savedAccent.toUpperCase()); }
       setLoading(false);
