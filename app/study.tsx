@@ -50,7 +50,7 @@ export default function Study(){
  },[image,id]);
  const quizDone=!!data&&quizIndex>=data.quiz.length; const currentQuiz=data?.quiz[quizIndex];
  if(error)return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.title}>Couldn't analyze notes</Text><Text style={s.error}>{error}</Text><Text style={s.muted}>Check your connection and that the AI service is configured.</Text><Pressable style={s.button} onPress={()=>router.replace("/history")}><Text style={s.buttonText}>Back home</Text></Pressable></View></SafeAreaView>;
- if(!data)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator size="large" color=c.onAccent/><Text style={s.loading}>Building your study session…</Text><Text style={s.muted}>Reading handwriting and creating practice.</Text></View></SafeAreaView>;
+ if(!data)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator size="large" color={c.onAccent}/><Text style={s.loading}>Building your study session…</Text><Text style={s.muted}>Reading handwriting and creating practice.</Text></View></SafeAreaView>;
  return <SafeAreaView style={s.safe}><Animated.ScrollView style={{opacity:modeMotion,transform:[{translateY:modeMotion.interpolate({inputRange:[0,1],outputRange:[8,0]})}]}} contentContainerStyle={s.container}>
   <Pressable onPress={()=>router.replace("/")}><Text style={s.back}>‹  New scan</Text></Pressable>
   <Text style={s.eyebrow}>STUDY SESSION</Text><Text style={s.title}>{data.topic}</Text>
