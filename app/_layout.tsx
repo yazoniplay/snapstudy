@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider, useTheme } from "../lib/theme";
+import { LanguageProvider } from "../lib/language";
 
 function AppStack() {
   const { mode, colors } = useTheme();
@@ -15,5 +16,5 @@ function AppStack() {
 }
 
 export default function Layout() {
-  return <ThemeProvider><AppStack /></ThemeProvider>;
+  return <ThemeProvider><LanguageProvider><AppStack /></LanguageProvider></ThemeProvider>;
 }
