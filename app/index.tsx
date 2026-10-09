@@ -5,7 +5,9 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { imageToBase64, setPendingImage } from "../lib/image";
 import BottomNav from "../components/BottomNav";
+import { supabase } from "../lib/supabase";
 
+import { useTheme, type ThemeColors } from "../lib/theme";
 type Session = { id:string; title:string; subject:string|null; created_at:string; result?:any };
 
 function calculateStreak(rows: Array<{created_at:string}>) {
@@ -24,6 +26,8 @@ function calculateStreak(rows: Array<{created_at:string}>) {
 }
 
 export default function Home() {
+  const { colors:c } = useTheme();
+  const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [camera, setCamera] = useState(false);
   const [recent, setRecent] = useState<Session[]>([]);
@@ -41,6 +45,20 @@ export default function Home() {
     return () => pulse.stop();
   }, [entrance, sparkle]);
   const [permission, requestPermission] = useCameraPermissions();
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+      const user = data.session?.user;
+      if (error || !user) router.replace("/auth");
+      else if (!user.user_metadata?.onboarding_completed) router.replace("/onboarding");
+      else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
+        // The saved device preference remains the source of truth for the current appearance.
+      }
+    }).catch(() => { if (active) router.replace("/auth"); });
+    return () => { active = false; };
+  }, []);
 
   async function openImage(uri: string) {
     try { setBusy(true); const image = await imageToBase64(uri); setPendingImage(image.base64, image.mimeType); router.push("/study"); }
@@ -94,11 +112,11 @@ export default function Home() {
   </SafeAreaView>;
 }
 
-const s=StyleSheet.create({
-  safe:{flex:1,backgroundColor:"#070A12"},container:{padding:20,paddingTop:22,paddingBottom:24},center:{flex:1,alignItems:"center",justifyContent:"center",gap:10},header:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:18},eyebrow:{color:"#8F89A0",fontSize:11,fontWeight:"900",letterSpacing:2.2},title:{color:"#F7F5FF",fontSize:35,fontWeight:"900",letterSpacing:-1.6,marginTop:5},sub:{color:"#9691A4",fontSize:13,marginTop:6},avatar:{width:45,height:45,borderRadius:16,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center"},avatarText:{color:"#fff",fontSize:17,fontWeight:"900"},
-  stats:{height:76,borderRadius:19,backgroundColor:"#0F1320",borderWidth:1,borderColor:"#242A3A",flexDirection:"row",alignItems:"center",justifyContent:"space-around",marginBottom:16},stat:{flex:1,alignItems:"center",justifyContent:"center",flexDirection:"row",gap:5,flexWrap:"wrap"},statIcon:{fontSize:13},statValue:{color:"#F4F1FF",fontSize:16,fontWeight:"900"},statLabel:{color:"#777286",fontSize:10,fontWeight:"800",width:"100%",textAlign:"center",marginTop:-2},statDivider:{width:1,height:32,backgroundColor:"#252B3A"},
-  hero:{backgroundColor:"#101522",borderWidth:1,borderColor:"#242B3D",borderRadius:25,padding:19,marginBottom:25},heroTop:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:16},spark:{width:47,height:47,borderRadius:15,backgroundColor:"#1B1730",alignItems:"center",justifyContent:"center"},sparkText:{color:"#B49AFF",fontSize:22},aiBadge:{borderWidth:1,borderColor:"#35304C",paddingHorizontal:9,paddingVertical:6,borderRadius:999},aiText:{color:"#AFA3D2",fontSize:9,fontWeight:"900",letterSpacing:1},heroTitle:{color:"#F7F5FF",fontSize:22,fontWeight:"900",lineHeight:27},heroSub:{color:"#9691A4",fontSize:13,lineHeight:20,marginTop:7,marginBottom:18},primary:{height:49,borderRadius:14,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center"},primaryText:{color:"#fff",fontSize:14,fontWeight:"900"},secondary:{height:46,borderRadius:14,borderWidth:1,borderColor:"#353B4D",alignItems:"center",justifyContent:"center",marginTop:9},secondaryText:{color:"#F1EEFA",fontSize:13,fontWeight:"800"},
-  sectionRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:11},section:{color:"#F0EDF8",fontSize:16,fontWeight:"900"},sectionHint:{color:"#716B80",fontSize:11,fontWeight:"800"},grid:{flexDirection:"row",flexWrap:"wrap",gap:9},card:{width:"48.5%",minHeight:122,backgroundColor:"#0F1320",borderWidth:1,borderColor:"#242A3A",borderRadius:18,padding:14},cardIcon:{width:31,height:31,borderRadius:10,backgroundColor:"#171B29",alignItems:"center",justifyContent:"center",marginBottom:12},icon:{color:"#C6B7FF",fontSize:15,fontWeight:"900"},cardTitle:{color:"#F4F1FF",fontSize:13,fontWeight:"900"},cardDesc:{color:"#7F7A8E",fontSize:11,marginTop:4},
-  recentBox:{marginTop:18},recentRow:{flexDirection:"row",alignItems:"center",gap:11,backgroundColor:"#0F1320",borderWidth:1,borderColor:"#242A3A",borderRadius:16,padding:12,marginBottom:7},recentIcon:{width:34,height:34,borderRadius:11,backgroundColor:"#171B29",alignItems:"center",justifyContent:"center"},recentTitle:{color:"#F4F1FF",fontSize:12,fontWeight:"900"},recentMeta:{color:"#747083",fontSize:10,marginTop:3},tip:{marginTop:12,flexDirection:"row",gap:11,borderRadius:17,padding:15,backgroundColor:"#0B0E17",borderWidth:1,borderColor:"#202638"},tipDot:{width:8,height:8,borderRadius:4,backgroundColor:"#8B5CF6",marginTop:4},tipTitle:{color:"#ECE9F5",fontWeight:"800",fontSize:12},tipText:{color:"#7F7A8E",fontSize:11,lineHeight:17,marginTop:3},accountLink:{alignItems:"center",paddingVertical:20},accountLinkText:{color:"#9E8AE0",fontSize:12,fontWeight:"800"},muted:{color:"#858096",fontSize:12},
-  cameraScreen:{flex:1,backgroundColor:"#000"},cameraView:{flex:1},cameraOverlay:{...StyleSheet.absoluteFillObject,justifyContent:"space-between",alignItems:"center",paddingTop:60,paddingBottom:45},close:{position:"absolute",top:50,left:20,width:44,height:44,borderRadius:22,backgroundColor:"#0008",alignItems:"center",justifyContent:"center"},closeText:{color:"#fff",fontSize:32,lineHeight:36},cameraHint:{color:"#fff",backgroundColor:"#0008",paddingHorizontal:16,paddingVertical:9,borderRadius:20,overflow:"hidden",fontWeight:"700"},capture:{width:76,height:76,borderRadius:38,borderWidth:5,borderColor:"#fff",alignItems:"center",justifyContent:"center"},captureRing:{width:58,height:58,borderRadius:29,backgroundColor:"#fff"}
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  safe:{flex:1,backgroundColor:c.bg},container:{padding:20,paddingTop:22,paddingBottom:24},center:{flex:1,alignItems:"center",justifyContent:"center",gap:10},header:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:18},eyebrow:{color:c.muted,fontSize:11,fontWeight:"900",letterSpacing:2.2},title:{color:c.text,fontSize:35,fontWeight:"900",letterSpacing:-1.6,marginTop:5},sub:{color:c.muted,fontSize:13,marginTop:6},avatar:{width:45,height:45,borderRadius:16,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},avatarText:{color:c.onAccent,fontSize:17,fontWeight:"900"},
+  stats:{height:76,borderRadius:19,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,flexDirection:"row",alignItems:"center",justifyContent:"space-around",marginBottom:16},stat:{flex:1,alignItems:"center",justifyContent:"center",flexDirection:"row",gap:5,flexWrap:"wrap"},statIcon:{fontSize:13},statValue:{color:c.text,fontSize:16,fontWeight:"900"},statLabel:{color:c.subtle,fontSize:10,fontWeight:"800",width:"100%",textAlign:"center",marginTop:-2},statDivider:{width:1,height:32,backgroundColor:c.border},
+  hero:{backgroundColor:c.surfaceAlt,borderWidth:1,borderColor:c.border,borderRadius:25,padding:19,marginBottom:25},heroTop:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:16},spark:{width:47,height:47,borderRadius:15,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"},sparkText:{color:c.accent,fontSize:22},aiBadge:{borderWidth:1,borderColor:c.border,paddingHorizontal:9,paddingVertical:6,borderRadius:999},aiText:{color:c.muted,fontSize:9,fontWeight:"900",letterSpacing:1},heroTitle:{color:c.text,fontSize:22,fontWeight:"900",lineHeight:27},heroSub:{color:c.muted,fontSize:13,lineHeight:20,marginTop:7,marginBottom:18},primary:{height:49,borderRadius:14,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},primaryText:{color:c.onAccent,fontSize:14,fontWeight:"900"},secondary:{height:46,borderRadius:14,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center",marginTop:9},secondaryText:{color:c.text,fontSize:13,fontWeight:"800"},
+  sectionRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:11},section:{color:c.text,fontSize:16,fontWeight:"900"},sectionHint:{color:c.subtle,fontSize:11,fontWeight:"800"},grid:{flexDirection:"row",flexWrap:"wrap",gap:9},card:{width:"48.5%",minHeight:122,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:18,padding:14},cardIcon:{width:31,height:31,borderRadius:10,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center",marginBottom:12},icon:{color:c.accent,fontSize:15,fontWeight:"900"},cardTitle:{color:c.text,fontSize:13,fontWeight:"900"},cardDesc:{color:c.muted,fontSize:11,marginTop:4},
+  recentBox:{marginTop:18},recentRow:{flexDirection:"row",alignItems:"center",gap:11,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:16,padding:12,marginBottom:7},recentIcon:{width:34,height:34,borderRadius:11,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"},recentTitle:{color:c.text,fontSize:12,fontWeight:"900"},recentMeta:{color:c.subtle,fontSize:10,marginTop:3},tip:{marginTop:12,flexDirection:"row",gap:11,borderRadius:17,padding:15,backgroundColor:c.input,borderWidth:1,borderColor:c.border},tipDot:{width:8,height:8,borderRadius:4,backgroundColor:c.accent,marginTop:4},tipTitle:{color:c.text,fontWeight:"800",fontSize:12},tipText:{color:c.muted,fontSize:11,lineHeight:17,marginTop:3},accountLink:{alignItems:"center",paddingVertical:20},accountLinkText:{color:c.accent,fontSize:12,fontWeight:"800"},muted:{color:c.muted,fontSize:12},
+  cameraScreen:{flex:1,backgroundColor:c.bg},cameraView:{flex:1},cameraOverlay:{...StyleSheet.absoluteFillObject,justifyContent:"space-between",alignItems:"center",paddingTop:60,paddingBottom:45},close:{position:"absolute",top:50,left:20,width:44,height:44,borderRadius:22,backgroundColor:"#0008",alignItems:"center",justifyContent:"center"},closeText:{color:c.onAccent,fontSize:32,lineHeight:36},cameraHint:{color:c.onAccent,backgroundColor:"#0008",paddingHorizontal:16,paddingVertical:9,borderRadius:20,overflow:"hidden",fontWeight:"700"},capture:{width:76,height:76,borderRadius:38,borderWidth:5,borderColor:c.onAccent,alignItems:"center",justifyContent:"center"},captureRing:{width:58,height:58,borderRadius:29,backgroundColor:c.onAccent}
 });
