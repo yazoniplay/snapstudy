@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 
 export default function Auth() {
-  const { colors:c, setMode } = useTheme();
+  const { colors:c, setMode: setThemeMode } = useTheme();
   const s = makeStyles(c);
   const [mode,setMode] = useState<"signup"|"login">("signup");
   const [name,setName] = useState("");
@@ -33,7 +33,7 @@ export default function Auth() {
         const {data,error} = await supabase.auth.signInWithPassword({email:email.trim().toLowerCase(),password});
         if(error) throw error;
         const savedTheme = data.user.user_metadata?.theme;
-        if (savedTheme === "light" || savedTheme === "dark") setMode(savedTheme);
+        if (savedTheme === "light" || savedTheme === "dark") setThemeMode(savedTheme);
         router.replace(data.user.user_metadata?.onboarding_completed ? "/" : "/onboarding");
       }
     } catch(e:any) {
