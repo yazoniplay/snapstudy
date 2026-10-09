@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Animated, Easing, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
@@ -29,6 +29,17 @@ export default function Home() {
   const [recent, setRecent] = useState<Session[]>([]);
   const [stats, setStats] = useState({ streak:0, sessions:0, questions:0 });
   const cameraRef = useRef<CameraView>(null);
+  const entrance = useRef(new Animated.Value(0)).current;
+  const sparkle = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(entrance, { toValue: 1, friction: 8, tension: 55, useNativeDriver: true }).start();
+    const pulse = Animated.loop(Animated.sequence([
+      Animated.timing(sparkle, { toValue: 1, duration: 1150, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(sparkle, { toValue: 0, duration: 1150, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]));
+    pulse.start();
+    return () => pulse.stop();
+  }, [entrance, sparkle]);
   const [permission, requestPermission] = useCameraPermissions();
 
   async function openImage(uri: string) {
@@ -58,7 +69,7 @@ export default function Home() {
   const formatDate = (d:string) => new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric"});
 
   return <SafeAreaView style={s.safe}>
-    <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+    <Animated.ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false} style={{opacity:entrance, transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[18,0]})]}}>
       <View style={s.header}><View><Text style={s.eyebrow}>SNAPSTUDY</Text><Text style={s.title}>Study smarter.</Text><Text style={s.sub}>Hey {firstName} — ready to learn?</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}><Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text></Pressable></View>
 
       <View style={s.stats}>
@@ -69,7 +80,7 @@ export default function Home() {
         <View style={s.stat}><Text style={s.statValue}>{stats.questions}</Text><Text style={s.statLabel}>questions</Text></View>
       </View>
 
-      <View style={s.hero}><View style={s.heroTop}><View style={s.spark}><Text style={s.sparkText}>✦</Text></View><View style={s.aiBadge}><Text style={s.aiText}>AI READY</Text></View></View><Text style={s.heroTitle}>Turn notes into a study session</Text><Text style={s.heroSub}>Snap a page and get a summary, flashcards, quiz and practice test in seconds.</Text><Pressable style={s.primary} onPress={cameraOpen} disabled={busy}><Text style={s.primaryText}>{busy ? "Preparing…" : "📷  Scan notes"}</Text></Pressable><Pressable style={s.secondary} onPress={library} disabled={busy}><Text style={s.secondaryText}>Choose from photos</Text></Pressable></View>
+      <View style={s.hero}><View style={s.heroTop}><Animated.View style={[s.spark,{transform:[{scale:sparkle.interpolate({inputRange:[0,1],outputRange:[1,1.1])},{rotate:sparkle.interpolate({inputRange:[0,1],outputRange:["0deg","12deg"]})}]}]}><Text style={s.sparkText}>✦</Text></Animated.View><View style={s.aiBadge}><Text style={s.aiText}>AI READY</Text></View></View><Text style={s.heroTitle}>Turn notes into a study session</Text><Text style={s.heroSub}>Snap a page and get a summary, flashcards, quiz and practice test in seconds.</Text><Pressable style={s.primary} onPress={cameraOpen} disabled={busy}><Text style={s.primaryText}>{busy ? "Preparing…" : "📷  Scan notes"}</Text></Pressable><Pressable style={s.secondary} onPress={library} disabled={busy}><Text style={s.secondaryText}>Choose from photos</Text></Pressable></View>
 
       <View style={s.sectionRow}><Text style={s.section}>Your toolkit</Text><Text style={s.sectionHint}>4 modes</Text></View>
       <View style={s.grid}>{[["◉","Flashcards","Recall faster"],["✓","Smart quiz","Instant feedback"],["▣","Practice test","Exam mode"],["≡","Summary","Key ideas"]].map(([icon,name,desc])=><View style={s.card} key={name}><View style={s.cardIcon}><Text style={s.icon}>{icon}</Text></View><Text style={s.cardTitle}>{name}</Text><Text style={s.cardDesc}>{desc}</Text></View>)}</View>
@@ -78,7 +89,7 @@ export default function Home() {
 
       <View style={s.tip}><View style={s.tipDot}/><View style={{flex:1}}><Text style={s.tipTitle}>Better scans = better answers</Text><Text style={s.tipText}>Use good lighting and keep the whole page inside the frame.</Text></View></View>
       <Pressable style={s.accountLink} onPress={()=>router.push("/account")}><Text style={s.accountLinkText}>Account & settings  →</Text></Pressable>
-    </ScrollView>
+    </Animated.ScrollView>
     <BottomNav />
   </SafeAreaView>;
 }
