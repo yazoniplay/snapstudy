@@ -31,6 +31,8 @@ export default function Study(){
  useEffect(()=>{
   let active=true;
   async function load(){
+   setData(null);
+   setError("");
    try{
     if(id){
       const translatedKey = "snapstudy:session:"+id+":lang:"+language;
