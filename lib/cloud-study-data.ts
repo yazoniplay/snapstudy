@@ -43,6 +43,26 @@ export async function loadStudyData<T>(key: string, fallback: T): Promise<T> {
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id,data_key" });
       if (saveError) throw saveError;
+      if (key === "sessions" && Array.isArray(localValue)) {
+        for (const session of localValue as Array<{id?: string}>) {
+          if (!session?.id) continue;
+          try {
+            const rawSession = await AsyncStorage.getItem("snapstudy:session:" + session.id);
+            if (rawSession === null) continue;
+            const result = JSON.parse(rawSession);
+            const rawLanguage = await AsyncStorage.getItem("snapstudy:session-language:" + session.id);
+            const { error: sessionError } = await supabase.from("user_study_data").upsert({
+              user_id: authData.user.id,
+              data_key: "session:" + session.id,
+              data_value: {...result, _language: rawLanguage || "en"},
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "user_id,data_key" });
+            if (sessionError) console.warn("Could not migrate a saved session:", sessionError.message);
+          } catch (migrationError) {
+            console.warn("Could not migrate a saved session:", migrationError);
+          }
+        }
+      }
       return localValue;
     }
     return fallback;
