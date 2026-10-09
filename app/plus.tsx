@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
-import { FREE_PLAN, NO_PLUS_ENTITLEMENT, hasPlusFeature } from "../lib/plus";
+import { NO_PLUS_ENTITLEMENT, hasPlusFeature, loadPlusEntitlement, type PlusEntitlement } from "../lib/plus";
 
 export default function Plus() {
   const { colors:c } = useTheme();
@@ -14,8 +14,9 @@ export default function Plus() {
   const selectedPrice = currencyOptions.find(item=>item.code===currency) || currencyOptions[0];
   const s = makeStyles(c);
   const [interested,setInterested] = useState(false);
-  const plusActive = hasPlusFeature(NO_PLUS_ENTITLEMENT,"extra_scans");
-  useEffect(()=>{AsyncStorage.multiGet(["snapstudy:plusInterest","snapstudy:plusCurrency"]).then(v=>{setInterested(v[0]?.[1]==="yes");const c=v[1]?.[1];if(c==="SEK"||c==="USD"||c==="EUR"||c==="QAR"||c==="AED")setCurrency(c);}).catch(()=>{});},[]);
+  const [entitlement,setEntitlement] = useState<PlusEntitlement>(NO_PLUS_ENTITLEMENT);
+  const plusActive = hasPlusFeature(entitlement,"extra_scans");
+  useEffect(()=>{AsyncStorage.multiGet(["snapstudy:plusInterest","snapstudy:plusCurrency"]).then(v=>{setInterested(v[0]?.[1]==="yes");const c=v[1]?.[1];if(c==="SEK"||c==="USD"||c==="EUR"||c==="QAR"||c==="AED")setCurrency(c);}).catch(()=>{});loadPlusEntitlement().then(setEntitlement).catch(()=>setEntitlement(NO_PLUS_ENTITLEMENT));},[]);
   async function saveInterest(){
     try { await AsyncStorage.setItem("snapstudy:plusInterest","yes"); setInterested(true); Alert.alert(t("savedInterestTitle"),t("savedInterestBody")); }
     catch { Alert.alert(t("saveFailedTitle"),t("saveFailedBody")); }
@@ -33,7 +34,7 @@ export default function Plus() {
       <View style={s.priceRow}><Text style={s.price}>{selectedPrice.symbol} {selectedPrice.price}</Text><Text style={s.per}>{t("perMonth")}</Text></View>
       <View style={s.coming}><Text style={s.comingText}>{t("paymentsOff")}</Text></View>
     </View>
-    <View style={s.statusCard}><Text style={s.statusLabel}>{t("plusStatusTitle")}</Text><Text style={s.statusTitle}>{plusActive ? t("benefitsTitle") : t("freePlanActive")}</Text><Text style={s.statusText}>{plusActive ? FREE_PLAN.name : t("plusNotActive")}</Text></View>
+    <View style={s.statusCard}><Text style={s.statusLabel}>{t("plusStatusTitle")}</Text><Text style={s.statusTitle}>{plusActive ? t("plusActiveStatus") : t("freePlanActive")}</Text><Text style={s.statusText}>{plusActive ? t("plusActiveBody") : t("plusNotActive")}</Text></View>
     <Text style={s.sectionTitle}>{t("freeTitle")}</Text>
     <View style={s.featureCard}>
       {[t("free1"),t("free2"),t("free3"),t("free4")].map(x=><View style={s.featureRow} key={x}><Text style={s.check}>✓</Text><Text style={s.featureText}>{x}</Text></View>)}
