@@ -43,7 +43,7 @@ serve(async (req) => {
         "x-goog-api-key": key,
       },
       body: JSON.stringify({
-        model: "gemini-3.8-flash",
+        model: "gemini-3.5-flash-lite",
         store: false,
         system_instruction: "You are SnapStudy, a careful study assistant. Follow the requested JSON structure exactly. Do not use markdown fences or add commentary.",
         input: [
