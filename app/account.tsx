@@ -37,6 +37,7 @@ export default function Account() {
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) Alert.alert("Couldn't sign out", error.message);
+    else router.replace("/auth");
   }
 
   if (loading) return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.muted}>Loading account…</Text></View></SafeAreaView>;
