@@ -119,7 +119,6 @@ export default function Account() {
 
         <View style={s.card}><Text style={s.cardTitle}>Streak leaderboard</Text><Text style={s.cardText}>Choose whether your name, avatar and study streak appear on the public leaderboard. Your email is never shown.</Text><View style={s.privacyRow}><View style={{flex:1}}><Text style={s.privacyTitle}>{leaderboardOptIn ? "Visible on leaderboard" : "Private profile"}</Text><Text style={s.cardText}>{leaderboardOptIn ? "Other students can see your streak." : "Opt in to compete with other students."}</Text></View><Switch value={leaderboardOptIn} onValueChange={toggleLeaderboard} trackColor={{false:c.border,true:c.accent}} thumbColor={c.surface}/></View><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>View streak leaderboard →</Text></Pressable></View>
 
-        </View>
         <View style={s.card}>
           <Text style={s.cardTitle}>Your study streak 🔥</Text>
           <View style={s.streakStats}><View style={s.streakTile}><Text style={s.streakNumber}>{currentStreak}</Text><Text style={s.cardText}>Current days</Text></View><View style={s.streakTile}><Text style={s.streakNumber}>{longestStreak}</Text><Text style={s.cardText}>Personal best</Text></View></View>
