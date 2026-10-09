@@ -16,7 +16,6 @@ export default function Home() {
   const [camera, setCamera] = useState(false);
   const [firstName, setFirstName] = useState("there");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const entrance = useRef(new Animated.Value(0)).current;
   const sparkle = useRef(new Animated.Value(0)).current;
