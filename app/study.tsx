@@ -14,7 +14,7 @@ const MODES:Mode[]=["summary","flashcards","quiz","test","concepts","plan","teac
 
 export default function Study(){
  const { colors:c } = useTheme(); const {t,language}=useLanguage(); const s=makeStyles(c,language);
- const { id, mode: initialMode, due: dueParam } = useLocalSearchParams<{id?: string; mode?: string; due?: string}>();
+ const { id, mode: initialMode, due: dueParam, weak: weakParam } = useLocalSearchParams<{id?: string; mode?: string; due?: string; weak?: string}>();
  const [image]=useState(()=>takePendingImage());
  const [data,setData]=useState<StudyResult|null>(null),[error,setError]=useState(""),[mode,setMode]=useState<Mode>(()=>MODES.includes(initialMode as Mode)?initialMode as Mode:"summary");
  const [card,setCard]=useState(0),[showAnswer,setShowAnswer]=useState(false),[quizIndex,setQuizIndex]=useState(0),[score,setScore]=useState(0),[selected,setSelected]=useState<number|null>(null),[testIndex,setTestIndex]=useState(0),[showTestAnswer,setShowTestAnswer]=useState(false);
@@ -34,6 +34,21 @@ export default function Study(){
    setData(null);
    setError("");
    try{
+    if(weakParam==="1"){
+      const weakRaw=await AsyncStorage.getItem("snapstudy:weakTopics");
+      const weakItems=weakRaw?JSON.parse(weakRaw):[];
+      const activeWeak=Array.isArray(weakItems)?weakItems.filter((item:any)=>!item.mastered):[];
+      if(!activeWeak.length) throw new Error(language==="sv"?"Inga svaga ämnen att repetera ännu. Gör ett quiz först.":language==="ar"?"لا توجد موضوعات تحتاج إلى مراجعة بعد. أكمل اختبارًا أولًا.":"No weak topics to review yet. Complete a quiz first.");
+      const focused:StudyResult={
+        topic:language==="sv"?"Riktad repetition":language==="ar"?"مراجعة مركزة":"Focused review",
+        summary:language==="sv"?"Träna på frågorna du tidigare svarat fel på.":language==="ar"?"تدرّب على الأسئلة التي أخطأت فيها سابقًا.":"Practice questions you previously missed.",
+        flashcards:activeWeak.map((item:any)=>({question:item.question,answer:item.options?.[item.answer]||""})),
+        quiz:activeWeak.map((item:any)=>({question:item.question,options:item.options,answer:item.answer,explanation:item.explanation,topic:item.topic})),
+        practiceTest:activeWeak.map((item:any)=>({question:item.question,answer:item.options?.[item.answer]||""}))
+      };
+      if(active)setData(focused);
+      return;
+    }
     if(id){
       const translatedKey = "snapstudy:session:"+id+":lang:"+language;
       const cachedTranslation = await AsyncStorage.getItem(translatedKey);
@@ -74,7 +89,7 @@ export default function Study(){
   }
   load();
   return()=>{active=false};
- },[image,id,language]);
+ },[image,id,language,weakParam]);
  const quizDone=!!data&&quizIndex>=data.quiz.length; const currentQuiz=data?.quiz[quizIndex];
  const keyConcepts=useMemo(()=>data?.flashcards.slice(0,8)||[],[data]);
  const cardKey=(question:string)=>String(data?.topic||"topic")+"::"+question;
@@ -97,6 +112,20 @@ export default function Study(){
  const planSteps=[t("planStep1"),t("planStep2"),t("planStep3"),t("planStep4")];
  const clock=String(Math.floor(focusSeconds/60)).padStart(2,"0")+":"+String(focusSeconds%60).padStart(2,"0");
  useEffect(()=>{if(data){supabase.auth.getUser().then(({data:{user}})=>{if(user)supabase.from("study_activity").insert({user_id:user.id}).then(({error})=>{if(error&&error.code!=="23505")console.warn("Study streak was not saved:",error.message);});});}},[data]);
+ async function recordQuizAnswer(q:{question:string;options:string[];answer:number;explanation:string;topic?:string},choice:number,fallbackTopic:string){
+  try{
+   const topic=q.topic||fallbackTopic;
+   const idKey=topic+"::"+q.question;
+   const raw=await AsyncStorage.getItem("snapstudy:weakTopics");
+   const list:any[]=raw?JSON.parse(raw):[];
+   const index=list.findIndex((item:any)=>item.id===idKey);
+   if(index<0&&choice===q.answer)return;
+   const old=index>=0?list[index]:{id:idKey,topic,question:q.question,options:q.options,answer:q.answer,explanation:q.explanation,misses:0,attempts:0,correctStreak:0,mastered:false,lastMissedAt:Date.now()};
+   const next={...old,options:q.options,answer:q.answer,explanation:q.explanation,attempts:(old.attempts||0)+1,lastReviewedAt:Date.now(),correctStreak:choice===q.answer?(old.correctStreak||0)+1:0,misses:(old.misses||0)+(choice===q.answer?0:1),lastMissedAt:choice===q.answer?old.lastMissedAt:Date.now(),mastered:choice===q.answer?(old.mastered||((old.correctStreak||0)+1>=2)):false};
+   if(index>=0)list[index]=next;else list.push(next);
+   await AsyncStorage.setItem("snapstudy:weakTopics",JSON.stringify(list));
+  }catch(e){console.warn("Could not save weak-topic progress",e);}
+ }
  const modeLabel=(m:Mode)=>m==="test"?t("practiceTest"):m==="concepts"?t("keyConcepts"):m==="plan"?t("studyPlan"):m==="teach"?t("teachBack"):m==="focus"?t("focusTimer"):m==="summary"?t("summary"):m==="flashcards"?t("flashcards"):m==="quiz"?t("quiz"):m;
  if(error)return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.title}>{t("couldntAnalyze")}</Text><Text style={s.error}>{error}</Text><Text style={s.muted}>{t("checkConnection")}</Text><Pressable style={s.button} onPress={()=>router.replace("/history")}><Text style={s.buttonText}>{t("backHome")}</Text></Pressable></View></SafeAreaView>;
  if(!data)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator size="large" color={c.accent}/><Text style={s.loading}>{t("buildingSession")}</Text><Text style={s.muted}>{t("readingNotes")}</Text></View></SafeAreaView>;
@@ -111,7 +140,7 @@ export default function Study(){
   {mode==="teach"&&<View style={s.sectionStack}><Text style={s.heading}>{t("teachBack")}</Text><Text style={s.mutedLeft}>{t("teachBackTip")}</Text><TextInput multiline value={teachText} onChangeText={setTeachText} placeholder={t("writeExplanation")} placeholderTextColor={c.subtle} style={s.teachInput}/><Text style={s.mutedLeft}>{language==="sv"?"Jämför din förklaring med sammanfattningen när du är klar.":language==="ar"?"قارن شرحك بالملخص عند الانتهاء.":"When you're done, compare your explanation with the summary."}</Text><Pressable style={s.secondaryBtn} onPress={()=>setMode("summary")}><Text style={s.btnText}>{language==="sv"?"Visa sammanfattningen":language==="ar"?"عرض الملخص":"Review summary"}</Text></Pressable></View>}
   {mode==="focus"&&<View style={s.sectionStack}><Text style={s.heading}>{t("focusTimer")}</Text><Text style={s.mutedLeft}>{t("focusReady")}</Text><View style={s.timerCard}><Text style={s.clock}>{clock}</Text><Text style={s.timerCaption}>{focusSeconds===0?t("focusDone"):t("minutes")}</Text><View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>setFocusRunning(v=>!v)}><Text style={s.btnText}>{focusRunning?t("pause"):focusSeconds===0?t("resume"):t("startFocus")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setFocusRunning(false);setFocusSeconds(1500);}}><Text style={s.primaryText}>{t("reset")}</Text></Pressable></View></View></View>}
   {mode==="flashcards"&&<View><View style={s.reviewHeader}><Text style={s.progress}>{dueOnly?t("dueCards")+" · "+visibleCardIndices.length:t("card")+" "+Math.min(card+1,data.flashcards.length)+" "+t("of")+" "+data.flashcards.length}</Text><Pressable style={[s.dueToggle,dueOnly&&s.dueToggleActive]} onPress={()=>{setDueOnly(v=>!v);setCard(0);setShowAnswer(false)}}><Text style={[s.dueToggleText,dueOnly&&s.dueToggleTextActive]}>{dueOnly?t("showAllCards"):t("reviewDue")+" · "+dueCount}</Text></Pressable></View>{visibleCardIndices.length===0?<View style={s.hero}><Text style={s.heading}>{t("allCaughtUp")}</Text><Text style={s.body}>{t("noCardsDue")}</Text><Pressable style={s.primaryBtn} onPress={()=>{setDueOnly(false);setCard(0)}}><Text style={s.primaryText}>{t("studyAllCards")}</Text></Pressable></View>:<><Animated.View style={{opacity:flashMotion,transform:[{scale:flashMotion.interpolate({inputRange:[0,1],outputRange:[0.97,1]})},{rotateY:flashMotion.interpolate({inputRange:[0,1],outputRange:["-6deg","0deg"]})}]}}><Pressable style={s.flashcard} onPress={()=>setShowAnswer(!showAnswer)}><Text style={s.flashLabel}>{showAnswer?t("answer").toLocaleUpperCase():t("question").toLocaleUpperCase()}</Text><Text style={[s.flashText,{writingDirection:language==="ar"?"rtl":"auto"}]}>{showAnswer?activeCard?.answer:activeCard?.question}</Text><Text style={s.tap}>{t("tapReveal")}</Text></Pressable></Animated.View>{showAnswer&&<View style={s.ratingWrap}><Text style={s.ratingTitle}>{t("howRemembered")}</Text><View style={s.ratingRow}><Pressable style={[s.ratingButton,s.ratingAgain]} onPress={()=>rateCard("again")}><Text style={s.ratingText}>{t("again")}</Text><Text style={s.ratingSub}>10 {t("minutesShort")}</Text></Pressable><Pressable style={s.ratingButton} onPress={()=>rateCard("hard")}><Text style={s.ratingText}>{t("hard")}</Text><Text style={s.ratingSub}>1+ {t("daysShort")}</Text></Pressable><Pressable style={s.ratingButton} onPress={()=>rateCard("good")}><Text style={s.ratingText}>{t("good")}</Text><Text style={s.ratingSub}>1–14 {t("daysShort")}</Text></Pressable><Pressable style={[s.ratingButton,s.ratingEasy]} onPress={()=>rateCard("easy")}><Text style={s.ratingText}>{t("easy")}</Text><Text style={s.ratingSub}>4+ {t("daysShort")}</Text></Pressable></View></View>}<View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>{setCard(Math.max(0,card-1));setShowAnswer(false)}}><Text style={s.btnText}>{t("previous")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setCard((card+1)%visibleCardIndices.length);setShowAnswer(false)}}><Text style={s.primaryText}>{t("next")}</Text></Pressable></View></>}</View>}
-  {mode==="quiz"&&<View>{quizDone?<View style={s.hero}><Text style={s.heading}>{t("quizComplete")}</Text><Text style={s.bigScore}>{score}/{data.quiz.length}</Text><Text style={s.body}>{t("score")}: {Math.round(score/data.quiz.length*100)}%</Text><Pressable style={s.primaryBtn} onPress={()=>{setQuizIndex(0);setScore(0);setSelected(null)}}><Text style={s.primaryText}>{t("retakeQuiz")}</Text></Pressable><Pressable style={s.secondaryBtn} onPress={()=>router.push("/plus")}><Text style={s.btnText}>{t("seePlus")}</Text></Pressable></View>:<><Text style={s.progress}>{t("questionProgress")} {quizIndex+1} {t("of")} {data.quiz.length}</Text><View style={s.card}><Text style={s.q}>{currentQuiz?.question}</Text>{currentQuiz?.options.map((o,i)=>{const picked=selected===i;const locked=selected!==null;return <Pressable key={i} disabled={locked} onPress={()=>{setSelected(i);if(i===currentQuiz.answer)setScore(v=>v+1)}} style={[s.optionBtn,picked&&s.picked]}><Text style={s.optionText}>{String.fromCharCode(65+i)}. {o}</Text></Pressable>})}{selected!==null&&<><Text style={s.feedback}>{selected===currentQuiz?.answer?t("correct"):t("notQuite")}</Text><Text style={s.explain}>{currentQuiz?.explanation}</Text><Pressable style={s.primaryBtn} onPress={()=>{setQuizIndex(v=>v+1);setSelected(null)}}><Text style={s.primaryText}>{quizIndex===data.quiz.length-1?t("finish"):t("next")}</Text></Pressable></>}</View></>}</View>}
+  {mode==="quiz"&&<View>{quizDone?<View style={s.hero}><Text style={s.heading}>{t("quizComplete")}</Text><Text style={s.bigScore}>{score}/{data.quiz.length}</Text><Text style={s.body}>{t("score")}: {Math.round(score/data.quiz.length*100)}%</Text><Pressable style={s.primaryBtn} onPress={()=>{setQuizIndex(0);setScore(0);setSelected(null)}}><Text style={s.primaryText}>{t("retakeQuiz")}</Text></Pressable><Pressable style={s.secondaryBtn} onPress={()=>router.push("/plus")}><Text style={s.btnText}>{t("seePlus")}</Text></Pressable></View>:<><Text style={s.progress}>{t("questionProgress")} {quizIndex+1} {t("of")} {data.quiz.length}</Text><View style={s.card}><Text style={s.q}>{currentQuiz?.question}</Text>{currentQuiz?.options.map((o,i)=>{const picked=selected===i;const locked=selected!==null;return <Pressable key={i} disabled={locked} onPress={async()=>{setSelected(i);if(i===currentQuiz.answer)setScore(v=>v+1);await recordQuizAnswer(currentQuiz,i,data.topic);}} style={[s.optionBtn,picked&&s.picked]}><Text style={s.optionText}>{String.fromCharCode(65+i)}. {o}</Text></Pressable>})}{selected!==null&&<><Text style={s.feedback}>{selected===currentQuiz?.answer?t("correct"):t("notQuite")}</Text><Text style={s.explain}>{currentQuiz?.explanation}</Text><Pressable style={s.primaryBtn} onPress={()=>{setQuizIndex(v=>v+1);setSelected(null)}}><Text style={s.primaryText}>{quizIndex===data.quiz.length-1?t("finish"):t("next")}</Text></Pressable></>}</View></>}</View>}
   {mode==="test"&&<View><Text style={s.progress}>{t("questionProgress")} {testIndex+1} {t("of")} {data.practiceTest.length}</Text><View style={s.card}><Text style={s.q}>{data.practiceTest[testIndex].question}</Text>{showTestAnswer&&<View style={s.answerBox}><Text style={s.flashLabel}>{t("answer").toUpperCase()}</Text><Text style={s.body}>{data.practiceTest[testIndex].answer}</Text></View>}<Pressable style={s.secondaryBtn} onPress={()=>setShowTestAnswer(!showTestAnswer)}><Text style={s.btnText}>{showTestAnswer?t("hideAnswer"):t("tapReveal")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setTestIndex(v=>v===data.practiceTest.length-1?0:v+1);setShowTestAnswer(false)}}><Text style={s.primaryText}>{testIndex===data.practiceTest.length-1?t("restartTest"):t("next")}</Text></Pressable></View></View>}
  </Animated.ScrollView></SafeAreaView>
 }
