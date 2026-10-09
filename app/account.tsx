@@ -66,7 +66,7 @@ export default function Account() {
 
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("language")}</Text>
-          <Text style={s.cardText}>Choose English, svenska or العربية. The app remembers your choice.</Text>
+          <Text style={s.cardText}>{t("languageSub")}</Text>
           <View style={s.themeRow}>
             {([["en",t("english")],["sv",t("swedish")],["ar",t("arabic")]] as [AppLanguage,string][]).map(([code,label])=><Pressable key={code} style={[s.themeButton,language===code&&s.themeButtonActive]} onPress={()=>{setLanguage(code);supabase.auth.updateUser({data:{language:code}}).catch(()=>{});}}><Text style={[s.themeButtonText,language===code&&s.themeButtonTextActive]}>{label}</Text></Pressable>)}
           </View>
