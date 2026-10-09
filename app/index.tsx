@@ -69,7 +69,7 @@ export default function Home() {
   const formatDate = (d:string) => new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric"});
 
   return <SafeAreaView style={s.safe}>
-    <Animated.ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false} style={{opacity:entrance, transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[18,0]})]}}>
+    <Animated.ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false} style={{opacity:entrance, transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}}>
       <View style={s.header}><View><Text style={s.eyebrow}>SNAPSTUDY</Text><Text style={s.title}>Study smarter.</Text><Text style={s.sub}>Hey {firstName} — ready to learn?</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}><Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text></Pressable></View>
 
       <View style={s.stats}>
