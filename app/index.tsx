@@ -32,6 +32,7 @@ export default function Home() {
   const [camera, setCamera] = useState(false);
   const [recent, setRecent] = useState<Session[]>([]);
   const [stats, setStats] = useState({ streak:0, sessions:0, questions:0 });
+  const [firstName, setFirstName] = useState("there");
   const cameraRef = useRef<CameraView>(null);
   const entrance = useRef(new Animated.Value(0)).current;
   const sparkle = useRef(new Animated.Value(0)).current;
@@ -53,6 +54,7 @@ export default function Home() {
       const user = data.session?.user;
       if (error || !user) router.replace("/auth");
       else if (!user.user_metadata?.onboarding_completed) router.replace("/onboarding");
+      else if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) setFirstName(user.user_metadata.full_name.trim().split(/\\s+/)[0]);
       else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
         // The saved device preference remains the source of truth for the current appearance.
       }
@@ -83,7 +85,6 @@ export default function Home() {
 
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>Frame your notes</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
-  const firstName = "there";
   const formatDate = (d:string) => new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric"});
 
   return <SafeAreaView style={s.safe}>
