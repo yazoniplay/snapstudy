@@ -116,7 +116,9 @@ export default function Account() {
         </View>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>{t("language")}</Text>
+<View style={s.card}><Text style={s.cardTitle}>Streak leaderboard</Text><Text style={s.cardText}>Choose whether your name, avatar and study streak appear on the public leaderboard. Your email is never shown.</Text><View style={s.privacyRow}><View style={{flex:1}}><Text style={s.privacyTitle}>{leaderboardOptIn ? "Visible on leaderboard" : "Private profile"}</Text><Text style={s.cardText}>{leaderboardOptIn ? "Other students can see your streak." : "Opt in to compete with other students."}</Text></View><Switch value={leaderboardOptIn} onValueChange={toggleLeaderboard} trackColor={{false:c.border,true:c.accent}} thumbColor={c.surface}/></View><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>View streak leaderboard →</Text></Pressable></View>
+
+                  <Text style={s.cardTitle}>{t("language")}</Text>
           <Text style={s.cardText}>{t("languageSub")}</Text>
           <View style={s.themeRow}>
             {([["en",t("english")],["sv",t("swedish")],["ar",t("arabic")]] as [AppLanguage,string][]).map(([code,label])=><Pressable key={code} style={[s.themeButton,language===code&&s.themeButtonActive]} onPress={()=>{setLanguage(code);supabase.auth.updateUser({data:{language:code}}).catch(()=>{});}}><Text style={[s.themeButtonText,language===code&&s.themeButtonTextActive]}>{label}</Text></Pressable>)}
@@ -180,6 +182,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   primary:{height:48,borderRadius:13,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},
   primaryText:{color:c.onAccent,fontWeight:"900"},
   swatchGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginTop:15,marginBottom:12},swatch:{width:30,height:30,borderRadius:11,borderWidth:2,borderColor:"transparent"},swatchSelected:{borderColor:c.text,transform:[{scale:1.1}]},colorInputRow:{flexDirection:"row",alignItems:"center",gap:10,marginBottom:12},colorPreview:{width:32,height:32,borderRadius:11,borderWidth:1,borderColor:c.border},colorInput:{flex:1,height:44,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:12,color:c.text,fontSize:13,fontWeight:"800"},resetColor:{alignItems:"center",paddingVertical:10,marginTop:4},themeRow:{flexDirection:"row",gap:9,marginTop:13},themeButton:{flex:1,paddingVertical:12,borderRadius:12,borderWidth:1,borderColor:c.border,alignItems:"center",backgroundColor:c.input},themeButtonActive:{backgroundColor:c.accentSoft,borderColor:c.accent},themeButtonText:{color:c.muted,fontWeight:"900",fontSize:12},themeButtonTextActive:{color:c.text},
+  secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},privacyRow:{flexDirection:"row",alignItems:"center",gap:12,marginTop:14},privacyTitle:{color:c.text,fontSize:12,fontWeight:"900"},
   cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
   cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
   danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
