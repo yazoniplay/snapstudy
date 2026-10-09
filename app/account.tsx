@@ -58,11 +58,11 @@ export default function Account() {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.82 });
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
-    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) { Alert.alert("Image too large", "Choose an image smaller than 5 MB."); return; }
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) { Alert.alert(t("imageTooLarge"), t("imageSizeHelp")); return; }
     setAvatarBusy(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Please sign in again.");
+      if (!user) throw new Error(t("signInAgain"));
       const response = await fetch(asset.uri);
       const body = await response.arrayBuffer();
       const mime = asset.mimeType || "image/jpeg";
@@ -75,9 +75,9 @@ export default function Account() {
       const { error: profileError } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
       if (profileError) throw profileError;
       setAvatarUrl(url);
-      Alert.alert("Avatar updated", "Your new profile picture is saved.");
+      Alert.alert(t("avatarUpdated"), t("avatarSaved"));
     } catch (e: any) {
-      Alert.alert("Couldn't upload avatar", e?.message || "Try a different image.");
+      Alert.alert(t("uploadAvatarFailed"), e?.message || t("tryDifferentImage"));
     } finally { setAvatarBusy(false); }
   }
 
@@ -86,7 +86,7 @@ export default function Account() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLeaderboardOptIn(!value); return; }
     const { error } = await supabase.from("profiles").update({ leaderboard_opt_in: value }).eq("id", user.id);
-    if (error) { setLeaderboardOptIn(!value); Alert.alert("Couldn't update leaderboard setting", error.message); }
+    if (error) { setLeaderboardOptIn(!value); Alert.alert(t("leaderboardUpdateFailed"), error.message); }
   }
 
   async function signOut() {
@@ -95,13 +95,13 @@ export default function Account() {
     else router.replace("/auth");
   }
 
-  if (loading) return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.muted}>Loading account…</Text></View></SafeAreaView>;
+  if (loading) return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.muted}>{t("loadingAccount")}</Text></View></SafeAreaView>;
 
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container}>
         <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>
-        <Text style={s.eyebrow}>ACCOUNT</Text>
+        <Text style={s.eyebrow}>{t("accountEyebrow")}</Text>
         <Text style={s.title}>{t("profile")}</Text>
         <Text style={s.sub}>{t("manageAccount")}</Text>
 
@@ -110,19 +110,19 @@ export default function Account() {
         <View style={s.card}>
           <Text style={s.label}>{t("name")}</Text>
           <TextInput value={name} onChangeText={setName} placeholder={t("yourName")} placeholderTextColor={c.subtle} style={s.input} />
-          <Text style={s.label}>Username (3–24 characters)</Text><TextInput value={handle} onChangeText={setHandle} placeholder="your_handle" autoCapitalize="none" autoCorrect={false} maxLength={24} placeholderTextColor={c.subtle} style={s.input} /><Text style={s.label}>{t("email")}</Text>
+          <Text style={s.label}>{t("usernameLabel")}</Text><TextInput value={handle} onChangeText={setHandle} placeholder="your_handle" autoCapitalize="none" autoCorrect={false} maxLength={24} placeholderTextColor={c.subtle} style={s.input} /><Text style={s.label}>{t("email")}</Text>
           <TextInput value={email} editable={false} style={[s.input, s.disabled]} />
           <Pressable style={s.primary} onPress={save} disabled={saving}>
             <Text style={s.primaryText}>{saving ? t("saving") : t("saveChanges")}</Text>
           </Pressable>
         </View>
 
-        <View style={s.card}><Text style={s.cardTitle}>Streak leaderboard</Text><Text style={s.cardText}>Choose whether your name, avatar and study streak appear on the public leaderboard. Your email is never shown.</Text><View style={s.privacyRow}><View style={{flex:1}}><Text style={s.privacyTitle}>{leaderboardOptIn ? "Visible on leaderboard" : "Private profile"}</Text><Text style={s.cardText}>{leaderboardOptIn ? "Other students can see your streak." : "Opt in to compete with other students."}</Text></View><Switch value={leaderboardOptIn} onValueChange={toggleLeaderboard} trackColor={{false:c.border,true:c.accent}} thumbColor={c.surface}/></View><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>View streak leaderboard →</Text></Pressable></View>
+        <View style={s.card}><Text style={s.cardTitle}>{t("streakLeaderboard")}</Text><Text style={s.cardText}>{t("leaderboardDescription")}</Text><View style={s.privacyRow}><View style={{flex:1}}><Text style={s.privacyTitle}>{leaderboardOptIn ? t("visibleLeaderboard") : t("privateProfile")}</Text><Text style={s.cardText}>{leaderboardOptIn ? t("streakVisible") : t("streakPrivate")}</Text></View><Switch value={leaderboardOptIn} onValueChange={toggleLeaderboard} trackColor={{false:c.border,true:c.accent}} thumbColor={c.surface}/></View><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>{t("viewLeaderboard")}</Text></Pressable></View>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>Your study streak 🔥</Text>
-          <View style={s.streakStats}><View style={s.streakTile}><Text style={s.streakNumber}>{currentStreak}</Text><Text style={s.cardText}>Current days</Text></View><View style={s.streakTile}><Text style={s.streakNumber}>{longestStreak}</Text><Text style={s.cardText}>Personal best</Text></View></View>
-          <Text style={s.cardText}>Your streak updates when you open a study session. Study on consecutive days to keep it going.</Text>
+          <Text style={s.cardTitle}>{t("studyStreak")}</Text>
+          <View style={s.streakStats}><View style={s.streakTile}><Text style={s.streakNumber}>{currentStreak}</Text><Text style={s.cardText}>{t("currentDays")}</Text></View><View style={s.streakTile}><Text style={s.streakNumber}>{longestStreak}</Text><Text style={s.cardText}>{t("personalBest")}</Text></View></View>
+          <Text style={s.cardText}>{t("streakHelp")}</Text>
         </View>
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("language")}</Text>
@@ -142,8 +142,8 @@ export default function Account() {
         </View>
 
         <View style={s.card}>
-          <Text style={s.cardTitle}>Accent color</Text>
-          <Text style={s.cardText}>Make SnapStudy yours. Pick a color or enter any HEX color.</Text>
+          <Text style={s.cardTitle}>{t("accentColor")}</Text>
+          <Text style={s.cardText}>{t("accentHelp")}</Text>
           <View style={s.swatchGrid}>
             {colorPresets.map(color => <Pressable accessibilityLabel={`Use accent color ${color}`} key={color} onPress={() => { setColorDraft(color); setAccentColor(color); supabase.auth.updateUser({data:{accent_color:color}}).catch(()=>{}); }} style={[s.swatch,{backgroundColor:color},accentColor.toUpperCase()===color&&s.swatchSelected]} />)}
           </View>
@@ -151,11 +151,11 @@ export default function Account() {
             <View style={[s.colorPreview,{backgroundColor:/^#[0-9A-Fa-f]{6}$/.test(colorDraft)?colorDraft:c.accent}]} />
             <TextInput value={colorDraft} onChangeText={setColorDraft} autoCapitalize="characters" autoCorrect={false} maxLength={7} placeholder="#8B5CF6" placeholderTextColor={c.subtle} style={s.colorInput} />
           </View>
-          <Pressable style={[s.primary,{opacity:/^#[0-9A-Fa-f]{6}$/.test(colorDraft)?1:0.45}]} disabled={!/^#[0-9A-Fa-f]{6}$/.test(colorDraft)} onPress={() => { const next=colorDraft.toUpperCase(); setAccentColor(next); supabase.auth.updateUser({data:{accent_color:next}}).catch(()=>{}); Alert.alert("Color updated","Your accent color has been applied."); }}>
-            <Text style={s.primaryText}>Apply custom color</Text>
+          <Pressable style={[s.primary,{opacity:/^#[0-9A-Fa-f]{6}$/.test(colorDraft)?1:0.45}]} disabled={!/^#[0-9A-Fa-f]{6}$/.test(colorDraft)} onPress={() => { const next=colorDraft.toUpperCase(); setAccentColor(next); supabase.auth.updateUser({data:{accent_color:next}}).catch(()=>{}); Alert.alert(t("colorUpdated"),t("colorApplied")); }}>
+            <Text style={s.primaryText}>{t("applyColor")}</Text>
           </Pressable>
           <Pressable style={s.resetColor} onPress={() => { setColorDraft("#8B5CF6"); setAccentColor("#8B5CF6"); supabase.auth.updateUser({data:{accent_color:"#8B5CF6"}}).catch(()=>{}); }}>
-            <Text style={{color:c.muted,fontSize:12,fontWeight:"800"}}>Reset to default purple</Text>
+            <Text style={{color:c.muted,fontSize:12,fontWeight:"800"}}>{t("resetColor")}</Text>
           </Pressable>
         </View>
 
