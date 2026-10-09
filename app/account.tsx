@@ -4,7 +4,10 @@ import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import BottomNav from "../components/BottomNav";
 
+import { useTheme, type ThemeColors } from "../lib/theme";
 export default function Account() {
+  const { colors:c, mode, setMode } = useTheme();
+  const s = makeStyles(c);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -50,12 +53,21 @@ export default function Account() {
 
         <View style={s.card}>
           <Text style={s.label}>Name</Text>
-          <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor="#696476" style={s.input} />
+          <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor=c.subtle style={s.input} />
           <Text style={s.label}>Email</Text>
           <TextInput value={email} editable={false} style={[s.input, s.disabled]} />
           <Pressable style={s.primary} onPress={save} disabled={saving}>
             <Text style={s.primaryText}>{saving ? "Saving…" : "Save changes"}</Text>
           </Pressable>
+        </View>
+
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Appearance</Text>
+          <Text style={s.cardText}>Choose the look you prefer. This setting is saved on this device.</Text>
+          <View style={s.themeRow}>
+            <Pressable style={[s.themeButton,mode==="light"&&s.themeButtonActive]} onPress={()=>{setMode("light");supabase.auth.updateUser({data:{theme:"light"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="light"&&s.themeButtonTextActive}>☀ Light</Text></Pressable>
+            <Pressable style={[s.themeButton,mode==="dark"&&s.themeButtonActive]} onPress={()=>{setMode("dark");supabase.auth.updateUser({data:{theme:"dark"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="dark"&&s.themeButtonTextActive}>☾ Dark</Text></Pressable>
+          </View>
         </View>
 
         <View style={s.card}>
@@ -71,25 +83,26 @@ export default function Account() {
   );
 }
 
-const s=StyleSheet.create({
-  safe:{flex:1,backgroundColor:"#070A12"},
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  safe:{flex:1,backgroundColor:c.bg},
   container:{padding:20,paddingTop:22,paddingBottom:25},
   center:{flex:1,alignItems:"center",justifyContent:"center"},
-  back:{color:"#9691A4",fontSize:13,fontWeight:"700",marginBottom:25},
-  eyebrow:{color:"#918BA1",fontSize:10,fontWeight:"900",letterSpacing:2},
-  title:{color:"#F7F5FF",fontSize:32,fontWeight:"900",letterSpacing:-1,marginTop:7},
-  sub:{color:"#858096",fontSize:13,marginTop:6,marginBottom:22},
-  avatar:{width:76,height:76,borderRadius:26,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center",marginBottom:18},
-  avatarText:{color:"#fff",fontSize:27,fontWeight:"900"},
-  card:{backgroundColor:"#0F1320",borderWidth:1,borderColor:"#242A3A",borderRadius:20,padding:17,marginBottom:12},
-  label:{color:"#C7C2D2",fontSize:11,fontWeight:"800",marginBottom:6,marginTop:2},
-  input:{height:48,borderRadius:13,borderWidth:1,borderColor:"#303647",backgroundColor:"#0B0E17",paddingHorizontal:14,color:"#F7F5FF",fontSize:13,marginBottom:12},
+  back:{color:c.muted,fontSize:13,fontWeight:"700",marginBottom:25},
+  eyebrow:{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:2},
+  title:{color:c.text,fontSize:32,fontWeight:"900",letterSpacing:-1,marginTop:7},
+  sub:{color:c.muted,fontSize:13,marginTop:6,marginBottom:22},
+  avatar:{width:76,height:76,borderRadius:26,backgroundColor:c.accent,alignItems:"center",justifyContent:"center",marginBottom:18},
+  avatarText:{color:c.onAccent,fontSize:27,fontWeight:"900"},
+  card:{backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:20,padding:17,marginBottom:12},
+  label:{color:c.text,fontSize:11,fontWeight:"800",marginBottom:6,marginTop:2},
+  input:{height:48,borderRadius:13,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:14,color:c.text,fontSize:13,marginBottom:12},
   disabled:{opacity:.55},
-  primary:{height:48,borderRadius:13,backgroundColor:"#8B5CF6",alignItems:"center",justifyContent:"center"},
-  primaryText:{color:"#fff",fontWeight:"900"},
-  cardTitle:{color:"#F4F1FF",fontSize:14,fontWeight:"900"},
-  cardText:{color:"#858096",fontSize:12,lineHeight:18,marginTop:5},
-  danger:{height:46,borderRadius:13,borderWidth:1,borderColor:"#3A2D3A",alignItems:"center",justifyContent:"center",marginTop:14},
-  dangerText:{color:"#E2A7B4",fontWeight:"900"},
-  muted:{color:"#858096"},
+  primary:{height:48,borderRadius:13,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},
+  primaryText:{color:c.onAccent,fontWeight:"900"},
+  themeRow:{flexDirection:"row",gap:9,marginTop:13},themeButton:{flex:1,paddingVertical:12,borderRadius:12,borderWidth:1,borderColor:c.border,alignItems:"center",backgroundColor:c.input},themeButtonActive:{backgroundColor:c.accentSoft,borderColor:c.accent},themeButtonText:{color:c.muted,fontWeight:"900",fontSize:12},themeButtonTextActive:{color:c.text},
+  cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
+  cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
+  danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
+  dangerText:{color:c.danger,fontWeight:"900"},
+  muted:{color:c.muted},
 });
