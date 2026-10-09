@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export type AppLanguage = "en" | "sv" | "ar";
 const dictionaries = {
  en: {
-  home:"Home",history:"History",account:"Account",language:"App language",english:"English",swedish:"Swedish",arabic:"Arabic",
+  home:"Home",history:"History",account:"Account",language:"App language",languageSub:"Choose English, Swedish or Arabic. Your choice is remembered.",english:"English",swedish:"Swedish",arabic:"Arabic",
   studySmarter:"Study smarter.",ready:"Ready to learn?",dayStreak:"day streak",sessions:"sessions",questions:"questions",
   turnNotes:"Turn notes into a study session",scanSub:"Scan a page for a summary, key concepts, an explanation, a study plan and practice.",
   scanNotes:"📷  Scan notes",choosePhotos:"Choose from photos",yourToolkit:"Your toolkit",recentSessions:"Recent sessions",viewAll:"View all →",
@@ -14,7 +14,7 @@ const dictionaries = {
   newScan:"‹  New scan",studySession:"STUDY SESSION",explain:"Explain simply",keyConcepts:"Key concepts",studyPlan:"Study plan",teachBack:"Teach it back",focusTimer:"Focus timer",tapReveal:"Tap to reveal answer",question:"Question",answer:"Answer",previous:"Previous",next:"Next",startFocus:"Start 25-minute focus",pause:"Pause",resume:"Resume",reset:"Reset",minutes:"minutes",writeExplanation:"Write an explanation in your own words…",teachBackTip:"Try explaining the topic without looking at your notes.",planStep1:"Read the summary once",planStep2:"Explain the key concepts aloud",planStep3:"Test yourself with flashcards",planStep4:"Finish by teaching it back",simpleExplanation:"In plain language",keyConceptHint:"These are the main ideas pulled from your generated flashcards.",focusDone:"Focus session complete 🎉",focusReady:"Put distractions away and work on this topic.",cameraHint:"Frame your notes"
  },
  sv: {
-  home:"Hem",history:"Historik",account:"Konto",language:"Appspråk",english:"Engelska",swedish:"Svenska",arabic:"Arabiska",
+  home:"Hem",history:"Historik",account:"Konto",language:"Appspråk",languageSub:"Välj engelska, svenska eller arabiska. Ditt val sparas.",english:"Engelska",swedish:"Svenska",arabic:"Arabiska",
   studySmarter:"Plugga smartare.",ready:"Redo att lära dig?",dayStreak:"dagars svit",sessions:"pass",questions:"frågor",
   turnNotes:"Gör anteckningar till ett pluggpass",scanSub:"Skanna en sida och få en sammanfattning, nyckelbegrepp, en förklaring, en studieplan och övningar.",
   scanNotes:"📷  Skanna anteckningar",choosePhotos:"Välj från bilder",yourToolkit:"Dina verktyg",recentSessions:"Senaste passen",viewAll:"Visa alla →",
@@ -24,7 +24,7 @@ const dictionaries = {
   newScan:"‹  Ny skanning",studySession:"PLUGGPASS",explain:"Förklara enkelt",keyConcepts:"Nyckelbegrepp",studyPlan:"Studieplan",teachBack:"Förklara själv",focusTimer:"Fokustimer",tapReveal:"Tryck för att visa svaret",question:"Fråga",answer:"Svar",previous:"Föregående",next:"Nästa",startFocus:"Starta 25 min fokus",pause:"Pausa",resume:"Fortsätt",reset:"Börja om",minutes:"minuter",writeExplanation:"Förklara med egna ord…",teachBackTip:"Försök förklara ämnet utan att titta på anteckningarna.",planStep1:"Läs sammanfattningen en gång",planStep2:"Förklara nyckelbegreppen högt",planStep3:"Testa dig med flashcards",planStep4:"Avsluta med att förklara själv",simpleExplanation:"Förklarat enkelt",keyConceptHint:"Här är huvudidéerna från dina skapade flashcards.",focusDone:"Fokuspassets klart 🎉",focusReady:"Lägg undan distraktioner och fokusera på ämnet.",cameraHint:"Rama in anteckningarna"
  },
  ar: {
-  home:"الرئيسية",history:"السجل",account:"الحساب",language:"لغة التطبيق",english:"الإنجليزية",swedish:"السويدية",arabic:"العربية",
+  home:"الرئيسية",history:"السجل",account:"الحساب",language:"لغة التطبيق",languageSub:"اختر الإنجليزية أو السويدية أو العربية. سيتم حفظ اختيارك.",english:"الإنجليزية",swedish:"السويدية",arabic:"العربية",
   studySmarter:"ذاكر بذكاء.",ready:"هل أنت مستعد للتعلّم؟",dayStreak:"أيام متتالية",sessions:"جلسات",questions:"أسئلة",
   turnNotes:"حوّل ملاحظاتك إلى جلسة دراسة",scanSub:"امسح صفحة للحصول على ملخص ومفاهيم أساسية وشرح وخطة دراسة وتمارين.",
   scanNotes:"📷  امسح الملاحظات",choosePhotos:"اختر من الصور",yourToolkit:"أدواتك",recentSessions:"الجلسات الأخيرة",viewAll:"عرض الكل ←",
