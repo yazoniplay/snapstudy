@@ -29,7 +29,7 @@ export default function Study(){
       return;
     }
     if(image.base64){
-      const x=await analyzeNotes(image);
+      const x=await analyzeNotes(image,language);
       if(!active) return;
       setData(x);
       try{
@@ -50,7 +50,7 @@ export default function Study(){
   }
   load();
   return()=>{active=false};
- },[image,id]);
+ },[image,id,language]);
  const quizDone=!!data&&quizIndex>=data.quiz.length; const currentQuiz=data?.quiz[quizIndex];
  if(error)return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.title}>Couldn't analyze notes</Text><Text style={s.error}>{error}</Text><Text style={s.muted}>Check your connection and that the AI service is configured.</Text><Pressable style={s.button} onPress={()=>router.replace("/history")}><Text style={s.buttonText}>Back home</Text></Pressable></View></SafeAreaView>;
  if(!data)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator size="large" color={c.onAccent}/><Text style={s.loading}>Building your study session…</Text><Text style={s.muted}>Reading handwriting and creating practice.</Text></View></SafeAreaView>;
