@@ -5,6 +5,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { imageToBase64, setPendingImage } from "../lib/image";
 import BottomNav from "../components/BottomNav";
+import StudyDashboard from "../components/StudyDashboard";
 import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -72,6 +73,8 @@ export default function Home() {
       <View style={s.header}><View><Text style={s.eyebrow}>SNAPSTUDY</Text><Text style={s.title}>{t("studySmarter")}</Text><Text style={s.sub}>{language==="sv"?"Hej":language==="ar"?"مرحبًا":"Hey"} {firstName} — {t("ready").toLowerCase()}</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text>}</Pressable></View>
 
       <View style={s.hero}><View style={s.heroTop}><Animated.View style={[s.spark,{transform:[{scale:sparkle.interpolate({inputRange:[0,1],outputRange:[1,1.1]})},{rotate:sparkle.interpolate({inputRange:[0,1],outputRange:["0deg","12deg"]})}]}]}><Text style={s.sparkText}>✦</Text></Animated.View><View style={s.aiBadge}><Text style={s.aiText}>AI READY</Text></View></View><Text style={s.heroTitle}>{t("turnNotes")}</Text><Text style={s.heroSub}>{t("scanSub")}</Text><Pressable style={s.primary} onPress={cameraOpen} disabled={busy}><Text style={s.primaryText}>{busy ? (language==="sv"?"Förbereder…":language==="ar"?"جارٍ التحضير…":"Preparing…") : t("scanNotes")}</Text></Pressable><Pressable style={s.secondary} onPress={library} disabled={busy}><Text style={s.secondaryText}>{t("choosePhotos")}</Text></Pressable></View>
+
+      <StudyDashboard />
 
       <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}>
         <View style={s.plusTop}><Text style={s.plusBadge}>PLUS</Text><Text style={s.plusArrow}>↗</Text></View>
