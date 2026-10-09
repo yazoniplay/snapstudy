@@ -26,7 +26,7 @@ function calculateStreak(rows: Array<{created_at:string}>) {
 }
 
 export default function Home() {
-  const { colors:c } = useTheme();
+  const { colors:c, setMode } = useTheme();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [camera, setCamera] = useState(false);
@@ -55,9 +55,7 @@ export default function Home() {
       if (error || !user) router.replace("/auth");
       else if (!user.user_metadata?.onboarding_completed) router.replace("/onboarding");
       else if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) setFirstName(user.user_metadata.full_name.trim().split(/\s+/)[0]);
-      else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
-        // The saved device preference remains the source of truth for the current appearance.
-      }
+      else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") setMode(user.user_metadata.theme);
     }).catch(() => { if (active) router.replace("/auth"); });
     return () => { active = false; };
   }, []);
