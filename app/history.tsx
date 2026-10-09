@@ -17,13 +17,13 @@ export default function History(){
   const {data:user}=await supabase.auth.getUser(); if(!user.user){router.replace("/auth");return;}
   const {data,error}=await supabase.from("study_sessions").select("id,title,subject,created_at").order("created_at",{ascending:false});
   if(error)throw error; if(active)setSessions(data||[]);
- }catch(e:any){if(active)setError(e?.message||"Couldn't load history.");}finally{if(active)setLoading(false);}})();return()=>{active=false}},[]);
+ }catch(e:any){if(active)setError(e?.message||t("historyLoadFailed"));}finally{if(active)setLoading(false);}})();return()=>{active=false}},[]);
  const date=(d:string)=>new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container}>
   <Pressable onPress={()=>router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>
   <Text style={s.eyebrow}>{t("libraryLabel")}</Text><Text style={s.title}>{t("historyTitle")}</Text><Text style={s.sub}>{t("historySub")}</Text>
   {loading?<View style={s.center}><ActivityIndicator color={c.accent}/></View>:error?<Text style={s.error}>{error}</Text>:sessions.length===0?<View style={s.empty}><Text style={s.emptyTitle}>{t("emptyHistory")}</Text><Text style={s.emptyText}>{t("emptyHistorySub")}</Text><Pressable style={s.primary} onPress={()=>router.replace("/")}><Text style={s.primaryText}>{t("startStudying")}</Text></Pressable></View>:
-   <View style={s.list}>{sessions.map(item=><Pressable key={item.id} style={s.row} onPress={()=>router.push({pathname:"/study",params:{id:item.id}})}><View style={s.icon}><Text style={s.iconText}>✦</Text></View><View style={{flex:1}}><Text style={s.itemTitle} numberOfLines={1}>{item.title}</Text><Text style={s.meta}>{item.subject||"Study"} · {date(item.created_at)}</Text></View><Text style={s.arrow}>›</Text></Pressable>)}</View>}
+   <View style={s.list}>{sessions.map(item=><Pressable key={item.id} style={s.row} onPress={()=>router.push({pathname:"/study",params:{id:item.id}})}><View style={s.icon}><Text style={s.iconText}>✦</Text></View><View style={{flex:1}}><Text style={s.itemTitle} numberOfLines={1}>{item.title}</Text><Text style={s.meta}>{item.subject||t("studySubject")} · {date(item.created_at)}</Text></View><Text style={s.arrow}>›</Text></Pressable>)}</View>}
  </ScrollView><BottomNav /></SafeAreaView>
 }
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
