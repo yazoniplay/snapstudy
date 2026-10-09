@@ -15,13 +15,10 @@ export default function Study(){
   let active=true;
   async function load(){
    try{
-    const { data: user } = await supabase.auth.getUser();
-    if(!user.user){ router.replace("/auth"); return; }
     if(id){
-      const { data: session, error: sessionError } = await supabase.from("study_sessions").select("result").eq("id",id).eq("user_id",user.user.id).single();
-      if(sessionError) throw sessionError;
-      if(!session?.result) throw new Error("This study session has no saved result.");
-      if(active) setData(session.result as StudyResult);
+      const saved = await AsyncStorage.getItem("snapstudy:session:"+id);
+      if(!saved) throw new Error("This saved study session could not be found on this device.");
+      if(active) setData(JSON.parse(saved) as StudyResult);
       return;
     }
     if(image.base64){
@@ -29,9 +26,18 @@ export default function Study(){
       if(!active) return;
       setData(x);
       try{
-       await AsyncStorage.setItem("snapstudy:last",JSON.stringify({topic:x.topic,summary:x.summary,createdAt:Date.now()}));
-       await supabase.from("study_sessions").insert({user_id:user.user.id,title:x.topic,subject:x.topic,result:x});
+       const createdAt=Date.now();
+       const last=JSON.stringify({topic:x.topic,summary:x.summary,createdAt,result:x});
+       await AsyncStorage.setItem("snapstudy:last",last);
+       const raw=await AsyncStorage.getItem("snapstudy:sessions");
+       const sessions=raw?JSON.parse(raw):[];
+       const sessionId=String(createdAt);
+       sessions.unshift({id:sessionId,topic:x.topic,summary:x.summary,createdAt});
+       await AsyncStorage.setItem("snapstudy:sessions",JSON.stringify(sessions.slice(0,50)));
+       await AsyncStorage.setItem("snapstudy:session:"+sessionId,JSON.stringify(x));
       }catch{}
+    }else{
+      throw new Error("No scan was found. Go back and scan your notes again.");
     }
    }catch(e:any){if(active)setError(e?.message||"Something went wrong.");}
   }
