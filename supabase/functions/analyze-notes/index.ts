@@ -59,14 +59,45 @@ serve(async (req) => {
       throw new Error(message);
     }
 
-    const outputText = typeof result?.output_text === "string"
-      ? result.output_text
-      : Array.isArray(result?.outputs)
-      ? result.outputs.filter((item: { type?: string }) => item?.type === "text").map((item: { text?: string }) => item.text || "").join("\n")
-      : "";
+    // Interactions API returns generated text inside steps[].content[].
+    // Also accept output_text/outputs for SDK and API response compatibility.
+    const textParts: string[] = [];
+    if (typeof result?.output_text === "string" && result.output_text.trim()) {
+      textParts.push(result.output_text);
+    }
+    const collectText = (items: unknown) => {
+      if (!Array.isArray(items)) return;
+      for (const item of items) {
+        if (item && typeof item === "object") {
+          const part = item as { type?: string; text?: string; content?: unknown[] };
+          if (part.type === "text" && typeof part.text === "string") textParts.push(part.text);
+          if (Array.isArray(part.content)) collectText(part.content);
+        }
+      }
+    };
+    collectText(result?.outputs);
+    collectText(result?.output);
+    if (Array.isArray(result?.steps)) {
+      for (const step of result.steps) {
+        if (step && typeof step === "object") {
+          const item = step as { type?: string; content?: unknown[] };
+          if (item.type === "model_output") collectText(item.content);
+        }
+      }
+    }
 
-    if (!outputText) throw new Error("Gemini returned no text. Please try a clearer image.");
-    const parsed = JSON.parse(outputText);
+    const outputText = textParts.join("\\n").trim();
+    if (!outputText) {
+      const status = typeof result?.status === "string" ? result.status : "unknown";
+      throw new Error(`Gemini returned no readable text (status: ${status}). This is an API response parsing issue, not necessarily an image-quality problem.`);
+    }
+    const cleanedText = outputText.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(cleanedText);
+    } catch {
+      throw new Error("Gemini responded, but its study content was not valid JSON. Please try again.");
+    }
     if (!parsed || typeof parsed.topic !== "string" || typeof parsed.summary !== "string" ||
         !Array.isArray(parsed.flashcards) || !Array.isArray(parsed.quiz) || !Array.isArray(parsed.practiceTest)) {
       throw new Error("Gemini returned study content in an unexpected format. Please try again.");
