@@ -1,6 +1,6 @@
 import {useEffect,useState} from "react";
 import {Alert,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,View} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
 import {router} from "expo-router";
 import {useTheme,type ThemeColors} from "../lib/theme";
 import {useLanguage} from "../lib/language";
@@ -10,11 +10,11 @@ export default function WeakTopics(){
  const {colors:c}=useTheme();const {t,language}=useLanguage();const s=styles(c);
  const [items,setItems]=useState<WeakItem[]>([]);
  const [loaded,setLoaded]=useState(false);
- async function load(){try{const raw=await AsyncStorage.getItem("snapstudy:weakTopics");const parsed=raw?JSON.parse(raw):[];setItems(Array.isArray(parsed)?parsed:[]);}catch{setItems([]);}finally{setLoaded(true);}}
+ async function load(){try{const parsed=await loadStudyData<WeakItem[]>("weakTopics",[]);setItems(Array.isArray(parsed)?parsed:[]);}catch{setItems([]);}finally{setLoaded(true);}}
  useEffect(()=>{load();},[]);
  const active=items.filter(x=>!x.mastered).sort((a,b)=>(b.misses||0)-(a.misses||0));
  const mastered=items.filter(x=>x.mastered);
- async function clearMastered(){const next=items.filter(x=>!x.mastered);await AsyncStorage.setItem("snapstudy:weakTopics",JSON.stringify(next));setItems(next);Alert.alert(language==="sv"?"Klart":language==="ar"?"تم":"Done",language==="sv"?"Behärskade frågor har tagits bort.":language==="ar"?"تمت إزالة الأسئلة التي أتقنتها.":"Mastered questions were cleared.");}
+ async function clearMastered(){const next=items.filter(x=>!x.mastered);await saveStudyData("weakTopics",next);setItems(next);Alert.alert(language==="sv"?"Klart":language==="ar"?"تم":"Done",language==="sv"?"Behärskade frågor har tagits bort.":language==="ar"?"تمت إزالة الأسئلة التي أتقنتها.":"Mastered questions were cleared.");}
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
   <Pressable onPress={()=>router.back()}><Text style={s.back}>{t("back")}</Text></Pressable>
   <Text style={s.eyebrow}>SNAPSTUDY · REVIEW</Text>
