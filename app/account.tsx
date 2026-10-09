@@ -20,6 +20,8 @@ export default function Account() {
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [handle, setHandle] = useState("");
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
   const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#F8FAFC"];
   useEffect(() => { setColorDraft(accentColor); }, [accentColor]);
   useEffect(() => {
@@ -31,8 +33,8 @@ export default function Account() {
       }
       setEmail(user.email ?? "");
       setName((user.user_metadata?.full_name as string) ?? "");
-      const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,leaderboard_opt_in").eq("id", user.id).maybeSingle();
-      if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setLeaderboardOptIn(!!profileResult.data.leaderboard_opt_in); }
+      const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,leaderboard_opt_in,current_streak,longest_streak").eq("id", user.id).maybeSingle();
+      if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setLeaderboardOptIn(!!profileResult.data.leaderboard_opt_in); setCurrentStreak(profileResult.data.current_streak || 0); setLongestStreak(profileResult.data.longest_streak || 0); }
       const savedAccent = user.user_metadata?.accent_color;
       if (typeof savedAccent === "string" && /^#[0-9A-Fa-f]{6}$/.test(savedAccent)) { setAccentColor(savedAccent); setColorDraft(savedAccent.toUpperCase()); }
       setLoading(false);
@@ -115,10 +117,16 @@ export default function Account() {
           </Pressable>
         </View>
 
-        <View style={s.card}>
-<View style={s.card}><Text style={s.cardTitle}>Streak leaderboard</Text><Text style={s.cardText}>Choose whether your name, avatar and study streak appear on the public leaderboard. Your email is never shown.</Text><View style={s.privacyRow}><View style={{flex:1}}><Text style={s.privacyTitle}>{leaderboardOptIn ? "Visible on leaderboard" : "Private profile"}</Text><Text style={s.cardText}>{leaderboardOptIn ? "Other students can see your streak." : "Opt in to compete with other students."}</Text></View><Switch value={leaderboardOptIn} onValueChange={toggleLeaderboard} trackColor={{false:c.border,true:c.accent}} thumbColor={c.surface}/></View><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>View streak leaderboard →</Text></Pressable></View>
+        <View style={s.card}><Text style={s.cardTitle}>Streak leaderboard</Text><Text style={s.cardText}>Choose whether your name, avatar and study streak appear on the public leaderboard. Your email is never shown.</Text><View style={s.privacyRow}><View style={{flex:1}}><Text style={s.privacyTitle}>{leaderboardOptIn ? "Visible on leaderboard" : "Private profile"}</Text><Text style={s.cardText}>{leaderboardOptIn ? "Other students can see your streak." : "Opt in to compete with other students."}</Text></View><Switch value={leaderboardOptIn} onValueChange={toggleLeaderboard} trackColor={{false:c.border,true:c.accent}} thumbColor={c.surface}/></View><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>View streak leaderboard →</Text></Pressable></View>
 
-                  <Text style={s.cardTitle}>{t("language")}</Text>
+        </View>
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Your study streak 🔥</Text>
+          <View style={s.streakStats}><View style={s.streakTile}><Text style={s.streakNumber}>{currentStreak}</Text><Text style={s.cardText}>Current days</Text></View><View style={s.streakTile}><Text style={s.streakNumber}>{longestStreak}</Text><Text style={s.cardText}>Personal best</Text></View></View>
+          <Text style={s.cardText}>Your streak updates when you open a study session. Study on consecutive days to keep it going.</Text>
+        </View>
+        <View style={s.card}>
+          <Text style={s.cardTitle}>{t("language")}</Text>
           <Text style={s.cardText}>{t("languageSub")}</Text>
           <View style={s.themeRow}>
             {([["en",t("english")],["sv",t("swedish")],["ar",t("arabic")]] as [AppLanguage,string][]).map(([code,label])=><Pressable key={code} style={[s.themeButton,language===code&&s.themeButtonActive]} onPress={()=>{setLanguage(code);supabase.auth.updateUser({data:{language:code}}).catch(()=>{});}}><Text style={[s.themeButtonText,language===code&&s.themeButtonTextActive]}>{label}</Text></Pressable>)}
@@ -182,6 +190,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   primary:{height:48,borderRadius:13,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},
   primaryText:{color:c.onAccent,fontWeight:"900"},
   swatchGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginTop:15,marginBottom:12},swatch:{width:30,height:30,borderRadius:11,borderWidth:2,borderColor:"transparent"},swatchSelected:{borderColor:c.text,transform:[{scale:1.1}]},colorInputRow:{flexDirection:"row",alignItems:"center",gap:10,marginBottom:12},colorPreview:{width:32,height:32,borderRadius:11,borderWidth:1,borderColor:c.border},colorInput:{flex:1,height:44,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:12,color:c.text,fontSize:13,fontWeight:"800"},resetColor:{alignItems:"center",paddingVertical:10,marginTop:4},themeRow:{flexDirection:"row",gap:9,marginTop:13},themeButton:{flex:1,paddingVertical:12,borderRadius:12,borderWidth:1,borderColor:c.border,alignItems:"center",backgroundColor:c.input},themeButtonActive:{backgroundColor:c.accentSoft,borderColor:c.accent},themeButtonText:{color:c.muted,fontWeight:"900",fontSize:12},themeButtonTextActive:{color:c.text},
+  streakStats:{flexDirection:"row",gap:10,marginTop:12,marginBottom:6},streakTile:{flex:1,padding:13,borderRadius:14,backgroundColor:c.surfaceAlt,borderWidth:1,borderColor:c.border},streakNumber:{color:c.accent,fontSize:28,fontWeight:"900"},
   secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},privacyRow:{flexDirection:"row",alignItems:"center",gap:12,marginTop:14},privacyTitle:{color:c.text,fontSize:12,fontWeight:"900"},
   cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
   cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
