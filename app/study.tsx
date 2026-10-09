@@ -61,7 +61,7 @@ export default function Study(){
  const keyConcepts=useMemo(()=>data?.flashcards.slice(0,8)||[],[data]);
  const planSteps=[t("planStep1"),t("planStep2"),t("planStep3"),t("planStep4")];
  const clock=String(Math.floor(focusSeconds/60)).padStart(2,"0")+":"+String(focusSeconds%60).padStart(2,"0");
- useEffect(()=>{if(data){supabase.rpc("record_study_activity").then(({error})=>{if(error)console.warn("Study streak was not saved:",error.message);});}},[data]);
+ useEffect(()=>{if(data){supabase.auth.getUser().then(({data:{user}})=>{if(user)supabase.from("study_activity").insert({user_id:user.id}).then(({error})=>{if(error&&error.code!=="23505")console.warn("Study streak was not saved:",error.message);});});}},[data]);
  const modeLabel=(m:Mode)=>m==="test"?(language==="sv"?"Övningsprov":language==="ar"?"اختبار تدريبي":"Practice test"):m==="concepts"?t("keyConcepts"):m==="plan"?t("studyPlan"):m==="teach"?t("teachBack"):m==="focus"?t("focusTimer"):m==="summary"?t("summary"):m==="flashcards"?t("flashcards"):m==="quiz"?(language==="sv"?"Quiz":language==="ar"?"اختبار قصير":"Quiz"):m;
  if(error)return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.title}>Couldn't analyze notes</Text><Text style={s.error}>{error}</Text><Text style={s.muted}>Check your connection and that the AI service is configured.</Text><Pressable style={s.button} onPress={()=>router.replace("/history")}><Text style={s.buttonText}>Back home</Text></Pressable></View></SafeAreaView>;
  if(!data)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator size="large" color={c.accent}/><Text style={s.loading}>Building your study session…</Text><Text style={s.muted}>Reading your notes and creating practice.</Text></View></SafeAreaView>;
