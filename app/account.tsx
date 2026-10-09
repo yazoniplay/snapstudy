@@ -103,12 +103,12 @@ export default function Account() {
         <Text style={s.title}>{t("profile")}</Text>
         <Text style={s.sub}>{t("manageAccount")}</Text>
 
-        <View style={s.avatar}><Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text></View>
+        <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
 
         <View style={s.card}>
           <Text style={s.label}>{t("name")}</Text>
           <TextInput value={name} onChangeText={setName} placeholder={t("yourName")} placeholderTextColor={c.subtle} style={s.input} />
-          <Text style={s.label}>{t("email")}</Text>
+          <Text style={s.label}>Username (3–24 characters)</Text><TextInput value={handle} onChangeText={setHandle} placeholder="your_handle" autoCapitalize="none" autoCorrect={false} maxLength={24} placeholderTextColor={c.subtle} style={s.input} /><Text style={s.label}>{t("email")}</Text>
           <TextInput value={email} editable={false} style={[s.input, s.disabled]} />
           <Pressable style={s.primary} onPress={save} disabled={saving}>
             <Text style={s.primaryText}>{saving ? t("saving") : t("saveChanges")}</Text>
