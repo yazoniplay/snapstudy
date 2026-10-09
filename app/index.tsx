@@ -8,6 +8,7 @@ import BottomNav from "../components/BottomNav";
 import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
+import { useLanguage } from "../lib/language";
 type Session = { id:string; title:string; subject:string|null; created_at:string; result?:any };
 
 function calculateStreak(rows: Array<{created_at:string}>) {
@@ -26,7 +27,7 @@ function calculateStreak(rows: Array<{created_at:string}>) {
 }
 
 export default function Home() {
-  const { colors:c, setMode } = useTheme();
+  const { colors:c, setMode } = useTheme(); const {t,language}=useLanguage();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [camera, setCamera] = useState(false);
@@ -81,31 +82,31 @@ export default function Home() {
     setCamera(true);
   }
 
-  if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>Frame your notes</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
+  if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
   const formatDate = (d:string) => new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric"});
 
   return <SafeAreaView style={s.safe}>
     <Animated.ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false} style={{opacity:entrance, transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}}>
-      <View style={s.header}><View><Text style={s.eyebrow}>SNAPSTUDY</Text><Text style={s.title}>Study smarter.</Text><Text style={s.sub}>Hey {firstName} — ready to learn?</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}><Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text></Pressable></View>
+      <View style={s.header}><View><Text style={s.eyebrow}>SNAPSTUDY</Text><Text style={s.title}>{t("studySmarter")}</Text><Text style={s.sub}>{language==="sv"?"Hej":language==="ar"?"مرحبًا":"Hey"} {firstName} — {t("ready").toLowerCase()}</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}><Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text></Pressable></View>
 
       <View style={s.stats}>
-        <View style={s.stat}><Text style={s.statIcon}>🔥</Text><Text style={s.statValue}>{stats.streak}</Text><Text style={s.statLabel}>day streak</Text></View>
+        <View style={s.stat}><Text style={s.statIcon}>🔥</Text><Text style={s.statValue}>{stats.streak}</Text><Text style={s.statLabel}>{t("dayStreak")}</Text></View>
         <View style={s.statDivider}/>
-        <View style={s.stat}><Text style={s.statValue}>{stats.sessions}</Text><Text style={s.statLabel}>sessions</Text></View>
+        <View style={s.stat}><Text style={s.statValue}>{stats.sessions}</Text><Text style={s.statLabel}>{t("sessions")}</Text></View>
         <View style={s.statDivider}/>
-        <View style={s.stat}><Text style={s.statValue}>{stats.questions}</Text><Text style={s.statLabel}>questions</Text></View>
+        <View style={s.stat}><Text style={s.statValue}>{stats.questions}</Text><Text style={s.statLabel}>{t("questions")}</Text></View>
       </View>
 
-      <View style={s.hero}><View style={s.heroTop}><Animated.View style={[s.spark,{transform:[{scale:sparkle.interpolate({inputRange:[0,1],outputRange:[1,1.1]})},{rotate:sparkle.interpolate({inputRange:[0,1],outputRange:["0deg","12deg"]})}]}]}><Text style={s.sparkText}>✦</Text></Animated.View><View style={s.aiBadge}><Text style={s.aiText}>AI READY</Text></View></View><Text style={s.heroTitle}>Turn notes into a study session</Text><Text style={s.heroSub}>Snap a page and get a summary, flashcards, quiz and practice test in seconds.</Text><Pressable style={s.primary} onPress={cameraOpen} disabled={busy}><Text style={s.primaryText}>{busy ? "Preparing…" : "📷  Scan notes"}</Text></Pressable><Pressable style={s.secondary} onPress={library} disabled={busy}><Text style={s.secondaryText}>Choose from photos</Text></Pressable></View>
+      <View style={s.hero}><View style={s.heroTop}><Animated.View style={[s.spark,{transform:[{scale:sparkle.interpolate({inputRange:[0,1],outputRange:[1,1.1]})},{rotate:sparkle.interpolate({inputRange:[0,1],outputRange:["0deg","12deg"]})}]}]}><Text style={s.sparkText}>✦</Text></Animated.View><View style={s.aiBadge}><Text style={s.aiText}>AI READY</Text></View></View><Text style={s.heroTitle}>{t("turnNotes")}</Text><Text style={s.heroSub}>{t("scanSub")}</Text><Pressable style={s.primary} onPress={cameraOpen} disabled={busy}><Text style={s.primaryText}>{busy ? (language==="sv"?"Förbereder…":language==="ar"?"جارٍ التحضير…":"Preparing…") : t("scanNotes")}</Text></Pressable><Pressable style={s.secondary} onPress={library} disabled={busy}><Text style={s.secondaryText}>{t("choosePhotos")}</Text></Pressable></View>
 
-      <View style={s.sectionRow}><Text style={s.section}>Your toolkit</Text><Text style={s.sectionHint}>4 modes</Text></View>
-      <View style={s.grid}>{[["◉","Flashcards","Recall faster"],["✓","Smart quiz","Instant feedback"],["▣","Practice test","Exam mode"],["≡","Summary","Key ideas"]].map(([icon,name,desc])=><View style={s.card} key={name}><View style={s.cardIcon}><Text style={s.icon}>{icon}</Text></View><Text style={s.cardTitle}>{name}</Text><Text style={s.cardDesc}>{desc}</Text></View>)}</View>
+      <View style={s.sectionRow}><Text style={s.section}>{t("yourToolkit")}</Text><Text style={s.sectionHint}>4 modes</Text></View>
+      <View style={s.grid}>{[["◉",t("flashcards"),t("recallFaster")],["✓",t("smartQuiz"),t("instantFeedback")],["▣",t("practiceTest"),t("examMode")],["≡",t("summary"),t("keyIdeas")]].map(([icon,name,desc])=><View style={s.card} key={name}><View style={s.cardIcon}><Text style={s.icon}>{icon}</Text></View><Text style={s.cardTitle}>{name}</Text><Text style={s.cardDesc}>{desc}</Text></View>)}</View>
 
-      {recent.length > 0 && <View style={s.recentBox}><View style={s.sectionRow}><Text style={s.section}>Recent sessions</Text><Pressable onPress={()=>router.push("/history")}><Text style={s.sectionHint}>View all →</Text></Pressable></View>{recent.map(item=><Pressable key={item.id} style={s.recentRow} onPress={()=>router.push({pathname:"/study",params:{id:item.id}})}><View style={s.recentIcon}><Text style={s.icon}>↗</Text></View><View style={{flex:1}}><Text style={s.recentTitle} numberOfLines={1}>{item.title}</Text><Text style={s.recentMeta}>{item.subject || "Study"} · {formatDate(item.created_at)}</Text></View></Pressable>)}</View>}
+      {recent.length > 0 && <View style={s.recentBox}><View style={s.sectionRow}><Text style={s.section}>{t("recentSessions")}</Text><Pressable onPress={()=>router.push("/history")}><Text style={s.sectionHint}>{t("viewAll")}</Text></Pressable></View>{recent.map(item=><Pressable key={item.id} style={s.recentRow} onPress={()=>router.push({pathname:"/study",params:{id:item.id}})}><View style={s.recentIcon}><Text style={s.icon}>↗</Text></View><View style={{flex:1}}><Text style={s.recentTitle} numberOfLines={1}>{item.title}</Text><Text style={s.recentMeta}>{item.subject || "Study"} · {formatDate(item.created_at)}</Text></View></Pressable>)}</View>}
 
-      <View style={s.tip}><View style={s.tipDot}/><View style={{flex:1}}><Text style={s.tipTitle}>Better scans = better answers</Text><Text style={s.tipText}>Use good lighting and keep the whole page inside the frame.</Text></View></View>
-      <Pressable style={s.accountLink} onPress={()=>router.push("/account")}><Text style={s.accountLinkText}>Account & settings  →</Text></Pressable>
+      <View style={s.tip}><View style={s.tipDot}/><View style={{flex:1}}><Text style={s.tipTitle}>{t("betterScans")}</Text><Text style={s.tipText}>{t("scanTip")}</Text></View></View>
+      <Pressable style={s.accountLink} onPress={()=>router.push("/account")}><Text style={s.accountLinkText}>{t("settings")}</Text></Pressable>
     </Animated.ScrollView>
     <BottomNav />
   </SafeAreaView>;
