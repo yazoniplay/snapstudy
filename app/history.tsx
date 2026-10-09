@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
+import { loadStudyData } from "../lib/cloud-study-data";
 import BottomNav from "../components/BottomNav";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -15,8 +16,16 @@ export default function History(){
  const [error,setError]=useState("");
  useEffect(()=>{let active=true;(async()=>{try{
   const {data:user}=await supabase.auth.getUser(); if(!user.user){router.replace("/auth");return;}
-  const {data,error}=await supabase.from("study_sessions").select("id,title,subject,created_at").order("created_at",{ascending:false});
-  if(error)throw error; if(active)setSessions(data||[]);
+  const [{data,error},legacySessions]=await Promise.all([
+   supabase.from("study_sessions").select("id,title,subject,created_at").order("created_at",{ascending:false}),
+   loadStudyData<Array<{id:string;topic:string;summary?:string;createdAt:number}>>("sessions",[])
+  ]);
+  if(error)throw error;
+  const cloudRows=data||[];
+  const cloudIds=new Set(cloudRows.map(item=>item.id));
+  const legacyRows=(Array.isArray(legacySessions)?legacySessions:[]).filter(item=>!cloudIds.has(item.id)).map(item=>({id:item.id,title:item.topic,subject:item.topic,created_at:new Date(item.createdAt).toISOString()}));
+  const merged=[...cloudRows,...legacyRows].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
+  if(active)setSessions(merged);
  }catch(e:any){if(active)setError(e?.message||t("historyLoadFailed"));}finally{if(active)setLoading(false);}})();return()=>{active=false}},[]);
  const date=(d:string)=>new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container}>
