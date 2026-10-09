@@ -71,7 +71,10 @@ export default function Study(){
           original = cloudCopy;
         }
       } else {
-        throw new Error("This saved study session could not be found on this device.");
+        const cloudCopy = await loadStudyData<StudyResult | null>("session:"+id, null);
+        if(!cloudCopy) throw new Error("This saved study session could not be found on this device.");
+        original = cloudCopy;
+        remoteLanguage = (cloudCopy as any)._language || "en";
       }
       const sourceLanguage = await AsyncStorage.getItem("snapstudy:session-language:"+id) || remoteLanguage;
       if(sourceLanguage === language || (!sourceLanguage && language === "en")){
