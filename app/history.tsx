@@ -5,10 +5,11 @@ import { supabase } from "../lib/supabase";
 import BottomNav from "../components/BottomNav";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
+import { useLanguage } from "../lib/language";
 type Session={id:string;title:string;subject:string|null;created_at:string};
 
 export default function History(){
- const { colors:c } = useTheme(); const s=makeStyles(c);
+ const { colors:c } = useTheme(); const s=makeStyles(c); const {t}=useLanguage();
  const [sessions,setSessions]=useState<Session[]>([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
@@ -19,9 +20,9 @@ export default function History(){
  }catch(e:any){if(active)setError(e?.message||"Couldn't load history.");}finally{if(active)setLoading(false);}})();return()=>{active=false}},[]);
  const date=(d:string)=>new Date(d).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container}>
-  <Pressable onPress={()=>router.replace("/")}><Text style={s.back}>‹  Home</Text></Pressable>
-  <Text style={s.eyebrow}>YOUR LIBRARY</Text><Text style={s.title}>Study history</Text><Text style={s.sub}>Pick up where you left off.</Text>
-  {loading?<View style={s.center}><ActivityIndicator color={c.accent}/></View>:error?<Text style={s.error}>{error}</Text>:sessions.length===0?<View style={s.empty}><Text style={s.emptyTitle}>Nothing here yet</Text><Text style={s.emptyText}>Scan your first page and your study session will show up here.</Text><Pressable style={s.primary} onPress={()=>router.replace("/")}><Text style={s.primaryText}>Start studying</Text></Pressable></View>:
+  <Pressable onPress={()=>router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>
+  <Text style={s.eyebrow}>{t("libraryLabel")}</Text><Text style={s.title}>{t("historyTitle")}</Text><Text style={s.sub}>{t("historySub")}</Text>
+  {loading?<View style={s.center}><ActivityIndicator color={c.accent}/></View>:error?<Text style={s.error}>{error}</Text>:sessions.length===0?<View style={s.empty}><Text style={s.emptyTitle}>{t("emptyHistory")}</Text><Text style={s.emptyText}>{t("emptyHistorySub")}</Text><Pressable style={s.primary} onPress={()=>router.replace("/")}><Text style={s.primaryText}>{t("startStudying")}</Text></Pressable></View>:
    <View style={s.list}>{sessions.map(item=><Pressable key={item.id} style={s.row} onPress={()=>router.push({pathname:"/study",params:{id:item.id}})}><View style={s.icon}><Text style={s.iconText}>✦</Text></View><View style={{flex:1}}><Text style={s.itemTitle} numberOfLines={1}>{item.title}</Text><Text style={s.meta}>{item.subject||"Study"} · {date(item.created_at)}</Text></View><Text style={s.arrow}>›</Text></Pressable>)}</View>}
  </ScrollView><BottomNav /></SafeAreaView>
 }
