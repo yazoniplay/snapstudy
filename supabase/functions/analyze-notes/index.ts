@@ -5,7 +5,7 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const prompt = `Read the handwritten or printed study notes in the supplied image.
+const prompt = `Read all supplied images of handwritten or printed study notes as pages from the same set of notes. Combine information across all pages and avoid repeating facts when pages overlap.
 Return ONLY valid JSON with exactly this shape:
 {
   "topic": "short topic",
@@ -22,8 +22,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   try {
-    const { imageBase64, language = "en", mimeType = "image/jpeg" } = await req.json();
-    if (typeof imageBase64 !== "string" || !imageBase64) throw new Error("No image supplied");
+    const body = await req.json();
+    const { language = "en", mimeType = "image/jpeg" } = body;
+    const supplied = Array.isArray(body.images) && body.images.length ? body.images : (typeof body.imageBase64 === "string" ? [{ imageBase64: body.imageBase64, mimeType }] : []);
+    const images = supplied.filter((item: any) => typeof item?.imageBase64 === "string" && item.imageBase64).slice(0, 6);
+    if (!images.length) throw new Error("Choose at least one photo of your notes.");
 
     const languageInstruction = language === "sv"
       ? "Write every generated field in natural Swedish."
@@ -48,7 +51,7 @@ serve(async (req) => {
         system_instruction: "You are SnapStudy, a careful study assistant. Follow the requested JSON structure exactly. Do not use markdown fences or add commentary.",
         input: [
           { type: "text", text: prompt + "\n\n" + languageInstruction },
-          { type: "image", data: imageBase64, mime_type: mimeType || "image/jpeg" },
+          ...images.map((item: any) => ({ type: "image", data: item.imageBase64, mime_type: item.mimeType || "image/jpeg" })),
         ],
       }),
     });
