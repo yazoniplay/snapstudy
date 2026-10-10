@@ -33,8 +33,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F8F5FF",
-          "imageWidth": 160
+          "image": "./assets/icon.png",
+          "imageWidth": 112,
+          "backgroundColor": "#F8F5FF"
         }
       ]
     ],
@@ -46,11 +47,16 @@
       "baseUrl": "/snapstudy"
     },
     "android": {
-      "package": "com.yazoniplay.snapstudy"
+      "package": "com.yazoniplay.snapstudy",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#7C5CFF"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.yazoniplay.snapstudy",
       "supportsTablet": true
-    }
+    },
+    "icon": "./assets/icon.png"
   }
 }
