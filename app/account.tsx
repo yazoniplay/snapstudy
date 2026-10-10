@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, Switch } from "react-native";
+import { Alert, Image, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, Switch } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
@@ -162,13 +163,34 @@ export default function Account() {
 
         <AdBanner />
 
+        <View style={[s.card,s.creatorCard]}>
+          <View style={s.creatorHeader}>
+            <View style={s.creatorMark}><Text style={s.creatorMarkText}>Y</Text></View>
+            <View style={{flex:1}}>
+              <Text style={s.creatorEyebrow}>{language==="sv"?"SKAPAREN BAKOM SNAPSTUDY":language==="ar"?"مبتكر سناب ستدي":"THE PERSON BEHIND SNAPSTUDY"}</Text>
+              <Text style={s.creatorTitle}>YAZONI</Text>
+              <Text style={s.creatorRole}>{language==="sv"?"Oberoende utvecklare · Sverige":language==="ar"?"مطوّر مستقل · السويد":"Independent developer · Sweden"}</Text>
+            </View>
+            <Ionicons name="sparkles" size={21} color={c.accent}/>
+          </View>
+          <Text style={s.creatorBody}>{language==="sv"?"Jag bygger appar och digitala produkter som gör vardagen enklare. Jag skapade SnapStudy för att göra anteckningar mer användbara med AI-stödda sammanfattningar, flashcards och quiz.":language==="ar"?"أبني تطبيقات ومنتجات رقمية تجعل المهام اليومية أسهل. أنشأت SnapStudy لجعل الملاحظات أكثر فائدة من خلال الملخصات والبطاقات التعليمية والاختبارات المدعومة بالذكاء الاصطناعي.":"I build apps and digital products that make everyday tasks simpler. I created SnapStudy to turn notes into something you can actually practise with: AI-assisted summaries, flashcards and quizzes."}</Text>
+          <View style={s.creatorDivider}/>
+          <Text style={s.creatorLinksTitle}>{language==="sv"?"HITTA MER AV MITT ARBETE":language==="ar"?"اكتشف المزيد من أعمالي":"EXPLORE MORE OF MY WORK"}</Text>
+          <Pressable style={s.creatorLinkRow} onPress={()=>Linking.openURL("https://github.com/yazoniplay").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
+            <View style={s.creatorLinkIcon}><Ionicons name="logo-github" size={19} color={c.text}/></View>
+            <View style={{flex:1}}><Text style={s.creatorLinkText}>GitHub</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Mina projekt och kod":language==="ar"?"مشاريعي والشفرة":"Projects, experiments and code"}</Text></View>
+            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
+          </Pressable>
+          <Pressable style={s.creatorLinkRow} onPress={()=>Linking.openURL("https://www.youtube.com/@yazoniiimc").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
+            <View style={s.creatorLinkIcon}><Ionicons name="logo-youtube" size={19} color="#FF4545"/></View>
+            <View style={{flex:1}}><Text style={s.creatorLinkText}>YouTube</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Videor och projekt":language==="ar"?"فيديوهات ومشاريع":"Videos and projects"}</Text></View>
+            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
+          </Pressable>
+        </View>
+
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("session")}</Text>
           <Text style={s.cardText}>{t("sessionSub")}</Text>
-          <View style={s.creditsBox}>
-            <Text style={s.creditsTitle}>{t("credits")}</Text>
-            <Text style={s.creditsText}>{t("creditsDescription")}</Text>
-          </View>
           <Pressable style={s.danger} onPress={signOut}>
             <Text style={s.dangerText}>{t("signOut")}</Text>
           </Pressable>
@@ -200,6 +222,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},privacyRow:{flexDirection:"row",alignItems:"center",gap:12,marginTop:14},privacyTitle:{color:c.text,fontSize:12,fontWeight:"900"},
   cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
   cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
+  creatorCard:{padding:18},creatorHeader:{flexDirection:"row",alignItems:"center",gap:12,marginBottom:15},creatorMark:{width:54,height:54,borderRadius:18,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},creatorMarkText:{color:c.onAccent,fontSize:29,fontWeight:"900",letterSpacing:-1},creatorEyebrow:{color:c.muted,fontSize:8,fontWeight:"900",letterSpacing:1.1},creatorTitle:{color:c.text,fontSize:21,fontWeight:"900",letterSpacing:1.2,marginTop:3},creatorRole:{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3},creatorBody:{color:c.text,fontSize:13,lineHeight:20,marginBottom:15},creatorDivider:{height:1,backgroundColor:c.border,marginBottom:15},creatorLinksTitle:{color:c.muted,fontSize:9,fontWeight:"900",letterSpacing:1.1,marginBottom:8},creatorLinkRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:58,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorLinkIcon:{width:37,height:37,borderRadius:12,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},creatorLinkText:{color:c.text,fontSize:13,fontWeight:"900"},creatorLinkSub:{color:c.muted,fontSize:10,marginTop:3},
   creditsBox:{marginTop:15,marginBottom:8,padding:13,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creditsTitle:{color:c.text,fontSize:13,fontWeight:"900",marginBottom:5},creditsText:{color:c.muted,fontSize:12,lineHeight:18},danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
   dangerText:{color:c.danger,fontWeight:"900"},
   muted:{color:c.muted},
