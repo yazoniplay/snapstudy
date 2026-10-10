@@ -22,6 +22,20 @@
         {
           "cameraPermission": "SnapStudy uses your camera to scan handwritten notes."
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F8F5FF",
+          "imageWidth": 160
+        }
       ]
     ],
     "web": {
