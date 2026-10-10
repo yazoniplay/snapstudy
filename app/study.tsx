@@ -10,6 +10,7 @@ import type {StudyResult} from "../lib/api";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 import { supabase } from "../lib/supabase";
+import AdBanner from "../components/AdBanner";
 
 type Mode="summary"|"flashcards"|"quiz"|"test"|"concepts"|"plan"|"teach"|"focus";
 const MODES:Mode[]=["summary","flashcards","quiz","test","concepts","plan","teach","focus"];
@@ -238,6 +239,7 @@ export default function Study(){
     </View>
    )}
   {mode==="test"&&<View><Text style={s.progress}>{t("questionProgress")} {testIndex+1} {t("of")} {data.practiceTest.length}</Text><View style={s.progressTrack}><View style={[s.progressFill,{width:((testIndex+1)/Math.max(1,data.practiceTest.length)*100)+"%"}]}/></View><Animated.View style={{opacity:questionMotion,transform:[{translateX:questionMotion.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}}><View style={s.card}><Text style={s.q}>{data.practiceTest[testIndex].question}</Text>{showTestAnswer&&<Animated.View style={{opacity:revealMotion,transform:[{translateY:revealMotion.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}><View style={s.answerBox}><Text style={s.flashLabel}>{t("answer").toUpperCase()}</Text><Text style={s.body}>{data.practiceTest[testIndex].answer}</Text></View></Animated.View>}<Pressable style={s.secondaryBtn} onPress={()=>setShowTestAnswer(!showTestAnswer)}><Text style={s.btnText}>{showTestAnswer?t("hideAnswer"):t("tapReveal")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setTestIndex(v=>v===data.practiceTest.length-1?0:v+1);setShowTestAnswer(false)}}><Text style={s.primaryText}>{testIndex===data.practiceTest.length-1?t("restartTest"):t("next")}</Text></Pressable></View></Animated.View></View>}
+  <AdBanner />
   <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}><Text style={s.plusEyebrow}>SNAPSTUDY PLUS</Text><Text style={s.plusTitle}>{t("plusHeroTitle")}</Text><Text style={s.plusText}>{t("plusHeroSub")}</Text><Text style={s.plusLink}>{language==="sv"?"Utforska Plus →":language==="ar"?"اكتشف بلس ←":"Explore Plus →"}</Text></Pressable>
  </Animated.ScrollView></SafeAreaView>
 }
