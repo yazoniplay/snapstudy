@@ -4,6 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import BottomNav from "../components/BottomNav";
+import AdBanner from "../components/AdBanner";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage, type AppLanguage } from "../lib/language";
@@ -159,9 +160,15 @@ export default function Account() {
           </Pressable>
         </View>
 
+        <AdBanner />
+
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("session")}</Text>
           <Text style={s.cardText}>{t("sessionSub")}</Text>
+          <View style={s.creditsBox}>
+            <Text style={s.creditsTitle}>{t("credits")}</Text>
+            <Text style={s.creditsText}>{t("creditsDescription")}</Text>
+          </View>
           <Pressable style={s.danger} onPress={signOut}>
             <Text style={s.dangerText}>{t("signOut")}</Text>
           </Pressable>
@@ -193,7 +200,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},privacyRow:{flexDirection:"row",alignItems:"center",gap:12,marginTop:14},privacyTitle:{color:c.text,fontSize:12,fontWeight:"900"},
   cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
   cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
-  danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
+  creditsBox:{marginTop:15,marginBottom:8,padding:13,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creditsTitle:{color:c.text,fontSize:13,fontWeight:"900",marginBottom:5},creditsText:{color:c.muted,fontSize:12,lineHeight:18},danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
   dangerText:{color:c.danger,fontWeight:"900"},
   muted:{color:c.muted},
 });
