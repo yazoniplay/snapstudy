@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "snapstudy",
     "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
     "plugins": [
       [
         "expo-router"
