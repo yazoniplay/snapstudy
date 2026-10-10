@@ -7,7 +7,6 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { imageToBase64, setPendingImages } from "../lib/image";
 import BottomNav from "../components/BottomNav";
-import StudyDashboard from "../components/StudyDashboard";
 import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -88,11 +87,6 @@ export default function Home() {
         </Pressable>
       </View>
 
-      <StudyDashboard />
-
-      <View style={s.quickActions}><Pressable style={s.quickAction} onPress={()=>router.push("/weak-topics")}><View style={s.quickIconBox}><Ionicons name="analytics-outline" size={21} color={c.accent}/></View><Text style={s.quickTitle}>{t("weakTopics")}</Text><Text style={s.quickDesc}>{t("weakTopicsSub")}</Text></Pressable><Pressable style={s.quickAction} onPress={()=>router.push("/planner")}><View style={s.quickIconBox}><Ionicons name="calendar-outline" size={21} color={c.accent}/></View><Text style={s.quickTitle}>{t("examPlanner")}</Text><Text style={s.quickDesc}>{t("examPlannerSub")}</Text></Pressable></View>
-
-      <View style={s.tip}><View style={s.tipDot}/><View style={{flex:1}}><Text style={s.tipTitle}>{t("betterScans")}</Text><Text style={s.tipText}>{t("scanTip")}</Text></View></View>
       <Pressable style={s.accountLink} onPress={()=>router.push("/account")}><Text style={s.accountLinkText}>{t("settings")}</Text></Pressable>
     </Animated.ScrollView>
     <BottomNav />
