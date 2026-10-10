@@ -87,6 +87,13 @@ export default function Home() {
         </Pressable>
       </View>
 
+      <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}>
+        <View style={s.plusTop}><Text style={s.plusBadge}>SNAPSTUDY PLUS</Text><Text style={s.plusArrow}>↗</Text></View>
+        <Text style={s.plusTitle}>{t("plusHeroTitle")}</Text>
+        <Text style={s.plusText}>{t("plusHeroSub")}</Text>
+        <Text style={s.plusLink}>{language==="sv"?"Utforska Plus →":language==="ar"?"اكتشف بلس ←":"Explore Plus →"}</Text>
+      </Pressable>
+
       <Pressable style={s.accountLink} onPress={()=>router.push("/account")}><Text style={s.accountLinkText}>{t("settings")}</Text></Pressable>
     </Animated.ScrollView>
     <BottomNav />
