@@ -7,6 +7,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { imageToBase64, setPendingImages } from "../lib/image";
 import BottomNav from "../components/BottomNav";
+import StudyDashboard from "../components/StudyDashboard";
 import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -86,6 +87,8 @@ export default function Home() {
           <Text style={s.secondaryText}>{t("choosePhotos")}</Text>
         </Pressable>
       </View>
+
+      <StudyDashboard />
 
       <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}>
         <View style={s.plusTop}><Text style={s.plusBadge}>SNAPSTUDY PLUS</Text><Text style={s.plusArrow}>↗</Text></View>
