@@ -31,7 +31,7 @@
     "react-native-web": "~0.21.2",
     "@supabase/supabase-js": "^2.76.0",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-google-mobile-ads": "17.2.0"
+    "react-native-google-mobile-ads": "15.8.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
