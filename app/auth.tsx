@@ -28,7 +28,7 @@ export default function Auth() {
         });
         if(error) throw error;
         if(data.session) router.replace("/onboarding");
-        else setMessage("Check your email to confirm your account, then come back and log in.");
+        else setMessage("Instant sign-in is blocked by the project setting. In Supabase, open Authentication → Sign In / Providers → Email, turn off “Confirm email”, save, then create your account again.");
       } else {
         const {data,error} = await supabase.auth.signInWithPassword({email:email.trim().toLowerCase(),password});
         if(error) throw error;
