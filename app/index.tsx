@@ -8,6 +8,8 @@ import { router } from "expo-router";
 import { imageToBase64, setPendingImages } from "../lib/image";
 import BottomNav from "../components/BottomNav";
 import StudyDashboard from "../components/StudyDashboard";
+import SnapStudyMark from "../components/SnapStudyMark";
+import AdBanner from "../components/AdBanner";
 import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -16,27 +18,61 @@ export default function Home() {
   const { colors:c, setMode } = useTheme(); const {t,language}=useLanguage();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
+  const [booting, setBooting] = useState(true);
   const [camera, setCamera] = useState(false);
   const [firstName, setFirstName] = useState("there");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const entrance = useRef(new Animated.Value(0)).current;
+  const splashPulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.spring(entrance, { toValue: 1, friction: 8, tension: 55, useNativeDriver: true }).start();
   }, [entrance]);
+  useEffect(() => {
+    const pulse = Animated.loop(Animated.sequence([
+      Animated.timing(splashPulse, { toValue: 1, duration: 850, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(splashPulse, { toValue: 0, duration: 850, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]));
+    pulse.start();
+    return () => pulse.stop();
+  }, [splashPulse]);
   const [permission, requestPermission] = useCameraPermissions();
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getSession().then(async ({ data, error }) => {
-      if (!active) return;
-      const user = data.session?.user;
-      if (user) { const profile = await supabase.from("profiles").select("avatar_url,display_name").eq("id",user.id).maybeSingle(); if (profile.data?.avatar_url) setAvatarUrl(profile.data.avatar_url); if (profile.data?.display_name) setFirstName(profile.data.display_name.trim().split(/\s+/)[0] || "there"); }
-      if (error || !user) router.replace("/auth");
-      else if (!user.user_metadata?.onboarding_completed) router.replace("/onboarding");
-      else if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) setFirstName(user.user_metadata.full_name.trim().split(/\s+/)[0]);
-      else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") setMode(user.user_metadata.theme);
-    }).catch(() => { if (active) router.replace("/auth"); });
+    const minimumSplash = new Promise<void>(resolve => setTimeout(resolve, 950));
+    async function bootstrap() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (!active) return;
+        const user = data.session?.user;
+        if (error || !user) {
+          await minimumSplash;
+          if (active) router.replace("/auth");
+          return;
+        }
+        const profile = await supabase.from("profiles").select("avatar_url,display_name").eq("id", user.id).maybeSingle();
+        if (!active) return;
+        if (profile.data?.avatar_url) setAvatarUrl(profile.data.avatar_url);
+        if (profile.data?.display_name) setFirstName(profile.data.display_name.trim().split(/\s+/)[0] || "there");
+        if (!user.user_metadata?.onboarding_completed) {
+          await minimumSplash;
+          if (active) router.replace("/onboarding");
+          return;
+        }
+        if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) {
+          setFirstName(user.user_metadata.full_name.trim().split(/\s+/)[0]);
+        } else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
+          setMode(user.user_metadata.theme);
+        }
+        await minimumSplash;
+        if (active) setBooting(false);
+      } catch {
+        await minimumSplash;
+        if (active) router.replace("/auth");
+      }
+    }
+    bootstrap();
     return () => { active = false; };
   }, []);
 
@@ -68,11 +104,24 @@ export default function Home() {
     setCamera(true);
   }
 
+  if (booting) return <SafeAreaView style={{flex:1,backgroundColor:"#F8F5FF",alignItems:"center",justifyContent:"center",padding:28,overflow:"hidden"}}>
+    <View style={{position:"absolute",width:280,height:280,borderRadius:140,backgroundColor:"#E8DFFF",top:-85,right:-95,opacity:0.75}}/>
+    <View style={{position:"absolute",width:220,height:220,borderRadius:110,backgroundColor:"#FBE0F2",bottom:-60,left:-65,opacity:0.8}}/>
+    <Animated.View style={{transform:[{scale:splashPulse.interpolate({inputRange:[0,1],outputRange:[0.94,1.06]})}],marginBottom:22}}>
+      <SnapStudyMark size={94}/>
+    </Animated.View>
+    <Text style={{color:"#2E2452",fontSize:27,fontWeight:"900",letterSpacing:2}}>SNAPSTUDY</Text>
+    <Text style={{color:"#786D99",fontSize:14,fontWeight:"600",marginTop:10}}>Loading your study space…</Text>
+    <View style={{height:4,width:142,backgroundColor:"#E6DFF6",borderRadius:5,overflow:"hidden",marginTop:26}}>
+      <Animated.View style={{height:"100%",width:"48%",backgroundColor:"#8C68FF",borderRadius:5,transform:[{translateX:splashPulse.interpolate({inputRange:[0,1],outputRange:[-18,64]})}]}}/>
+    </View>
+  </SafeAreaView>;
+
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
   return <SafeAreaView style={s.safe}>
     <Animated.ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false} style={{opacity:entrance, transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}}>
-      <View style={s.header}><View><View style={s.brandRow}><View style={s.brandMark}><Ionicons name="book-outline" size={16} color={c.accent}/></View><Text style={s.eyebrow}>SNAPSTUDY</Text></View><Text style={s.title}>{t("studySmarter")}</Text><Text style={s.sub}>{language==="sv"?"Hej":language==="ar"?"مرحبًا":"Hey"} {firstName} — {t("ready").toLowerCase()}</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text>}</Pressable></View>
+      <View style={s.header}><View><View style={s.brandRow}><SnapStudyMark size={30} /><Text style={s.eyebrow}>SNAPSTUDY</Text></View><Text style={s.title}>{t("studySmarter")}</Text><Text style={s.sub}>{language==="sv"?"Hej":language==="ar"?"مرحبًا":"Hey"} {firstName} — {t("ready").toLowerCase()}</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text>}</Pressable></View>
 
       <View style={s.hero}>
         <View style={s.heroIconBox}><Ionicons name="document-text-outline" size={24} color={c.accent}/></View>
@@ -88,6 +137,7 @@ export default function Home() {
         </Pressable>
       </View>
 
+      <AdBanner />
       <StudyDashboard />
 
       <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}>
