@@ -178,7 +178,50 @@ export default function Study(){
   {mode==="plan"&&<View style={s.sectionStack}><Text style={s.heading}>{t("studyPlan")}</Text><Text style={s.mutedLeft}>{language==="sv"?"Ett enkelt upplägg för att repetera det viktigaste.":language==="ar"?"خطة بسيطة لمراجعة أهم المعلومات.":"A simple sequence to review the most important material."}</Text>{planSteps.map((step,i)=><View style={s.planRow} key={step}><View style={s.planNumber}><Text style={s.planNumberText}>{i+1}</Text></View><Text style={s.planText}>{step}</Text></View>)}<Pressable style={s.primaryBtn} onPress={()=>{setMode("focus");setFocusRunning(true);}}><Text style={s.primaryText}>{t("startFocus")}</Text></Pressable></View>}
   {mode==="teach"&&<View style={s.sectionStack}><Text style={s.heading}>{t("teachBack")}</Text><Text style={s.mutedLeft}>{t("teachBackTip")}</Text><TextInput multiline value={teachText} onChangeText={setTeachText} placeholder={t("writeExplanation")} placeholderTextColor={c.subtle} style={s.teachInput}/><Text style={s.mutedLeft}>{language==="sv"?"Jämför din förklaring med sammanfattningen när du är klar.":language==="ar"?"قارن شرحك بالملخص عند الانتهاء.":"When you're done, compare your explanation with the summary."}</Text><Pressable style={s.secondaryBtn} onPress={()=>setMode("summary")}><Text style={s.btnText}>{language==="sv"?"Visa sammanfattningen":language==="ar"?"عرض الملخص":"Review summary"}</Text></Pressable></View>}
   {mode==="focus"&&<View style={s.sectionStack}><Text style={s.heading}>{t("focusTimer")}</Text><Text style={s.mutedLeft}>{t("focusReady")}</Text><View style={s.timerCard}><Text style={s.clock}>{clock}</Text><Text style={s.timerCaption}>{focusSeconds===0?t("focusDone"):t("minutes")}</Text><View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>setFocusRunning(v=>!v)}><Text style={s.btnText}>{focusRunning?t("pause"):focusSeconds===0?t("resume"):t("startFocus")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setFocusRunning(false);setFocusSeconds(1500);}}><Text style={s.primaryText}>{t("reset")}</Text></Pressable></View></View></View>}
-  {mode==="flashcards"&&<View><View style={s.reviewHeader}><Text style={s.progress}>{dueOnly?t("dueCards")+" · "+visibleCardIndices.length:t("card")+" "+Math.min(card+1,data.flashcards.length)+" "+t("of")+" "+data.flashcards.length}</Text><Pressable style={[s.dueToggle,dueOnly&&s.dueToggleActive]} onPress={()=>{setDueOnly(v=>!v);setCard(0);setShowAnswer(false)}}><Text style={[s.dueToggleText,dueOnly&&s.dueToggleTextActive]}>{dueOnly?t("showAllCards"):t("reviewDue")+" · "+dueCount}</Text></Pressable></View>{visibleCardIndices.length===0?<View style={s.hero}><Text style={s.heading}>{t("allCaughtUp")}</Text><Text style={s.body}>{t("noCardsDue")}</Text><Pressable style={s.primaryBtn} onPress={()=>{setDueOnly(false);setCard(0)}}><Text style={s.primaryText}>{t("studyAllCards")}</Text></Pressable></View>:<><Animated.View style={{opacity:flashMotion,transform:[{scale:flashMotion.interpolate({inputRange:[0,1],outputRange:[0.97,1]})},{rotateY:flashMotion.interpolate({inputRange:[0,1],outputRange:["-6deg","0deg"]})}]}}><Pressable style={s.flashcard} onPress={()=>setShowAnswer(!showAnswer)}><Text style={s.flashLabel}>{showAnswer?t("answer").toLocaleUpperCase():t("question").toLocaleUpperCase()}</Text><Text style={[s.flashText,{writingDirection:language==="ar"?"rtl":"auto"}]}>{showAnswer?activeCard?.answer:activeCard?.question}</Text><Text style={s.tap}>{t("tapReveal")}</Text></Pressable></Animated.View>{showAnswer&&<View style={s.ratingWrap}><Text style={s.ratingTitle}>{t("howRemembered")}</Text><View style={s.ratingRow}><Pressable style={[s.ratingButton,s.ratingAgain]} onPress={()=>rateCard("again")}><Text style={s.ratingText}>{t("again")}</Text><Text style={s.ratingSub}>10 {t("minutesShort")}</Text></Pressable><Pressable style={s.ratingButton} onPress={()=>rateCard("hard")}><Text style={s.ratingText}>{t("hard")}</Text><Text style={s.ratingSub}>1+ {t("daysShort")}</Text></Pressable><Pressable style={s.ratingButton} onPress={()=>rateCard("good")}><Text style={s.ratingText}>{t("good")}</Text><Text style={s.ratingSub}>1–14 {t("daysShort")}</Text></Pressable><Pressable style={[s.ratingButton,s.ratingEasy]} onPress={()=>rateCard("easy")}><Text style={s.ratingText}>{t("easy")}</Text><Text style={s.ratingSub}>4+ {t("daysShort")}</Text></Pressable></View></View>}<View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>{setCard(Math.max(0,card-1));setShowAnswer(false)}}><Text style={s.btnText}>{t("previous")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setCard((card+1)%visibleCardIndices.length);setShowAnswer(false)}}><Text style={s.primaryText}>{t("next")}</Text></Pressable></View></>}</View>}
+  {mode === "flashcards" && (
+   <View>
+    <View style={s.reviewHeader}>
+     <Text style={s.progress}>{dueOnly ? t("dueCards") + " · " + visibleCardIndices.length : t("card") + " " + Math.min(card + 1, data.flashcards.length) + " " + t("of") + " " + data.flashcards.length}</Text>
+     <Pressable style={[s.dueToggle, dueOnly && s.dueToggleActive]} onPress={() => { setDueOnly(value => !value); setCard(0); setShowAnswer(false); }}>
+      <Text style={[s.dueToggleText, dueOnly && s.dueToggleTextActive]}>{dueOnly ? t("showAllCards") : t("reviewDue") + " · " + dueCount}</Text>
+     </Pressable>
+    </View>
+    {visibleCardIndices.length === 0 ? (
+     <View style={s.hero}>
+      <Text style={s.heading}>{t("allCaughtUp")}</Text>
+      <Text style={s.body}>{t("noCardsDue")}</Text>
+      <Pressable style={s.primaryBtn} onPress={() => { setDueOnly(false); setCard(0); }}>
+       <Text style={s.primaryText}>{t("studyAllCards")}</Text>
+      </Pressable>
+     </View>
+    ) : (
+     <View>
+      <Animated.View style={{ opacity: flashMotion, transform: [{ scale: flashMotion.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }, { rotateY: flashMotion.interpolate({ inputRange: [0, 1], outputRange: ["-6deg", "0deg"] }) }] }}>
+       <Pressable style={s.flashcard} onPress={() => setShowAnswer(value => !value)}>
+        <Text style={s.flashLabel}>{showAnswer ? t("answer").toLocaleUpperCase() : t("question").toLocaleUpperCase()}</Text>
+        <Text style={[s.flashText, { writingDirection: language === "ar" ? "rtl" : "auto" }]}>{showAnswer ? activeCard?.answer : activeCard?.question}</Text>
+        <Text style={s.tap}>{t("tapReveal")}</Text>
+       </Pressable>
+      </Animated.View>
+      {showAnswer && (
+       <View style={s.ratingWrap}>
+        <Text style={s.ratingTitle}>{t("howRemembered")}</Text>
+        <View style={s.ratingRow}>
+         <Pressable style={[s.ratingButton, s.ratingAgain]} onPress={() => rateCard("again")}><Text style={s.ratingText}>{t("again")}</Text><Text style={s.ratingSub}>10 {t("minutesShort")}</Text></Pressable>
+         <Pressable style={s.ratingButton} onPress={() => rateCard("hard")}><Text style={s.ratingText}>{t("hard")}</Text><Text style={s.ratingSub}>1+ {t("daysShort")}</Text></Pressable>
+         <Pressable style={s.ratingButton} onPress={() => rateCard("good")}><Text style={s.ratingText}>{t("good")}</Text><Text style={s.ratingSub}>1–14 {t("daysShort")}</Text></Pressable>
+         <Pressable style={[s.ratingButton, s.ratingEasy]} onPress={() => rateCard("easy")}><Text style={s.ratingText}>{t("easy")}</Text><Text style={s.ratingSub}>4+ {t("daysShort")}</Text></Pressable>
+        </View>
+       </View>
+      )}
+      <View style={s.row}>
+       <Pressable style={s.secondaryBtn} onPress={() => { setCard(Math.max(0, card - 1)); setShowAnswer(false); }}><Text style={s.btnText}>{t("previous")}</Text></Pressable>
+       <Pressable style={s.primaryBtn} onPress={() => { setCard((card + 1) % visibleCardIndices.length); setShowAnswer(false); }}><Text style={s.primaryText}>{t("next")}</Text></Pressable>
+      </View>
+     </View>
+    )}
+   </View>
+  )}
    {mode === "quiz" && (
     <View>
      {quizDone ? (
