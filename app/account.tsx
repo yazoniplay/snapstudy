@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Image, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, Switch } from "react-native";
+import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, Switch } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -162,61 +162,6 @@ export default function Account() {
         </View>
 
         <AdBanner />
-
-        <View style={[s.card,s.creatorCard]}>
-          <Text style={s.creditsTitle}>{language==="sv"?"Krediter och attribution":language==="ar"?"الشكر ونَسب الفضل":"Credits and attribution"}</Text>
-          <Text style={s.creditsIntro}>{language==="sv"?"Teknikerna och tjänsterna som hjälper SnapStudy att fungera.":language==="ar"?"التقنيات والخدمات التي تساعد سناب ستدي على العمل.":"The technologies and services that help power SnapStudy."}</Text>
-          <Text style={s.creditSectionTitle}>{language==="sv"?"Byggt med":language==="ar"?"تم بناؤه باستخدام":"Built with"}</Text>
-          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://expo.dev").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
-            <View style={s.creatorLinkIcon}><Ionicons name="phone-portrait-outline" size={19} color={c.accent}/></View>
-            <View style={{flex:1}}><Text style={s.creatorLinkText}>Expo + React Native</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Appens ramverk och mobilplattform":language==="ar"?"إطار التطبيق ومنصة الهاتف":"Mobile app framework and platform"}</Text></View>
-            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
-          </Pressable>
-          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://supabase.com").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
-            <View style={s.creatorLinkIcon}><Ionicons name="server-outline" size={19} color="#3ECF8E"/></View>
-            <View style={{flex:1}}><Text style={s.creatorLinkText}>Supabase</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Autentisering, databas och lagring":language==="ar"?"تسجيل الدخول وقاعدة البيانات والتخزين":"Authentication, database and storage"}</Text></View>
-            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
-          </Pressable>
-          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://ai.google.dev").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
-            <View style={s.creatorLinkIcon}><Ionicons name="sparkles-outline" size={19} color="#4285F4"/></View>
-            <View style={{flex:1}}><Text style={s.creatorLinkText}>Google Gemini</Text><Text style={s.creatorLinkSub}>{language==="sv"?"AI-analys av anteckningar":language==="ar"?"تحليل الملاحظات بالذكاء الاصطناعي":"AI-powered note analysis"}</Text></View>
-            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
-          </Pressable>
-          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://developers.google.com/admob").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
-            <View style={s.creatorLinkIcon}><Ionicons name="megaphone-outline" size={19} color="#F59E0B"/></View>
-            <View style={{flex:1}}><Text style={s.creatorLinkText}>Google Mobile Ads</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Annonser i appen":language==="ar"?"الإعلانات داخل التطبيق":"In-app banner advertising"}</Text></View>
-            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
-          </Pressable>
-          <View style={s.creatorDivider}/>
-          <Text style={s.creditSectionTitle}>{language==="sv"?"Om skaparen":language==="ar"?"عن المطوّر":"About the creator"}</Text>
-          <View style={s.creatorHeader}>
-            <View style={s.creatorMark}><Text style={s.creatorMarkText}>Y</Text></View>
-            <View style={{flex:1}}>
-              <Text style={s.creatorEyebrow}>{language==="sv"?"SKAPAREN BAKOM SNAPSTUDY":language==="ar"?"مبتكر سناب ستدي":"THE PERSON BEHIND SNAPSTUDY"}</Text>
-              <Text style={s.creatorTitle}>YAZONI</Text>
-              <Text style={s.creatorRole}>{language==="sv"?"Oberoende utvecklare · Sverige":language==="ar"?"مطوّر مستقل · السويد":"Independent developer · Sweden"}</Text>
-            </View>
-            <Ionicons name="sparkles" size={21} color={c.accent}/>
-          </View>
-          <Text style={s.creatorBody}>{language==="sv"?"Jag är en utvecklare i Sverige som gillar att bygga appar, webbplatser och AI-verktyg. Jag fokuserar på genomtänkt design och funktioner som faktiskt hjälper. SnapStudy gör skolanteckningar till sammanfattningar, flashcards och quiz som går att öva med.":language==="ar"?"أنا مطوّر في السويد أحب بناء التطبيقات والمواقع وأدوات الذكاء الاصطناعي. أركّز على التصميم المدروس والميزات المفيدة فعلًا. يحوّل SnapStudy ملاحظات الدراسة إلى ملخصات وبطاقات تعليمية واختبارات للتدرّب.":"I’m a developer in Sweden who enjoys building apps, websites and AI tools. I care about thoughtful design and features that genuinely help. SnapStudy turns class notes into summaries, flashcards and quizzes you can actively practise with."}</Text>
-          <View style={s.creatorTags}>
-            <View style={s.creatorTag}><Text style={s.creatorTagText}>{language==="sv"?"Appar & produkter":language==="ar"?"تطبيقات ومنتجات":"Apps & products"}</Text></View>
-            <View style={s.creatorTag}><Text style={s.creatorTagText}>{language==="sv"?"Webbutveckling":language==="ar"?"تطوير الويب":"Web development"}</Text></View>
-            <View style={s.creatorTag}><Text style={s.creatorTagText}>{language==="sv"?"AI-verktyg":language==="ar"?"أدوات الذكاء الاصطناعي":"AI tools"}</Text></View>
-          </View>
-          <View style={s.creatorDivider}/>
-          <Text style={s.creatorLinksTitle}>{language==="sv"?"HITTA MER AV MITT ARBETE":language==="ar"?"اكتشف المزيد من أعمالي":"EXPLORE MORE OF MY WORK"}</Text>
-          <Pressable style={s.creatorLinkRow} onPress={()=>Linking.openURL("https://github.com/yazoniplay").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
-            <View style={s.creatorLinkIcon}><Ionicons name="logo-github" size={19} color={c.text}/></View>
-            <View style={{flex:1}}><Text style={s.creatorLinkText}>GitHub</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Mina projekt och kod":language==="ar"?"مشاريعي والشفرة":"Projects, experiments and code"}</Text></View>
-            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
-          </Pressable>
-          <Pressable style={s.creatorLinkRow} onPress={()=>Linking.openURL("https://www.youtube.com/@yazoniiimc").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
-            <View style={s.creatorLinkIcon}><Ionicons name="logo-youtube" size={19} color="#FF4545"/></View>
-            <View style={{flex:1}}><Text style={s.creatorLinkText}>YouTube</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Videor och projekt":language==="ar"?"فيديوهات ومشاريع":"Videos and projects"}</Text></View>
-            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
-          </Pressable>
-        </View>
 
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("session")}</Text>
