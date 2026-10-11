@@ -164,6 +164,31 @@ export default function Account() {
         <AdBanner />
 
         <View style={[s.card,s.creatorCard]}>
+          <Text style={s.creditsTitle}>{language==="sv"?"Krediter och attribution":language==="ar"?"الشكر ونَسب الفضل":"Credits and attribution"}</Text>
+          <Text style={s.creditsIntro}>{language==="sv"?"Teknikerna och tjänsterna som hjälper SnapStudy att fungera.":language==="ar"?"التقنيات والخدمات التي تساعد سناب ستدي على العمل.":"The technologies and services that help power SnapStudy."}</Text>
+          <Text style={s.creditSectionTitle}>{language==="sv"?"Byggt med":language==="ar"?"تم بناؤه باستخدام":"Built with"}</Text>
+          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://expo.dev").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
+            <View style={s.creatorLinkIcon}><Ionicons name="phone-portrait-outline" size={19} color={c.accent}/></View>
+            <View style={{flex:1}}><Text style={s.creatorLinkText}>Expo + React Native</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Appens ramverk och mobilplattform":language==="ar"?"إطار التطبيق ومنصة الهاتف":"Mobile app framework and platform"}</Text></View>
+            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
+          </Pressable>
+          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://supabase.com").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
+            <View style={s.creatorLinkIcon}><Ionicons name="server-outline" size={19} color="#3ECF8E"/></View>
+            <View style={{flex:1}}><Text style={s.creatorLinkText}>Supabase</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Autentisering, databas och lagring":language==="ar"?"تسجيل الدخول وقاعدة البيانات والتخزين":"Authentication, database and storage"}</Text></View>
+            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
+          </Pressable>
+          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://ai.google.dev").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
+            <View style={s.creatorLinkIcon}><Ionicons name="sparkles-outline" size={19} color="#4285F4"/></View>
+            <View style={{flex:1}}><Text style={s.creatorLinkText}>Google Gemini</Text><Text style={s.creatorLinkSub}>{language==="sv"?"AI-analys av anteckningar":language==="ar"?"تحليل الملاحظات بالذكاء الاصطناعي":"AI-powered note analysis"}</Text></View>
+            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
+          </Pressable>
+          <Pressable style={s.creditRow} onPress={()=>Linking.openURL("https://developers.google.com/admob").catch(()=>Alert.alert("Couldn’t open link","Try again in a moment."))}>
+            <View style={s.creatorLinkIcon}><Ionicons name="megaphone-outline" size={19} color="#F59E0B"/></View>
+            <View style={{flex:1}}><Text style={s.creatorLinkText}>Google Mobile Ads</Text><Text style={s.creatorLinkSub}>{language==="sv"?"Annonser i appen":language==="ar"?"الإعلانات داخل التطبيق":"In-app banner advertising"}</Text></View>
+            <Ionicons name="arrow-up-right" size={18} color={c.muted}/>
+          </Pressable>
+          <View style={s.creatorDivider}/>
+          <Text style={s.creditSectionTitle}>{language==="sv"?"Om skaparen":language==="ar"?"عن المطوّر":"About the creator"}</Text>
           <View style={s.creatorHeader}>
             <View style={s.creatorMark}><Text style={s.creatorMarkText}>Y</Text></View>
             <View style={{flex:1}}>
@@ -227,7 +252,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},privacyRow:{flexDirection:"row",alignItems:"center",gap:12,marginTop:14},privacyTitle:{color:c.text,fontSize:12,fontWeight:"900"},
   cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
   cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
-  creatorTags:{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:15},creatorTag:{paddingHorizontal:10,paddingVertical:7,borderRadius:999,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creatorTagText:{color:c.accent,fontSize:10,fontWeight:"800"},  creatorCard:{padding:18},creatorHeader:{flexDirection:"row",alignItems:"center",gap:12,marginBottom:15},creatorMark:{width:54,height:54,borderRadius:18,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},creatorMarkText:{color:c.onAccent,fontSize:29,fontWeight:"900",letterSpacing:-1},creatorEyebrow:{color:c.muted,fontSize:8,fontWeight:"900",letterSpacing:1.1},creatorTitle:{color:c.text,fontSize:21,fontWeight:"900",letterSpacing:1.2,marginTop:3},creatorRole:{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3},creatorBody:{color:c.text,fontSize:13,lineHeight:20,marginBottom:15},creatorDivider:{height:1,backgroundColor:c.border,marginBottom:15},creatorLinksTitle:{color:c.muted,fontSize:9,fontWeight:"900",letterSpacing:1.1,marginBottom:8},creatorLinkRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:58,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorLinkIcon:{width:37,height:37,borderRadius:12,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},creatorLinkText:{color:c.text,fontSize:13,fontWeight:"900"},creatorLinkSub:{color:c.muted,fontSize:10,marginTop:3},
+  creditsTitle:{color:c.text,fontSize:19,fontWeight:"900",letterSpacing:-.4,marginBottom:6},creditsIntro:{color:c.muted,fontSize:12,lineHeight:18,marginBottom:16},creditSectionTitle:{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.2,marginBottom:7,marginTop:4},creditRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:59,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorTags:{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:15},creatorTag:{paddingHorizontal:10,paddingVertical:7,borderRadius:999,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creatorTagText:{color:c.accent,fontSize:10,fontWeight:"800"},  creatorCard:{padding:18},creatorHeader:{flexDirection:"row",alignItems:"center",gap:12,marginBottom:15},creatorMark:{width:54,height:54,borderRadius:18,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},creatorMarkText:{color:c.onAccent,fontSize:29,fontWeight:"900",letterSpacing:-1},creatorEyebrow:{color:c.muted,fontSize:8,fontWeight:"900",letterSpacing:1.1},creatorTitle:{color:c.text,fontSize:21,fontWeight:"900",letterSpacing:1.2,marginTop:3},creatorRole:{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3},creatorBody:{color:c.text,fontSize:13,lineHeight:20,marginBottom:15},creatorDivider:{height:1,backgroundColor:c.border,marginBottom:15},creatorLinksTitle:{color:c.muted,fontSize:9,fontWeight:"900",letterSpacing:1.1,marginBottom:8},creatorLinkRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:58,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorLinkIcon:{width:37,height:37,borderRadius:12,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},creatorLinkText:{color:c.text,fontSize:13,fontWeight:"900"},creatorLinkSub:{color:c.muted,fontSize:10,marginTop:3},
   creditsBox:{marginTop:15,marginBottom:8,padding:13,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creditsTitle:{color:c.text,fontSize:13,fontWeight:"900",marginBottom:5},creditsText:{color:c.muted,fontSize:12,lineHeight:18},danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
   dangerText:{color:c.danger,fontWeight:"900"},
   muted:{color:c.muted},
