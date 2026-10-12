@@ -67,9 +67,9 @@ Deno.serve(async (req) => {
       if (!response.ok) throw new Error("Could not retrieve Stripe subscription");
 
       const active = subscription.status === "active" || subscription.status === "trialing";
-      const periodEnd = subscription.current_period_end
-        ? new Date(subscription.current_period_end * 1000).toISOString()
-        : null;
+      // Stripe's newer API versions may put the billing period on the subscription item.
+      const periodEndSeconds = subscription.current_period_end ?? subscription.items?.data?.[0]?.current_period_end;
+      const periodEnd = periodEndSeconds ? new Date(periodEndSeconds * 1000).toISOString() : null;
       const { error } = await supabase.from("user_subscriptions").upsert({
         user_id: userId,
         status: active ? "active" : subscription.status === "past_due" ? "past_due" : "expired",
@@ -90,9 +90,9 @@ Deno.serve(async (req) => {
       if (!userId) return json({ received: true, ignored: "subscription has no user metadata" });
       const active = event.type !== "customer.subscription.deleted" &&
         (subscription.status === "active" || subscription.status === "trialing");
-      const periodEnd = subscription.current_period_end
-        ? new Date(subscription.current_period_end * 1000).toISOString()
-        : null;
+      // Stripe's newer API versions may put the billing period on the subscription item.
+      const periodEndSeconds = subscription.current_period_end ?? subscription.items?.data?.[0]?.current_period_end;
+      const periodEnd = periodEndSeconds ? new Date(periodEndSeconds * 1000).toISOString() : null;
       const { error } = await supabase.from("user_subscriptions").upsert({
         user_id: userId,
         status: active ? "active" : subscription.status === "past_due" ? "past_due" : "canceled",
