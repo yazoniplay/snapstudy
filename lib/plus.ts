@@ -23,7 +23,6 @@ export const PLUS_PLAN_PREVIEW = {
 } as const;
 
 // A trial is a no-payment preview on this device, not a paid subscription.
-// Paid access still comes only from the server-verified subscription row.
 const PLUS_TRIAL_KEY = "snapstudy:plus-trial:v1";
 const TRIAL_DURATION_MS = 48 * 60 * 60 * 1000;
 const NO_TRIAL: PlusTrialStatus = { used: false, active: false, startedAt: null, expiresAt: null };
@@ -87,5 +86,7 @@ export function hasPlusFeature(entitlement: PlusEntitlement, feature: PlusFeatur
   const validExpiry = entitlement.expiresAt == null || Date.parse(entitlement.expiresAt) > Date.now();
   const verifiedPaidAccess = entitlement.active && entitlement.verified && validExpiry;
   const activeTrialPreview = entitlement.active && entitlement.source === "trial" && !entitlement.verified && validExpiry;
-  return (verifiedPaidAccess || activeTrialPreview) && PLUS_PLAN_PREVIEW.features.includes(feature);
+  // Ad-free is reserved for a verified paid subscription; the no-payment trial keeps ads visible.
+  const hasAccess = feature === "ad_free" ? verifiedPaidAccess : verifiedPaidAccess || activeTrialPreview;
+  return hasAccess && PLUS_PLAN_PREVIEW.features.includes(feature);
 }
