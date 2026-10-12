@@ -113,9 +113,9 @@ export default function Plus() {
         {icon:"school-outline" as const,title:"Exam prep packs",body:"Revision plans, practice sets and exam-day checklists.",status:"Planned"},
         {icon:"repeat-outline" as const,title:"Smart review",body:"Bring back difficult cards and revisit weak topics.",status:"In app"},
         {icon:"time-outline" as const,title:"Focus sessions",body:"Timed study blocks with progress and breaks.",status:"In app"},
-        {icon:"cloud-download-outline" as const,title:"Export study packs",body:"Save your summaries and flashcards for offline use.",status:"Planned"},
+        {icon:"cloud-download-outline" as const,title:"Export study packs",body:"Save your summaries and flashcards for offline use.",status:trialStatus.active ? "Trial unlocked" : "Pro feature"},
         {icon:"color-palette-outline" as const,title:"Personal themes",body:"Make the study space feel like yours.",status:"In app"},
-        {icon:"albums-outline" as const,title:"Longer study history",body:"Keep more of your generated sessions together.",status:"Planned"},
+        {icon:"albums-outline" as const,title:"Longer study history",body:"Keep more of your generated sessions together.",status:trialStatus.active ? "Trial unlocked" : "Pro feature"},
         {icon:"eye-off-outline" as const,title:"Ad-free sessions",body:"No banner ads while trial access is active.",status:trialStatus.active ? "Trial unlocked" : "Trial feature"},
       ].map(feature=><View key={feature.title} style={s.proFeature}><View style={s.proFeatureTop}><View style={s.proFeatureIcon}><Ionicons name={feature.icon} size={19} color={c.accent}/></View><Text style={s.proFeatureStatus}>{feature.status}</Text></View><Text style={s.proFeatureTitle}>{feature.title}</Text><Text style={s.proFeatureBody}>{feature.body}</Text></View>)}
     </View>
