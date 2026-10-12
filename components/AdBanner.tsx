@@ -3,6 +3,7 @@ import { AppState, Image, Linking, Platform, Pressable, Text, View } from "react
 import { LinearGradient } from "expo-linear-gradient";
 import { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
 import { supabase } from "../lib/supabase";
+import { useFocusEffect } from "expo-router";
 import { hasPlusFeature, loadPlusEntitlement } from "../lib/plus";
 
 type SponsoredAd = {
@@ -47,8 +48,11 @@ export default function AdBanner() {
     }
   }, []);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     void loadAd();
+  }, [loadAd]));
+
+  useEffect(() => {
     const subscription = AppState.addEventListener("change", state => {
       if (state === "active") void loadAd();
     });
