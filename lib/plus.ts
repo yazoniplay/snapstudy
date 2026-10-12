@@ -65,10 +65,28 @@ export async function loadPlusEntitlement(): Promise<PlusEntitlement> {
     if (auth.user) {
       const { data, error } = await supabase
         .from("user_subscriptions")
-        .select("status,provider,current_period_end")
+        .select("status,provider,current_period_end,provider_subscription_id")
         .eq("user_id", auth.user.id)
         .maybeSingle();
       if (!error && data) {
+        // Repair legacy Stripe rows whose billing period wasn't saved by older webhook code.
+        if (data.provider === "stripe" && data.status === "active" && !data.current_period_end && data.provider_subscription_id) {
+          try {
+            await supabase.functions.invoke("refresh-plus-entitlement", { body: {} });
+          } catch {
+            // If verification is unavailable, fail closed rather than granting indefinite paid access.
+          }
+          const refreshed = await supabase
+            .from("user_subscriptions")
+            .select("status,provider,current_period_end")
+            .eq("user_id", auth.user.id)
+            .maybeSingle();
+          if (!refreshed.error && refreshed.data) {
+            const expiresAt = refreshed.data.current_period_end || null;
+            const active = refreshed.data.status === "active" && refreshed.data.provider === "stripe" && !!expiresAt && Date.parse(expiresAt) > Date.now();
+            if (active) return { active: true, verified: true, source: "stripe", expiresAt };
+          }
+        }
         const expiresAt = data.current_period_end || null;
         const active = data.status === "active" && data.provider !== "none" && !!expiresAt && Date.parse(expiresAt) > Date.now();
         if (active) return { active: true, verified: true, source: data.provider as SubscriptionSource, expiresAt };
