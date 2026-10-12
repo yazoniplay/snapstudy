@@ -237,63 +237,63 @@ export default function Study(){
   )}
    {mode === "quiz" && (
     <View>
-     {quizDone ? (
-      <View style={s.hero}>
-       <Text style={s.heading}>{t("quizComplete")}</Text>
-       <Text style={s.bigScore}>{score}/{data.quiz.length}</Text>
-       <Text style={s.body}>{t("score")}: {Math.round(score / data.quiz.length * 100)}%</Text>
-       <Pressable style={s.primaryBtn} onPress={() => { setQuizIndex(0); setScore(0); setSelected(null); setHearts(5); }}>
-        <Text style={s.primaryText}>{t("retakeQuiz")}</Text>
-       </Pressable>
-      </View>
-     ) : (
-      <>
-       <Text style={s.progress}>{t("questionProgress")} {quizIndex + 1} {t("of")} {data.quiz.length}</Text>
-       <View style={s.progressTrack}>
-        <View style={[s.progressFill, { width: ((quizIndex + 1) / Math.max(1, data.quiz.length) * 100) + "%" }]} />
-       </View>
-       <Animated.View style={{ opacity: questionMotion, transform: [{ translateX: questionMotion.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }, { scale: questionMotion.interpolate({ inputRange: [0, 1], outputRange: [0.985, 1] }) }] }}>
-        <View style={s.card}>
-         <Text style={s.q}>{currentQuiz?.question}</Text>
-         {currentQuiz?.options.map((option, index) => {
-          const picked = selected === index;
-          const locked = selected !== null;
-          return (
-           <Pressable
-            key={index}
-            disabled={locked}
-            onPress={async () => {
-             setSelected(index);
-             const nextHearts = index === currentQuiz.answer ? hearts : Math.max(0, hearts - 1);
-             const nextStamina = Math.max(0, stamina - 10);
-             if (index === currentQuiz.answer) setScore(value => value + 1);
-             else setHearts(nextHearts);
-             setStamina(nextStamina);
-             const day = new Date().toISOString().slice(0, 10);
-             AsyncStorage.setItem("snapstudy:energy:v1", JSON.stringify({ day, hearts: nextHearts, stamina: nextStamina })).catch(() => {});
-             if (currentQuiz) await recordQuizAnswer(currentQuiz, index, data.topic);
-            }}
-            style={[s.optionBtn, picked && s.picked, selected !== null && index === currentQuiz?.answer && s.correctOption, picked && selected !== null && selected !== currentQuiz?.answer && s.wrongOption]}
-           >
-            <Text style={s.optionText}>{String.fromCharCode(65 + index)}. {option}</Text>
-           </Pressable>
-          );
-         })}
-         {selected !== null && (
-          <Animated.View style={{ opacity: feedbackMotion, transform: [{ translateY: feedbackMotion.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
-           <Text style={s.feedback}>{selected === currentQuiz?.answer ? t("correct") : t("notQuite")}</Text>
-           <Text style={s.explain}>{currentQuiz?.explanation}</Text>
-           <Pressable style={s.primaryBtn} onPress={() => { setQuizIndex(value => value + 1); setSelected(null); }}>
-            <Text style={s.primaryText}>{quizIndex === data.quiz.length - 1 ? t("finish") : t("next")}</Text>
-           </Pressable>
-          </Animated.View>
-         )}
+      {quizDone ? (
+        <View style={s.hero}>
+          <Text style={s.heading}>{t("quizComplete")}</Text>
+          <Text style={s.bigScore}>{score}/{data.quiz.length}</Text>
+          <Text style={s.body}>{t("score")}: {Math.round(score / Math.max(1, data.quiz.length) * 100)}%</Text>
+          <Pressable style={s.primaryBtn} onPress={() => { setQuizIndex(0); setScore(0); setSelected(null); setHearts(5); }}>
+            <Text style={s.primaryText}>{t("retakeQuiz")}</Text>
+          </Pressable>
         </View>
-       </Animated.View>
-      </>
-     )}
+      ) : (
+        <>
+          <Text style={s.progress}>{t("questionProgress")} {quizIndex + 1} {t("of")} {data.quiz.length}</Text>
+          <View style={s.progressTrack}>
+            <View style={[s.progressFill, { width: ((quizIndex + 1) / Math.max(1, data.quiz.length) * 100) + "%" }]} />
+          </View>
+          <Animated.View style={{ opacity: questionMotion, transform: [{ translateX: questionMotion.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }, { scale: questionMotion.interpolate({ inputRange: [0, 1], outputRange: [0.985, 1] }) }] }}>
+            <View style={s.card}>
+              <Text style={s.q}>{currentQuiz?.question}</Text>
+              {currentQuiz?.options.map((option, index) => {
+                const picked = selected === index;
+                const locked = selected !== null;
+                return (
+                  <Pressable
+                    key={index}
+                    disabled={locked}
+                    onPress={async () => {
+                      setSelected(index);
+                      const nextHearts = index === currentQuiz.answer ? hearts : Math.max(0, hearts - 1);
+                      const nextStamina = Math.max(0, stamina - 10);
+                      if (index === currentQuiz.answer) setScore(value => value + 1);
+                      else setHearts(nextHearts);
+                      setStamina(nextStamina);
+                      const day = new Date().toISOString().slice(0, 10);
+                      AsyncStorage.setItem("snapstudy:energy:v1", JSON.stringify({ day, hearts: nextHearts, stamina: nextStamina })).catch(() => {});
+                      await recordQuizAnswer(currentQuiz, index, data.topic);
+                    }}
+                    style={[s.optionBtn, picked && s.picked, selected !== null && index === currentQuiz?.answer && s.correctOption, picked && selected !== null && selected !== currentQuiz?.answer && s.wrongOption]}
+                  >
+                    <Text style={s.optionText}>{String.fromCharCode(65 + index)}. {option}</Text>
+                  </Pressable>
+                );
+              })}
+              {selected !== null && (
+                <Animated.View style={{ opacity: feedbackMotion, transform: [{ translateY: feedbackMotion.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
+                  <Text style={s.feedback}>{selected === currentQuiz?.answer ? t("correct") : t("notQuite")}</Text>
+                  <Text style={s.explain}>{currentQuiz?.explanation}</Text>
+                  <Pressable style={s.primaryBtn} onPress={() => { setQuizIndex(value => value + 1); setSelected(null); }}>
+                    <Text style={s.primaryText}>{quizIndex === data.quiz.length - 1 ? t("finish") : t("next")}</Text>
+                  </Pressable>
+                </Animated.View>
+              )}
+            </View>
+          </Animated.View>
+        </>
+      )}
     </View>
-   )}
+  )}
   {mode==="test"&&<View><Text style={s.progress}>{t("questionProgress")} {testIndex+1} {t("of")} {data.practiceTest.length}</Text><View style={s.progressTrack}><View style={[s.progressFill,{width:((testIndex+1)/Math.max(1,data.practiceTest.length)*100)+"%"}]}/></View><Animated.View style={{opacity:questionMotion,transform:[{translateX:questionMotion.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}}><View style={s.card}><Text style={s.q}>{data.practiceTest[testIndex].question}</Text>{showTestAnswer&&<Animated.View style={{opacity:revealMotion,transform:[{translateY:revealMotion.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}><View style={s.answerBox}><Text style={s.flashLabel}>{t("answer").toUpperCase()}</Text><Text style={s.body}>{data.practiceTest[testIndex].answer}</Text></View></Animated.View>}<Pressable style={s.secondaryBtn} onPress={()=>setShowTestAnswer(!showTestAnswer)}><Text style={s.btnText}>{showTestAnswer?t("hideAnswer"):t("tapReveal")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setTestIndex(v=>v===data.practiceTest.length-1?0:v+1);setShowTestAnswer(false)}}><Text style={s.primaryText}>{testIndex===data.practiceTest.length-1?t("restartTest"):t("next")}</Text></Pressable></View></Animated.View></View>}
   <AdBanner />
   <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}><Text style={s.plusEyebrow}>SNAPSTUDY PLUS</Text><Text style={s.plusTitle}>{t("plusHeroTitle")}</Text><Text style={s.plusText}>{t("plusHeroSub")}</Text><Text style={s.plusLink}>{language==="sv"?"Utforska Plus →":language==="ar"?"اكتشف بلس ←":"Explore Plus →"}</Text></Pressable>
