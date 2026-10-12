@@ -97,7 +97,7 @@ export default function Plus() {
       {params.plus === "success" ? <View style={s.notice}><Text style={s.noticeText}>Checkout complete. Your Plus access will appear after the payment confirmation is verified.</Text></View> : null}
       {params.plus === "cancelled" ? <View style={s.notice}><Text style={s.noticeText}>Checkout was cancelled. You haven't been charged.</Text></View> : null}
     </View>
-    <View style={s.statusCard}><Text style={s.statusLabel}>{t("plusStatusTitle")}</Text><Text style={s.statusTitle}>{plusActive ? t("plusActiveStatus") : t("freePlanActive")}</Text><Text style={s.statusText}>{plusActive ? t("plusActiveBody") : t("plusNotActive")}</Text></View>
+    <View style={s.statusCard}><Text style={s.statusLabel}>{t("plusStatusTitle")}</Text><Text style={s.statusTitle}>{trialStatus.active ? (language==="sv" ? "Gratis Pro-testperiod aktiv" : language==="ar" ? "الفترة التجريبية المجانية نشطة" : "Free Pro trial active") : plusActive ? t("plusActiveStatus") : t("freePlanActive")}</Text><Text style={s.statusText}>{trialStatus.active ? (language==="sv" ? "Du har Pro-förhandsvisning i 48 timmar. Den avslutas automatiskt utan debitering." : language==="ar" ? "لديك تجربة برو لمدة 48 ساعة وتنتهي تلقائيًا دون رسوم." : "Your 48-hour Pro preview is active. It expires automatically with no charge.") : plusActive ? t("plusActiveBody") : t("plusNotActive")}</Text></View>
     <Text style={s.sectionTitle}>{t("freeTitle")}</Text>
     <View style={s.featureCard}>
       {[t("free1"),t("free2"),t("free3"),t("free4")].map(x=><View style={s.featureRow} key={x}><Text style={s.check}>✓</Text><Text style={s.featureText}>{x}</Text></View>)}
