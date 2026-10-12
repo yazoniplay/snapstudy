@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from "react";
-import {Animated,Easing,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,TextInput,View} from "react-native";
+import {Animated,Easing,Pressable,SafeAreaView,ScrollView,Share,StyleSheet,Text,TextInput,View} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
@@ -11,6 +11,7 @@ import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 import { supabase } from "../lib/supabase";
 import AdBanner from "../components/AdBanner";
+import { hasPlusFeature, loadPlusEntitlement, NO_PLUS_ENTITLEMENT, type PlusEntitlement } from "../lib/plus";
 
 type Mode="summary"|"flashcards"|"quiz"|"test"|"concepts"|"plan"|"teach"|"focus";
 const MODES:Mode[]=["summary","flashcards","quiz","test","concepts","plan","teach","focus"];
@@ -20,6 +21,7 @@ export default function Study(){
  const { id, mode: initialMode, due: dueParam, weak: weakParam } = useLocalSearchParams<{id?: string; mode?: string; due?: string; weak?: string}>();
  const [images]=useState(()=>takePendingImages());
  const [hearts,setHearts]=useState(5),[stamina,setStamina]=useState(100);
+ const [plusAccess,setPlusAccess]=useState<PlusEntitlement>(NO_PLUS_ENTITLEMENT);
  const [data,setData]=useState<StudyResult|null>(null),[error,setError]=useState(""),[mode,setMode]=useState<Mode>(()=>MODES.includes(initialMode as Mode)?initialMode as Mode:"summary");
  const [card,setCard]=useState(0),[showAnswer,setShowAnswer]=useState(false),[quizIndex,setQuizIndex]=useState(0),[score,setScore]=useState(0),[selected,setSelected]=useState<number|null>(null),[testIndex,setTestIndex]=useState(0),[showTestAnswer,setShowTestAnswer]=useState(false);
  const [reviewSchedule,setReviewSchedule]=useState<Record<string,{dueAt:number;intervalDays:number;repetitions:number;lastRating:string}>>({});
@@ -38,6 +40,7 @@ export default function Study(){
  useEffect(()=>{feedbackMotion.setValue(0);if(selected!==null)Animated.spring(feedbackMotion,{toValue:1,friction:10,tension:80,useNativeDriver:true}).start();},[selected,feedbackMotion]);
  useEffect(()=>{revealMotion.setValue(0);if(showTestAnswer)Animated.spring(revealMotion,{toValue:1,friction:10,tension:85,useNativeDriver:true}).start();},[showTestAnswer,revealMotion]);
  useEffect(()=>{const pulse=Animated.loop(Animated.sequence([Animated.timing(loadingPulse,{toValue:1,duration:900,easing:Easing.inOut(Easing.ease),useNativeDriver:true}),Animated.timing(loadingPulse,{toValue:0,duration:900,easing:Easing.inOut(Easing.ease),useNativeDriver:true})]));pulse.start();return()=>pulse.stop();},[loadingPulse]);
+ useEffect(()=>{let active=true;loadPlusEntitlement().then(value=>{if(active)setPlusAccess(value)}).catch(()=>{});return()=>{active=false};},[]);
  useEffect(()=>{let active=true;const day=new Date().toISOString().slice(0,10);AsyncStorage.getItem("snapstudy:energy:v1").then(raw=>{if(!active)return;const saved=raw?JSON.parse(raw):null;if(saved?.day===day){setHearts(typeof saved.hearts==="number"?saved.hearts:5);setStamina(typeof saved.stamina==="number"?saved.stamina:100);}}).catch(()=>{});return()=>{active=false};},[]);
  useEffect(()=>{if(!focusRunning)return;const timer=setInterval(()=>setFocusSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(timer);},[focusRunning]);
  useEffect(()=>{if(focusSeconds===0)setFocusRunning(false);},[focusSeconds]);
@@ -115,7 +118,9 @@ export default function Study(){
        }
        const sessions=await loadStudyData<any[]>("sessions",[]);
        sessions.unshift({id:sessionId,topic:x.topic,summary:x.summary,createdAt});
-       await saveStudyData("sessions",sessions.slice(0,50));
+       const entitlement=await loadPlusEntitlement();
+       const historyLimit=hasPlusFeature(entitlement,"extended_history")?200:50;
+       await saveStudyData("sessions",sessions.slice(0,historyLimit));
        await AsyncStorage.setItem("snapstudy:session:"+sessionId,JSON.stringify(x));
        await saveStudyData("session:"+sessionId,{...x,_language:language});
        await AsyncStorage.setItem("snapstudy:session-language:"+sessionId,language);
@@ -147,6 +152,14 @@ export default function Study(){
   if(visibleCardIndices.length>1){setCard((card+1)%visibleCardIndices.length);setShowAnswer(false);}else if(dueOnly){setShowAnswer(false);}
  }
  const dueCount=data?data.flashcards.filter(x=>{const entry=reviewSchedule[cardKey(x.question)];return !entry||entry.dueAt<=Date.now()}).length:0;
+ async function exportStudyPack(){
+  const entitlement=await loadPlusEntitlement();
+  setPlusAccess(entitlement);
+  if(!hasPlusFeature(entitlement,"export")){router.push("/plus");return;}
+  if(!data)return;
+  const parts=[data.topic,"","SUMMARY",data.summary,"","FLASHCARDS",...data.flashcards.flatMap((item,index)=>[`${index+1}. ${item.question}`,item.answer,""]),"QUIZ",...data.quiz.flatMap((item,index)=>[`${index+1}. ${item.question}`,...item.options.map((option,i)=>`${String.fromCharCode(65+i)}. ${option}`),`Answer: ${item.options[item.answer]}`,item.explanation,""]),"PRACTICE TEST",...data.practiceTest.flatMap((item,index)=>[`${index+1}. ${item.question}`,item.answer,""])];
+  try{await Share.share({title:`${data.topic} · SnapStudy`,message:parts.join("\n")});}catch(error){console.warn("Study pack export failed",error);}
+ }
  const planSteps=[t("planStep1"),t("planStep2"),t("planStep3"),t("planStep4")];
  const clock=String(Math.floor(focusSeconds/60)).padStart(2,"0")+":"+String(focusSeconds%60).padStart(2,"0");
  useEffect(()=>{if(data){supabase.auth.getUser().then(({data:{user}})=>{if(user)supabase.from("study_activity").insert({user_id:user.id}).then(({error})=>{if(error&&error.code!=="23505")console.warn("Study streak was not saved:",error.message);});});}},[data]);
@@ -173,7 +186,7 @@ export default function Study(){
   <Pressable style={s.goPlus} onPress={()=>router.push("/plus")}><Text style={s.goPlusText}>SNAPSTUDY PLUS</Text><Text style={s.goPlusArrow}>↗</Text></Pressable>
   <View style={s.energyHud}><View style={s.hudHearts}><Ionicons name="heart" size={17} color="#F06A9B"/><Text style={s.hudText}>{hearts}/5</Text></View><View style={s.hudStamina}><Ionicons name="flash" size={17} color="#9B7BFF"/><View style={s.hudTrack}><View style={[s.hudFill,{width:stamina+"%"}]}/></View><Text style={s.hudText}>{stamina}%</Text></View></View>
   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabs}>{MODES.map(m=><Pressable key={m} onPress={()=>setMode(m)} style={[s.tab,mode===m&&s.tabActive]}><Ionicons name={modeIcons[m]} size={16} color={mode===m?c.onAccent:c.muted}/><Text style={[s.tabText,mode===m&&s.tabTextActive]}>{modeLabel(m)}</Text></Pressable>)}</ScrollView>
-  {mode==="summary"&&<><View style={s.hero}><Text style={s.heading}>{t("summary")}</Text><Text style={s.body}>{data.summary}</Text></View><View style={s.stats}><Stat n={data.flashcards.length} label={t("flashcards")}/><Stat n={data.quiz.length} label="Quiz"/><Stat n={data.practiceTest.length} label={t("practiceTest")}/></View></>}
+  {mode==="summary"&&<><View style={s.hero}><Text style={s.heading}>{t("summary")}</Text><Text style={s.body}>{data.summary}</Text></View><View style={s.stats}><Stat n={data.flashcards.length} label={t("flashcards")}/><Stat n={data.quiz.length} label="Quiz"/><Stat n={data.practiceTest.length} label={t("practiceTest")}/></View><Pressable style={[s.primaryBtn,{flexDirection:"row",gap:9,marginTop:14}]} onPress={exportStudyPack}><Ionicons name={hasPlusFeature(plusAccess,"export")?"download-outline":"lock-closed-outline"} size={17} color={c.onAccent}/><Text style={s.primaryText}>{hasPlusFeature(plusAccess,"export")?(language==="sv"?"Exportera studiepaket":language==="ar"?"تصدير حزمة الدراسة":"Export study pack"):(language==="sv"?"Lås upp export med Pro":language==="ar"?"افتح التصدير مع برو":"Unlock study pack export · Pro")}</Text></Pressable></>}
   {mode==="concepts"&&<View style={s.sectionStack}><Text style={s.heading}>{t("keyConcepts")}</Text><Text style={s.mutedLeft}>{t("keyConceptHint")}</Text>{keyConcepts.map((item,i)=><View style={s.conceptCard} key={i}><Text style={s.conceptNumber}>{String(i+1).padStart(2,"0")}</Text><View style={{flex:1}}><Text style={s.conceptQuestion}>{item.question}</Text><Text style={s.body}>{item.answer}</Text></View></View>)}</View>}
   {mode==="plan"&&<View style={s.sectionStack}><Text style={s.heading}>{t("studyPlan")}</Text><Text style={s.mutedLeft}>{language==="sv"?"Ett enkelt upplägg för att repetera det viktigaste.":language==="ar"?"خطة بسيطة لمراجعة أهم المعلومات.":"A simple sequence to review the most important material."}</Text>{planSteps.map((step,i)=><View style={s.planRow} key={step}><View style={s.planNumber}><Text style={s.planNumberText}>{i+1}</Text></View><Text style={s.planText}>{step}</Text></View>)}<Pressable style={s.primaryBtn} onPress={()=>{setMode("focus");setFocusRunning(true);}}><Text style={s.primaryText}>{t("startFocus")}</Text></Pressable></View>}
   {mode==="teach"&&<View style={s.sectionStack}><Text style={s.heading}>{t("teachBack")}</Text><Text style={s.mutedLeft}>{t("teachBackTip")}</Text><TextInput multiline value={teachText} onChangeText={setTeachText} placeholder={t("writeExplanation")} placeholderTextColor={c.subtle} style={s.teachInput}/><Text style={s.mutedLeft}>{language==="sv"?"Jämför din förklaring med sammanfattningen när du är klar.":language==="ar"?"قارن شرحك بالملخص عند الانتهاء.":"When you're done, compare your explanation with the summary."}</Text><Pressable style={s.secondaryBtn} onPress={()=>setMode("summary")}><Text style={s.btnText}>{language==="sv"?"Visa sammanfattningen":language==="ar"?"عرض الملخص":"Review summary"}</Text></Pressable></View>}
