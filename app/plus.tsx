@@ -116,7 +116,7 @@ export default function Plus() {
         {icon:"cloud-download-outline" as const,title:"Export study packs",body:"Save your summaries and flashcards for offline use.",status:trialStatus.active ? "Trial unlocked" : "Pro feature"},
         {icon:"color-palette-outline" as const,title:"Personal themes",body:"Make the study space feel like yours.",status:"In app"},
         {icon:"albums-outline" as const,title:"Longer study history",body:"Keep more of your generated sessions together.",status:trialStatus.active ? "Trial unlocked" : "Pro feature"},
-        {icon:"eye-off-outline" as const,title:"Ad-free sessions",body:"No banner ads while trial access is active.",status:trialStatus.active ? "Trial unlocked" : "Trial feature"},
+        {icon:"eye-off-outline" as const,title:"Ad-free sessions",body:"Removes banner ads for verified paid Plus subscribers.",status:entitlement.verified && hasPlusFeature(entitlement,"ad_free") ? "Included" : "Paid feature"},
       ].map(feature=><View key={feature.title} style={s.proFeature}><View style={s.proFeatureTop}><View style={s.proFeatureIcon}><Ionicons name={feature.icon} size={19} color={c.accent}/></View><Text style={s.proFeatureStatus}>{feature.status}</Text></View><Text style={s.proFeatureTitle}>{feature.title}</Text><Text style={s.proFeatureBody}>{feature.body}</Text></View>)}
     </View>
     <Text style={s.disclaimer}>The 2-day trial is a no-payment preview stored on this device. It does not automatically convert into a paid subscription. Paid web subscriptions are separate and require server-verified billing. Google Play and Apple in-app purchases are not enabled yet.</Text>
