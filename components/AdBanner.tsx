@@ -3,6 +3,7 @@ import { AppState, Image, Linking, Platform, Pressable, Text, View } from "react
 import { LinearGradient } from "expo-linear-gradient";
 import { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
 import { supabase } from "../lib/supabase";
+import { hasPlusFeature, loadPlusEntitlement } from "../lib/plus";
 
 type SponsoredAd = {
   id: string;
@@ -16,9 +17,14 @@ type SponsoredAd = {
 export default function AdBanner() {
   const [ad, setAd] = useState<SponsoredAd | null>(null);
   const [checked, setChecked] = useState(false);
+  const [adFree, setAdFree] = useState(false);
 
   const loadAd = useCallback(async () => {
     try {
+      const entitlement = await loadPlusEntitlement();
+      const premium = hasPlusFeature(entitlement, "ad_free");
+      setAdFree(premium);
+      if (premium) { setAd(null); return; }
       const { data, error } = await supabase
         .from("sponsored_ads")
         .select("id,advertiser_name,headline,body,image_url,target_url,starts_at,ends_at")
@@ -49,6 +55,7 @@ export default function AdBanner() {
     return () => subscription.remove();
   }, [loadAd]);
 
+  if (adFree) return null;
   if (Platform.OS !== "android" && Platform.OS !== "ios") return null;
 
   if (ad) {
