@@ -58,7 +58,7 @@ export default function Chat() {
 
   async function sendText() {
     const body = draft.trim();
-    if (!body || sending || !friendshipId) return;
+    if (!body || sending || !friendshipId || !userId) return;
     setSending(true); setDraft("");
     const {error} = await supabase.from("messages").insert({friendship_id:friendshipId,sender_id:userId,message_type:"text",body});
     if (error) { setDraft(body); Alert.alert("Message not sent",error.message); }
@@ -67,7 +67,7 @@ export default function Chat() {
   }
 
   async function sendImage() {
-    if (sending) return;
+    if (sending || !userId) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) { Alert.alert("Photo permission needed","Allow photo access to send a study photo."); return; }
     const result = await ImagePicker.launchImageLibraryAsync({mediaTypes:["images"],quality:0.8,allowsEditing:false});
@@ -92,7 +92,7 @@ export default function Chat() {
   }
 
   async function sendGift(code:string) {
-    if (sending) return;
+    if (sending || !userId) return;
     setSending(true); setGiftPicker(false);
     const {error} = await supabase.from("messages").insert({friendship_id:friendshipId,sender_id:userId,message_type:"gift",gift_code:code});
     if (error) Alert.alert("Gift didn't send",error.message);
@@ -125,10 +125,10 @@ export default function Chat() {
       </ScrollView>
       {giftPicker&&<View style={s.giftTray}>{Object.entries(GIFTS).map(([code,gift])=><Pressable key={code} style={s.giftChoice} onPress={()=>sendGift(code)}><Text style={s.giftChoiceEmoji}>{gift.emoji}</Text><Text style={s.giftChoiceLabel}>{gift.label}</Text></Pressable>)}</View>}
       <View style={s.composerWrap}>
-        <Pressable style={s.toolButton} onPress={sendImage} disabled={sending} accessibilityLabel="Send image"><Ionicons name="image-outline" size={21} color={c.accent}/></Pressable>
+        <Pressable style={s.toolButton} onPress={sendImage} disabled={sending||!userId} accessibilityLabel="Send image"><Ionicons name="image-outline" size={21} color={c.accent}/></Pressable>
         <Pressable style={[s.toolButton,giftPicker&&s.toolButtonActive]} onPress={()=>setGiftPicker(v=>!v)} accessibilityLabel="Send a gift"><Ionicons name="gift-outline" size={21} color={c.accent}/></Pressable>
         <TextInput value={draft} onChangeText={setDraft} placeholder="Message your study buddy…" placeholderTextColor={c.subtle} multiline maxLength={2000} style={s.input} returnKeyType="default"/>
-        <Pressable style={[s.sendButton,(!draft.trim()||sending)&&{opacity:0.55}]} onPress={sendText} disabled={!draft.trim()||sending} accessibilityLabel="Send message">{sending?<ActivityIndicator size="small" color={c.onAccent}/>:<Ionicons name="arrow-up" size={21} color={c.onAccent}/>}</Pressable>
+        <Pressable style={[s.sendButton,(!draft.trim()||sending)&&{opacity:0.55}]} onPress={sendText} disabled={!draft.trim()||sending||!userId} accessibilityLabel="Send message">{sending?<ActivityIndicator size="small" color={c.onAccent}/>:<Ionicons name="arrow-up" size={21} color={c.onAccent}/>}</Pressable>
       </View>
     </KeyboardAvoidingView>
   </SafeAreaView>;
