@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Alert, ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
@@ -87,7 +87,7 @@ export default function Friends() {
   const outgoing = links.filter(row => row.status === "pending" && row.requested_by === userId);
   const displayName = (p: Profile) => p.display_name || p.username || "Student";
 
-  function personCard(person: Profile, action: React.ReactNode, key = person.id) {
+  function personCard(person: Profile, action: ReactNode, key = person.id) {
     return <View key={key} style={s.personCard}>
       <View style={s.personAvatar}>{person.avatar_url ? <Image source={{ uri: person.avatar_url }} style={s.avatarImage}/> : <Text style={s.avatarLetter}>{displayName(person).slice(0,1).toUpperCase()}</Text>}</View>
       <View style={s.personMeta}><Text style={s.personName} numberOfLines={1}>{displayName(person)}</Text><Text style={s.personHandle} numberOfLines={1}>@{person.username || "student"}</Text></View>
