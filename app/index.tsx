@@ -62,7 +62,8 @@ export default function Home() {
         }
         if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) {
           setFirstName(user.user_metadata.full_name.trim().split(/\s+/)[0]);
-        } else if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
+        }
+        if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
           setMode(user.user_metadata.theme);
         }
         await minimumSplash;
