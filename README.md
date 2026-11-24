@@ -11,7 +11,7 @@ SnapStudy is an Expo app that turns photos of handwritten notes into study mater
 
 The `analyze-notes` Supabase Edge Function tries each configured provider in order. A provider failure, timeout, or invalid study JSON causes it to continue to the next provider. Each request is bounded to 9 seconds so a long provider outage does not stall the study flow indefinitely.
 
-Supported provider IDs: `gemini`, `groq`, `nvidia`, `tokenharbor`, `huggingface`, `openrouter`, `vercel`, `zai`, `siliconflow`, `orcarouter`, `bazaarlink`, `cloudflare`, and `sambanova`.
+Supported provider IDs: `gemini`, `groq`, `nvidia`, `tokenharbor`, `huggingface`, `openrouter`, `vercel`, `zai`, `siliconflow`, `orcarouter`, `bazaarlink`, `cloudflare`, and `sambanova`, plus remote/cloud `ollama`.
 
 Configure provider credentials as **Supabase Edge Function secrets** (never put provider keys in Expo/public environment variables). Set any available keys with the Supabase CLI, for example:
 
@@ -32,7 +32,7 @@ Provider key names:
 - OrcaRouter: `ORCAROUTER_API_KEY` and `ORCAROUTER_BASE_URL`
 - BazaarLink: `BAZAARLINK_API_KEY` and `BAZAARLINK_BASE_URL`
 - Cloudflare Workers AI: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
-- SambaNova: `SAMBANOVA_API_KEY`
+- Remote Ollama: `OLLAMA_API_KEY`, optional `OLLAMA_BASE_URL` (local Ollama on your computer cannot be reached from the hosted Edge Function)\n- SambaNova: `SAMBANOVA_API_KEY`
 
 Optional `*_MODEL` secrets override the default model for each provider. Optional `AI_PROVIDER_ORDER` accepts a comma-separated list of provider IDs, such as `groq,cloudflare,gemini,openrouter`. Router providers with no known public-compatible endpoint require their `*_BASE_URL` to be set.
 
