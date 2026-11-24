@@ -14,7 +14,6 @@ import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
-import { awardXP } from "../lib/gamification";
 export default function Home() {
   const { colors:c, setMode } = useTheme(); const {t,language}=useLanguage();
   const s = makeStyles(c);
