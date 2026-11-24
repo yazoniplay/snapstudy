@@ -9,6 +9,7 @@ import { useTheme } from "../lib/theme";
 type FocusMode="focus"|"short"|"long";
 const DURATIONS:Record<FocusMode,number>={focus:25*60,short:5*60,long:15*60};
 export default function FocusRoom(){
+ const { colors:c } = useTheme();
  const [mode,setMode]=useState<FocusMode>("focus");
  const [seconds,setSeconds]=useState(DURATIONS.focus);
  const [running,setRunning]=useState(false);
