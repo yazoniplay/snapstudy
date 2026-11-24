@@ -4,12 +4,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { awardXP, loadGamification } from "../lib/gamification";
-import { useTheme } from "../lib/theme";
 
 type FocusMode="focus"|"short"|"long";
 const DURATIONS:Record<FocusMode,number>={focus:25*60,short:5*60,long:15*60};
 export default function FocusRoom(){
- const {colors:c}=useTheme();
  const [mode,setMode]=useState<FocusMode>("focus");
  const [seconds,setSeconds]=useState(DURATIONS.focus);
  const [running,setRunning]=useState(false);
@@ -28,7 +26,6 @@ export default function FocusRoom(){
  function choose(next:FocusMode){setRunning(false);setMode(next);setSeconds(DURATIONS[next]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
  function reset(){setRunning(false);setSeconds(DURATIONS[mode]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
  const clock=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
- const progress=1-seconds/DURATIONS[mode];
  return <SafeAreaView style={styles.safe}>
   <StatusBar barStyle="light-content"/>
   <ImageBackground source={{uri:"https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=1800&q=85"}} resizeMode="cover" style={styles.background}>
