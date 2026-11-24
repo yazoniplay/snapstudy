@@ -51,7 +51,7 @@ async function run(p:P,images:any[],lang:string) {
   return parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
  }
  const content=[{type:"text",text:prompt+"\n"+instruction},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
- const response=await fetch(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+p.key},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:8000})});
+ const response=await fetch(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:8000})});
  const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
  const c=data.choices?.[0]?.message?.content;return parse(typeof c==="string"?c:Array.isArray(c)?c.map((x:any)=>x.text||"").join("\n"):"");
 }
