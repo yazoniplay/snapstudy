@@ -40,7 +40,7 @@ function parse(raw:string) {
  const s=raw.replace(/^\s*```(?:json)?\s*/i,"").replace(/\s*```\s*$/,"").trim();
  const v=JSON.parse(s);
  if(!v||typeof v.topic!=="string"||typeof v.summary!=="string"||!Array.isArray(v.flashcards)||!Array.isArray(v.quiz)||!Array.isArray(v.practiceTest))throw new Error("Invalid study JSON");
- const words=(value:string)=>String(value||"").toLowerCase().replace(/[^\\p{L}\\p{N}\\s-]/gu," ").split(/[\\s-]+/).map(x=>x.replace(/(ing|ed|es|s)$/,"")).filter(x=>x.length>2&&!["the","and","are","was","were","that","this","with","from","into","does","have","has","what","which","when","where","person","individual"].includes(x));
+ const words=(value:string)=>String(value||"").toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu," ").split(/[\s-]+/).map(x=>x.replace(/(ing|ed|es|s)$/,"")).filter(x=>x.length>2&&!["the","and","are","was","were","that","this","with","from","into","does","have","has","what","which","when","where","person","individual"].includes(x));
  for(const q of v.quiz){
   if(!Array.isArray(q?.options)||!q.options.length)continue;
   const explanationWords=words(q.explanation);
