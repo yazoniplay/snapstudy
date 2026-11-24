@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { ActivityIndicator, Alert, Animated, Easing, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Animated, Easing, Image, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
@@ -143,7 +143,7 @@ export default function Home() {
       </View>
       <Pressable onPress={()=>router.push("/progress")} style={{borderRadius:19,overflow:"hidden"}}><LinearGradient colors={["#251943","#3B286A"]} style={{padding:15}}><View style={{flexDirection:"row",alignItems:"center",gap:11}}><View style={{width:45,height:45,borderRadius:15,backgroundColor:"#7D61E6",borderWidth:1,borderColor:"#B9A9FF",alignItems:"center",justifyContent:"center"}}><Text style={{color:"#FFFFFF",fontSize:18,fontWeight:"900"}}>{level.level}</Text></View><View style={{flex:1}}><View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}><Text style={{color:"#FFFFFF",fontSize:13,fontWeight:"900"}}>{language==="sv"?"Din studienivå":"Your study level"}</Text><Text style={{color:"#D6C8FF",fontSize:10,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()} XP</Text></View><View style={{height:7,borderRadius:8,backgroundColor:"#FFFFFF24",overflow:"hidden",marginTop:8}}><View style={{height:"100%",width:(level.progress*100)+"%",backgroundColor:"#F6C96B",borderRadius:8}}/></View><Text style={{color:"#D6C8FF",fontSize:10,fontWeight:"700",marginTop:6}}>{Math.max(0,level.nextXp-(gameState?.totalXp||0))} XP to next level · {language==="sv"?"Uppdrag":"Quests"} →</Text></View></View></LinearGradient></Pressable>
       <StudyDashboard />
-      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:17,borderWidth:1,borderColor:"#D8C8FF",backgroundColor:c.surface,flexDirection:"row",alignItems:"center",gap:11,padding:12}}><LinearGradient colors={["#A78BFA","#D7A6F2"]} style={{width:38,height:38,borderRadius:12,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color="#FFFFFF"/></LinearGradient><View style={{flex:1}}><Text style={{color:"#9470E9",fontSize:9,fontWeight:"900",letterSpacing:1.2}}>SNAPSTUDY PRO</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Få mer ut av varje pass":"Make every study session count"}</Text></View><Ionicons name="chevron-forward" size={17} color="#9B7BEA"/></Pressable>
+      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:17,borderWidth:1,borderColor:"#D8C8FF",backgroundColor:c.surface,flexDirection:"row",alignItems:"center",gap:11,padding:12}}><LinearGradient colors={["#A78BFA","#D7A6F2"]} style={{width:38,height:38,borderRadius:12,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color="#FFFFFF"/></LinearGradient><View style={{flex:1}}><Text style={{color:"#9470E9",fontSize:9,fontWeight:"900",letterSpacing:1.2}}>SNAPSTUDY PLUS</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Få mer ut av varje pass":"Make every study session count"}</Text></View><Ionicons name="chevron-forward" size={17} color="#9B7BEA"/></Pressable>
       <AdBanner />
     </Animated.ScrollView><BottomNav/>
   </SafeAreaView>;
