@@ -37,21 +37,21 @@ function parse(raw:string) {
  if(!v||typeof v.topic!=="string"||typeof v.summary!=="string"||!Array.isArray(v.flashcards)||!Array.isArray(v.quiz)||!Array.isArray(v.practiceTest))throw new Error("Invalid study JSON");
  return v;
 }
-async function fetchTimed(url:string, init:RequestInit, timeoutMs=9000):Promise<Response> {
+async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<Response> {
  const controller=new AbortController();
  const timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{return await fetch(url,{...init,signal:controller.signal});}
  finally{clearTimeout(timer);}
 }
 async function run(p:P,images:any[],lang:string) {
- const instruction=lang==="sv"?"Write every field in natural Swedish.":lang==="ar"?"اكتب باللغة العربية الفصحى.":"Write every field in natural English.";
+ const providerTimeout=p.id==="gemini"?14000:p.id==="groq"?10000:p.id==="cloudflare"?8000:5000;\n const instruction=lang==="sv"?"Write every field in natural Swedish.":lang==="ar"?"اكتب باللغة العربية الفصحى.":"Write every field in natural English.";
  if(p.url==="gemini") {
-  const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})});
+  const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},providerTimeout);
   const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Gemini failed");
   return parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
  }
  const content=[{type:"text",text:prompt+"\n"+instruction},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
- const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:8000})});
+ const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:8000})},providerTimeout);
  const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
  const c=data.choices?.[0]?.message?.content;return parse(typeof c==="string"?c:Array.isArray(c)?c.map((x:any)=>x.text||"").join("\n"):"");
 }
