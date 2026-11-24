@@ -9,7 +9,7 @@ SnapStudy is an Expo app that turns photos of handwritten notes into study mater
 
 ## AI provider fallback
 
-The `analyze-notes` Supabase Edge Function tries each configured provider in order. A provider failure, timeout, or invalid study JSON causes it to continue to the next provider. Each request is bounded to 9 seconds so a long provider outage does not stall the study flow indefinitely.
+The `analyze-notes` Supabase Edge Function tries each configured provider in order. A provider failure, timeout, or invalid study JSON causes it to continue to the next provider. Requests are time-bounded (Gemini 14s, Groq 10s, Cloudflare 8s, other providers 5s) so the fallback chain stays within the Edge Function runtime.
 
 Supported provider IDs: `gemini`, `groq`, `nvidia`, `tokenharbor`, `huggingface`, `openrouter`, `vercel`, `zai`, `siliconflow`, `orcarouter`, `bazaarlink`, `cloudflare`, and `sambanova`, remote/cloud `ollama`, `agentrouter`, `routeway`, `requesty`, `fastrouter`, `opencodezen`, `llm7`, and `aihorde`.
 
@@ -29,8 +29,8 @@ Provider key names:
 - Vercel AI Gateway: `AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL`, and `AI_GATEWAY_MODEL` (or the `VERCEL_AI_GATEWAY_*` aliases)
 - Z.ai / Zhipu: `ZAI_API_KEY` (or `ZHIPU_API_KEY`); default endpoint `https://api.z.ai/api/paas/v4`
 - SiliconFlow: `SILICONFLOW_API_KEY`
-- OrcaRouter: `ORCAROUTER_API_KEY` and `ORCAROUTER_BASE_URL`
-- BazaarLink: `BAZAARLINK_API_KEY` and `BAZAARLINK_BASE_URL`
+- OrcaRouter: `ORCAROUTER_API_KEY` (default base URL `https://api.orcarouter.ai/v1`)
+- BazaarLink: `BAZAARLINK_API_KEY` (default base URL `https://api.bazaarlink.ai/v1`)
 - Cloudflare Workers AI: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
 - Remote Ollama: `OLLAMA_API_KEY`, optional `OLLAMA_BASE_URL` (local Ollama on your computer cannot be reached from the hosted Edge Function)\n- AgentRouter: `AGENTROUTER_API_KEY` (optional `AGENTROUTER_BASE_URL` / `AGENTROUTER_MODEL`)\n- Routeway: `ROUTEWAY_API_KEY`\n- Requesty: `REQUESTY_API_KEY`\n- FastRouter: `FASTROUTER_API_KEY`\n- OpenCode Zen: `OPENCODE_ZEN_API_KEY`\n- LLM7: optional `LLM7_API_KEY` (keyless endpoint supported)\n- AI Horde: optional `AIHORDE_API_KEY` (anonymous key is used if omitted)\n- SambaNova: `SAMBANOVA_API_KEY`
 
