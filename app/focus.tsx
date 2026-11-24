@@ -48,7 +48,7 @@ export default function FocusRoom(){
       </View></View>
      </View>
      <View style={styles.controls}>
-      <Pressable onPress={()=>{setFinished(false);setRunning(v=>!v)}} style={styles.startButton}><Text style={styles.startText}>{running?"Pause":finished?"Start again":"Start session"}</Text><Ionicons name={running?"pause":"play"} size={17} color="#5D459C"/></Pressable>
+      <Pressable onPress={()=>{if(finished){setSeconds(DURATIONS[mode]);completed.current=false;runId.current="focus-room-"+Date.now();}setFinished(false);setRunning(finished?true:!running)}} style={styles.startButton}><Text style={styles.startText}>{running?"Pause":finished?"Start again":"Start session"}</Text><Ionicons name={running?"pause":"play"} size={17} color="#5D459C"/></Pressable>
       <Pressable onPress={reset} style={styles.resetButton}><Ionicons name="refresh" size={20} color="#FFFFFF"/></Pressable>
      </View>
      {finished&&mode==="focus"?<Text style={styles.completeText}>Beautiful work. You added 40 XP to your study journey.</Text>:null}
