@@ -10,13 +10,13 @@ export type ThemeColors = {
 
 const palettes: Record<ThemeMode, ThemeColors> = {
   dark: {
-    bg:"#070A12", surface:"#0F1320", surfaceAlt:"#101522", border:"#242A3A",
-    text:"#F7F5FF", muted:"#9691A4", subtle:"#777286", accent:"#8B5CF6",
-    accentSoft:"#1B1730", input:"#0B0E17", onAccent:"#FFFFFF",
+    bg:"#10131D", surface:"#191E2B", surfaceAlt:"#202637", border:"#2B3447",
+    text:"#F5F6FC", muted:"#A6AEC0", subtle:"#818BA1", accent:"#8B5CF6",
+    accentSoft:"#30264B", input:"#151A26", onAccent:"#FFFFFF",
     danger:"#E2A7B4", dangerBorder:"#3A2D3A",
   },
   light: {
-    bg:"#F5F6FB", surface:"#FFFFFF", surfaceAlt:"#FFFFFF", border:"#E1E4EE",
+    bg:"#F4F5FA", surface:"#FFFFFF", surfaceAlt:"#F9FAFD", border:"#E6E8F0",
     text:"#191827", muted:"#656579", subtle:"#85859A", accent:"#7651E8",
     accentSoft:"#EEE9FF", input:"#F8F8FC", onAccent:"#FFFFFF",
     danger:"#B42345", dangerBorder:"#F1CAD3",
