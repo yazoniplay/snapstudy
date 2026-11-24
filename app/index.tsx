@@ -141,28 +141,18 @@ export default function Home() {
       <AdBanner />
       <StudyDashboard />
 
-      <Pressable onPress={()=>router.push("/progress")} style={{backgroundColor:c.surface,borderColor:c.accent,borderWidth:1,borderRadius:18,padding:16,marginTop:14,flexDirection:"row",alignItems:"center",gap:12}}>
-        <View style={{width:42,height:42,borderRadius:14,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="trophy-outline" size={22} color={c.accent}/></View>
-        <View style={{flex:1}}><Text style={{color:c.text,fontSize:15,fontWeight:"900"}}>Your level & quests</Text><Text style={{color:c.muted,fontSize:12,marginTop:4}}>Earn XP, unlock achievements and build your streak</Text></View>
-        <Ionicons name="chevron-forward" size={19} color={c.accent}/>
-      </Pressable>
-
-      <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}>
-        <View style={s.plusTop}><Text style={s.plusBadge}>SNAPSTUDY PLUS</Text><Text style={s.plusArrow}>↗</Text></View>
-        <Text style={s.plusTitle}>{t("plusHeroTitle")}</Text>
-        <Text style={s.plusText}>{t("plusHeroSub")}</Text>
-        <Text style={s.plusLink}>{language==="sv"?"Utforska Plus →":language==="ar"?"اكتشف بلس ←":"Explore Plus →"}</Text>
-      </Pressable>
-
-      <Pressable style={s.creditsCard} onPress={()=>router.push("/credits")} accessibilityRole="button" accessibilityLabel={language==="sv"?"Krediter och attribution":language==="ar"?"الشكر ونسب الفضل":"Credits and attribution"}>
-        <View style={s.creditsIcon}><Ionicons name="ribbon-outline" size={21} color={c.accent}/></View>
-        <View style={{flex:1}}>
-          <Text style={s.creditsTitle}>{language==="sv"?"Krediter och attribution":language==="ar"?"الشكر ونسب الفضل":"Credits and attribution"}</Text>
-          <Text style={s.creditsSub}>{language==="sv"?"Möt skaparen och läs om SnapStudy":language==="ar"?"تعرّف على المطوّر وعن سناب ستدي":"Meet the creator and learn about SnapStudy"}</Text>
+      <Pressable onPress={()=>router.push("/progress")} style={{marginTop:2,marginBottom:18,borderRadius:22,overflow:"hidden",backgroundColor:"#30205E",padding:18,flexDirection:"row",alignItems:"center",gap:14}}>
+        <View style={{width:52,height:52,borderRadius:18,backgroundColor:"#6D4AFF",alignItems:"center",justifyContent:"center",borderWidth:2,borderColor:"#A995FF"}}>
+          <Ionicons name="game-controller-outline" size={27} color="#FFFFFF"/>
         </View>
-        <Ionicons name={language==="ar"?"arrow-back":"arrow-forward"} size={19} color={c.muted}/>
+        <View style={{flex:1}}>
+          <Text style={{color:"#C9B9FF",fontSize:10,fontWeight:"900",letterSpacing:1.8}}>YOUR STUDY RPG</Text>
+          <Text style={{color:"#FFFFFF",fontSize:19,fontWeight:"900",marginTop:4}}>Level up today</Text>
+          <Text style={{color:"#D8D0F5",fontSize:12,marginTop:3}}>Quests · XP · achievements</Text>
+        </View>
+        <View style={{width:34,height:34,borderRadius:17,backgroundColor:"#FFFFFF20",alignItems:"center",justifyContent:"center"}}><Ionicons name="chevron-forward" size={19} color="#FFFFFF"/></View>
       </Pressable>
-      <Pressable style={s.accountLink} onPress={()=>router.push("/account")}><Text style={s.accountLinkText}>{t("settings")}</Text></Pressable>
+
     </Animated.ScrollView>
     <BottomNav />
   </SafeAreaView>;
