@@ -35,9 +35,18 @@ function providers():P[] {
  return list.filter(p=>(p.key||p.id==="aihorde")&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
 }
 function parse(raw:string) {
- const s=raw.replace(/^\s*\`\`\`(?:json)?\s*/i,"").replace(/\s*\`\`\`\s*$/,"").trim();
+ const s=raw.replace(/^\s*```(?:json)?\s*/i,"").replace(/\s*```\s*$/,"").trim();
  const v=JSON.parse(s);
  if(!v||typeof v.topic!=="string"||typeof v.summary!=="string"||!Array.isArray(v.flashcards)||!Array.isArray(v.quiz)||!Array.isArray(v.practiceTest))throw new Error("Invalid study JSON");
+ const words=(value:string)=>String(value||"").toLowerCase().replace(/[^\\p{L}\\p{N}\\s-]/gu," ").split(/[\\s-]+/).map(x=>x.replace(/(ing|ed|es|s)$/,"")).filter(x=>x.length>2&&!["the","and","are","was","were","that","this","with","from","into","does","have","has","what","which","when","where","person","individual"].includes(x));
+ for(const q of v.quiz){
+  if(!Array.isArray(q?.options)||!q.options.length)continue;
+  const explanationWords=words(q.explanation);
+  const scores=q.options.map((option:string)=>words(option).filter(token=>explanationWords.some(word=>word===token||word.startsWith(token)||token.startsWith(word))).length);
+  const best=Math.max(...scores),bestIndex=scores.indexOf(best),answer=Number(q.answer);
+  if((!Number.isInteger(answer)||answer<0||answer>=q.options.length)&&Number.isInteger(answer)&&answer>=1&&answer<=q.options.length)q.answer=answer-1;
+  else if(best>0&&bestIndex!==answer&&best>=(scores[answer]||0)+1)q.answer=bestIndex;
+ }
  return v;
 }
 async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<Response> {
