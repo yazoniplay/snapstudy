@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -11,7 +11,6 @@ export default function Progress() {
   const { colors:c } = useTheme(); const s = styles(c);
   const [state,setState] = useState<GamificationState | null>(null);
   const [name,setName] = useState("Student"); const [avatar,setAvatar] = useState<string|null>(null); const [streak,setStreak] = useState(0); const [loading,setLoading] = useState(true);
-  const refresh = useCallback(async () => { const next = await loadGamification(); setState(next); },[]);
   useEffect(() => { let active=true; (async()=>{try{const [{data:{user}},next]=await Promise.all([supabase.auth.getUser(),loadGamification()]);if(!user){router.replace("/auth");return;}const {data}=await supabase.from("profiles").select("display_name,avatar_url,current_streak").eq("id",user.id).maybeSingle();if(active){setName(data?.display_name||user.user_metadata?.full_name||"Student");setAvatar(data?.avatar_url||null);setStreak(data?.current_streak||0);setState(next);}}catch(e){console.warn("Progress load failed",e);}finally{if(active)setLoading(false);}})();return()=>{active=false};},[]);
   const level = getLevel(state?.totalXp||0); const quests = state ? getDailyQuestProgress(state) : [];
   if(loading||!state)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator color={c.accent}/><Text style={s.muted}>Loading your progress…</Text></View></SafeAreaView>;
