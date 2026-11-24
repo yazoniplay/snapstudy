@@ -1,7 +1,11 @@
 // Multi-provider study AI fallback
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
-const prompt = "Read all supplied note images as one set. Return only JSON with topic, summary, flashcards [{question,answer}], quiz [{question,options,answer,explanation}], practiceTest [{question,answer}]. Make 8-12 flashcards, 6 quizzes, 5 practice questions. Use only the notes.";
+const prompt = `You are an expert study-material creator. Read the supplied images as a set of STUDY SOURCES, not as general photos.
+Create questions ONLY about educational information that is visibly written or clearly diagrammed in the source (definitions, facts, processes, formulas, dates, labelled diagrams). Never create questions about a person's appearance, identity, hair, eyes, clothing, age, attractiveness, or other visual traits. Never turn a random photo into trivia. If the images do not contain readable educational material, return JSON with topic "No study notes detected", a brief summary asking the user to upload notes, and empty flashcards, quiz, and practiceTest arrays.
+Return ONLY valid JSON with this exact shape:
+{"topic":"...","summary":"...","flashcards":[{"question":"...","answer":"..."}],"quiz":[{"question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."}],"practiceTest":[{"question":"...","answer":"..."}]}
+Make 8-12 flashcards, up to 6 useful multiple-choice questions, and up to 5 practice questions, but do not invent content just to reach a count. For every quiz question, answer MUST be the zero-based index (A=0, B=1, C=2, D=3) of the single correct option. Before returning, verify that the selected option actually answers the question and that the explanation explicitly supports that same option. Distractors must be plausible but clearly wrong based on the source. Do not create questions whose answer or explanation is unsupported by the source. Use only information in the supplied notes.`;
 const env = (k:string) => Deno.env.get(k)?.trim() || "";
 type P = {id:string;key:string;url:string;model:string};
 function providers():P[] {
