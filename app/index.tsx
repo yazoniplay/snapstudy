@@ -14,6 +14,7 @@ import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
+import { awardXP } from "../lib/gamification";
 export default function Home() {
   const { colors:c, setMode } = useTheme(); const {t,language}=useLanguage();
   const s = makeStyles(c);
@@ -140,6 +141,12 @@ export default function Home() {
 
       <AdBanner />
       <StudyDashboard />
+
+      <Pressable onPress={()=>router.push("/progress")} style={{backgroundColor:c.surface,borderColor:c.accent,borderWidth:1,borderRadius:18,padding:16,marginTop:14,flexDirection:"row",alignItems:"center",gap:12}}>
+        <View style={{width:42,height:42,borderRadius:14,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="trophy-outline" size={22} color={c.accent}/></View>
+        <View style={{flex:1}}><Text style={{color:c.text,fontSize:15,fontWeight:"900"}}>Your level & quests</Text><Text style={{color:c.muted,fontSize:12,marginTop:4}}>Earn XP, unlock achievements and build your streak</Text></View>
+        <Ionicons name="chevron-forward" size={19} color={c.accent}/>
+      </Pressable>
 
       <Pressable style={s.plusCard} onPress={()=>router.push("/plus")}>
         <View style={s.plusTop}><Text style={s.plusBadge}>SNAPSTUDY PLUS</Text><Text style={s.plusArrow}>↗</Text></View>
