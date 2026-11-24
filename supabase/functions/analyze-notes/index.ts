@@ -15,8 +15,8 @@ function providers():P[] {
  {id:"vercel",key:env("AI_GATEWAY_API_KEY")||env("VERCEL_AI_GATEWAY_API_KEY"),url:env("AI_GATEWAY_BASE_URL")||env("VERCEL_AI_GATEWAY_BASE_URL")||"https://ai-gateway.vercel.sh/v1",model:env("AI_GATEWAY_MODEL")||env("VERCEL_AI_GATEWAY_MODEL")||"openai/gpt-oss-120b"},
  {id:"zai",key:env("ZAI_API_KEY")||env("ZHIPU_API_KEY"),url:env("ZAI_BASE_URL")||"https://api.z.ai/api/paas/v4",model:env("ZAI_MODEL")||"glm-4.7-flash"},
  {id:"siliconflow",key:env("SILICONFLOW_API_KEY"),url:env("SILICONFLOW_BASE_URL")||"https://api.siliconflow.com/v1",model:env("SILICONFLOW_MODEL")||"Qwen/Qwen3-30B-A3B-Instruct-2507"},
- {id:"orcarouter",key:env("ORCAROUTER_API_KEY"),url:env("ORCAROUTER_BASE_URL"),model:env("ORCAROUTER_MODEL")||"auto:free"},
- {id:"bazaarlink",key:env("BAZAARLINK_API_KEY"),url:env("BAZAARLINK_BASE_URL"),model:env("BAZAARLINK_MODEL")||"auto:free"},
+ {id:"orcarouter",key:env("ORCAROUTER_API_KEY"),url:env("ORCAROUTER_BASE_URL")||"https://api.orcarouter.ai/v1",model:env("ORCAROUTER_MODEL")||"orcarouter/auto"},
+ {id:"bazaarlink",key:env("BAZAARLINK_API_KEY"),url:env("BAZAARLINK_BASE_URL")||"https://api.bazaarlink.ai/v1",model:env("BAZAARLINK_MODEL")||"auto:free"},
  {id:"cloudflare",key:env("CLOUDFLARE_API_TOKEN"),url:env("CLOUDFLARE_BASE_URL")||(env("CLOUDFLARE_ACCOUNT_ID")?"https://api.cloudflare.com/client/v4/accounts/"+env("CLOUDFLARE_ACCOUNT_ID")+"/ai/v1":""),model:env("CLOUDFLARE_WORKERS_AI_MODEL")||env("CLOUDFLARE_MODEL")||"@cf/zai-org/glm-4.7-flash"},
  {id:"ollama",key:env("OLLAMA_API_KEY"),url:env("OLLAMA_BASE_URL")||"https://ollama.com/v1",model:env("OLLAMA_MODEL")||"llama3.3"},
  {id:"agentrouter",key:env("AGENTROUTER_API_KEY"),url:env("AGENTROUTER_BASE_URL")||"https://agentrouter.org/v1",model:env("AGENTROUTER_MODEL")||"deepseek-v4-flash"},
@@ -51,7 +51,7 @@ async function run(p:P,images:any[],lang:string) {
   return parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
  }
  const content=[{type:"text",text:prompt+"\n"+instruction},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
- const response=await fetch(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:8000})});
+ const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:8000})});
  const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
  const c=data.choices?.[0]?.message?.content;return parse(typeof c==="string"?c:Array.isArray(c)?c.map((x:any)=>x.text||"").join("\n"):"");
 }
