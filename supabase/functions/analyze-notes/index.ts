@@ -7,8 +7,8 @@ type P = {id:string;key:string;url:string;model:string};
 function providers():P[] {
  const list:P[]=[
  {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-3.5-flash-lite"},
- {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"meta-llama/llama-4-scout-17b-16e-instruct"},
- {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"meta/llama-3.2-90b-vision-instruct"},
+ {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"qwen/qwen3.8-27b"},
+ {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"nvidia/nemotron-nano-12b-v2-vl"},
  {id:"tokenharbor",key:env("TOKEN_HARBOR_KEY")||env("TOKENHARBOR_API_KEY"),url:env("TOKEN_HARBOR_BASE_URL")||env("TOKENHARBOR_BASE_URL")||"https://tokenharbor.ai/v1",model:env("TOKEN_HARBOR_MODEL")||env("TOKENHARBOR_MODEL")||"deepseek-v4.1-flash:free"},
  {id:"huggingface",key:env("HUGGINGFACE_API_KEY")||env("HF_TOKEN"),url:env("HUGGINGFACE_BASE_URL")||"https://router.huggingface.co/v1",model:env("HUGGINGFACE_MODEL")||"Qwen/Qwen2.5-VL-72B-Instruct"},
  {id:"openrouter",key:env("OPENROUTER_API_KEY"),url:env("OPENROUTER_BASE_URL")||"https://openrouter.ai/api/v1",model:env("OPENROUTER_MODEL")||"openrouter/free"},
@@ -29,7 +29,7 @@ function providers():P[] {
  {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"deepseek-ai/DeepSeek-V3.2"}
  ];
  const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
- return list.filter(p=>(p.key||p.id==="llm7")&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
+ return list.filter(p=>(p.key||p.id==="llm7")&&(p.url==="gemini"||p.url)).filter(p=>!["llm7","aihorde"].includes(p.id)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
 }
 function parse(raw:string) {
  const s=raw.replace(/^\s*\`\`\`(?:json)?\s*/i,"").replace(/\s*\`\`\`\s*$/,"").trim();
@@ -44,7 +44,7 @@ async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<
  finally{clearTimeout(timer);}
 }
 async function run(p:P,images:any[],lang:string) {
- const providerTimeout=p.id==="gemini"?14000:p.id==="groq"?10000:p.id==="cloudflare"?8000:5000;
+ const providerTimeout=p.id==="gemini"?18000:p.id==="groq"?15000:p.id==="cloudflare"?15000:p.id==="tokenharbor"?25000:15000;
  const instruction=lang==="sv"?"Write every field in natural Swedish.":lang==="ar"?"اكتب باللغة العربية الفصحى.":"Write every field in natural English.";
  if(p.url==="gemini") {
   const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},providerTimeout);
