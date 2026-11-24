@@ -10,6 +10,7 @@ import type {StudyResult} from "../lib/api";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 import { supabase } from "../lib/supabase";
+import { awardXP } from "../lib/gamification";
 import AdBanner from "../components/AdBanner";
 import { hasPlusFeature, loadPlusEntitlement, NO_PLUS_ENTITLEMENT, type PlusEntitlement } from "../lib/plus";
 
@@ -28,6 +29,7 @@ export default function Study(){
  const [dueOnly,setDueOnly]=useState(dueParam==="1");
  const [teachText,setTeachText]=useState("");
  const [focusSeconds,setFocusSeconds]=useState(1500),[focusRunning,setFocusRunning]=useState(false);
+ const focusAwarded=useRef(false); const focusRunId=useRef("focus-"+Date.now());
  const modeMotion=useRef(new Animated.Value(1)).current;
  const flashMotion=useRef(new Animated.Value(1)).current;
  const questionMotion=useRef(new Animated.Value(1)).current;
@@ -43,7 +45,7 @@ export default function Study(){
  useEffect(()=>{let active=true;loadPlusEntitlement().then(value=>{if(active)setPlusAccess(value)}).catch(()=>{});return()=>{active=false};},[]);
  useEffect(()=>{let active=true;const day=new Date().toISOString().slice(0,10);AsyncStorage.getItem("snapstudy:energy:v1").then(raw=>{if(!active)return;const saved=raw?JSON.parse(raw):null;if(saved?.day===day){setHearts(typeof saved.hearts==="number"?saved.hearts:5);setStamina(typeof saved.stamina==="number"?saved.stamina:100);}}).catch(()=>{});return()=>{active=false};},[]);
  useEffect(()=>{if(!focusRunning)return;const timer=setInterval(()=>setFocusSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(timer);},[focusRunning]);
- useEffect(()=>{if(focusSeconds===0)setFocusRunning(false);},[focusSeconds]);
+ useEffect(()=>{if(focusSeconds===0){setFocusRunning(false);if(!focusAwarded.current){focusAwarded.current=true;awardXP(focusRunId.current,40,"focus","25-minute focus session",{focusSessions:1,focusMinutes:25}).catch(e=>console.warn("Could not award focus XP",e));}}},[focusSeconds]);
  useEffect(()=>{
   let active=true;
   async function load(){
@@ -149,6 +151,8 @@ export default function Study(){
   const next={...reviewSchedule,[key]:{dueAt,intervalDays,repetitions:rating==="again"?0:(old?.repetitions||0)+1,lastRating:rating}};
   setReviewSchedule(next);
   await saveStudyData("reviewSchedule",next).catch(()=>{});
+  const today=new Date().toISOString().slice(0,10);
+  await awardXP("card:"+today+":"+key,5,"card","Flashcard reviewed",{cardsReviewed:1}).catch(e=>console.warn("Could not award flashcard XP",e));
   if(visibleCardIndices.length>1){setCard((card+1)%visibleCardIndices.length);setShowAnswer(false);}else if(dueOnly){setShowAnswer(false);}
  }
  const dueCount=data?data.flashcards.filter(x=>{const entry=reviewSchedule[cardKey(x.question)];return !entry||entry.dueAt<=Date.now()}).length:0;
@@ -191,7 +195,7 @@ export default function Study(){
   {mode==="concepts"&&<View style={s.sectionStack}><Text style={s.heading}>{t("keyConcepts")}</Text><Text style={s.mutedLeft}>{t("keyConceptHint")}</Text>{keyConcepts.map((item,i)=><View style={s.conceptCard} key={i}><Text style={s.conceptNumber}>{String(i+1).padStart(2,"0")}</Text><View style={{flex:1}}><Text style={s.conceptQuestion}>{item.question}</Text><Text style={s.body}>{item.answer}</Text></View></View>)}</View>}
   {mode==="plan"&&<View style={s.sectionStack}><Text style={s.heading}>{t("studyPlan")}</Text><Text style={s.mutedLeft}>{language==="sv"?"Ett enkelt upplägg för att repetera det viktigaste.":language==="ar"?"خطة بسيطة لمراجعة أهم المعلومات.":"A simple sequence to review the most important material."}</Text>{planSteps.map((step,i)=><View style={s.planRow} key={step}><View style={s.planNumber}><Text style={s.planNumberText}>{i+1}</Text></View><Text style={s.planText}>{step}</Text></View>)}<Pressable style={s.primaryBtn} onPress={()=>{setMode("focus");setFocusRunning(true);}}><Text style={s.primaryText}>{t("startFocus")}</Text></Pressable></View>}
   {mode==="teach"&&<View style={s.sectionStack}><Text style={s.heading}>{t("teachBack")}</Text><Text style={s.mutedLeft}>{t("teachBackTip")}</Text><TextInput multiline value={teachText} onChangeText={setTeachText} placeholder={t("writeExplanation")} placeholderTextColor={c.subtle} style={s.teachInput}/><Text style={s.mutedLeft}>{language==="sv"?"Jämför din förklaring med sammanfattningen när du är klar.":language==="ar"?"قارن شرحك بالملخص عند الانتهاء.":"When you're done, compare your explanation with the summary."}</Text><Pressable style={s.secondaryBtn} onPress={()=>setMode("summary")}><Text style={s.btnText}>{language==="sv"?"Visa sammanfattningen":language==="ar"?"عرض الملخص":"Review summary"}</Text></Pressable></View>}
-  {mode==="focus"&&<View style={s.sectionStack}><Text style={s.heading}>{t("focusTimer")}</Text><Text style={s.mutedLeft}>{t("focusReady")}</Text><View style={s.timerCard}><Text style={s.clock}>{clock}</Text><Text style={s.timerCaption}>{focusSeconds===0?t("focusDone"):t("minutes")}</Text><View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>setFocusRunning(v=>!v)}><Text style={s.btnText}>{focusRunning?t("pause"):focusSeconds===0?t("resume"):t("startFocus")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setFocusRunning(false);setFocusSeconds(1500);}}><Text style={s.primaryText}>{t("reset")}</Text></Pressable></View></View></View>}
+  {mode==="focus"&&<View style={s.sectionStack}><Text style={s.heading}>{t("focusTimer")}</Text><Text style={s.mutedLeft}>{t("focusReady")}</Text><View style={s.timerCard}><Text style={s.clock}>{clock}</Text><Text style={s.timerCaption}>{focusSeconds===0?t("focusDone"):t("minutes")}</Text><View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>setFocusRunning(v=>!v)}><Text style={s.btnText}>{focusRunning?t("pause"):focusSeconds===0?t("resume"):t("startFocus")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setFocusRunning(false);setFocusSeconds(1500);focusAwarded.current=false;focusRunId.current="focus-"+Date.now();}}><Text style={s.primaryText}>{t("reset")}</Text></Pressable></View></View></View>}
   {mode === "flashcards" && (
    <View>
     <View style={s.reviewHeader}>
@@ -284,7 +288,7 @@ export default function Study(){
                 <Animated.View style={{ opacity: feedbackMotion, transform: [{ translateY: feedbackMotion.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
                   <Text style={s.feedback}>{selected === currentQuiz?.answer ? t("correct") : t("notQuite")}</Text>
                   <Text style={s.explain}>{currentQuiz?.explanation}</Text>
-                  <Pressable style={s.primaryBtn} onPress={() => { setQuizIndex(value => value + 1); setSelected(null); }}>
+                  <Pressable style={s.primaryBtn} onPress={async () => { if(quizIndex===data.quiz.length-1){const today=new Date().toISOString().slice(0,10);await awardXP("quiz:"+today+":"+data.topic,25,"quiz","Quiz completed",{quizzesCompleted:1,tasksCompleted:1}).catch(e=>console.warn("Could not award quiz XP",e));} setQuizIndex(value => value + 1); setSelected(null); }}>
                     <Text style={s.primaryText}>{quizIndex === data.quiz.length - 1 ? t("finish") : t("next")}</Text>
                   </Pressable>
                 </Animated.View>
