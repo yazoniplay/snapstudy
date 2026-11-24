@@ -10,6 +10,7 @@ import type {StudyResult} from "../lib/api";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 import { supabase } from "../lib/supabase";
+import { awardXP, getLevel, loadGamification } from "../lib/gamification";
 import AdBanner from "../components/AdBanner";
 import { hasPlusFeature, loadPlusEntitlement, NO_PLUS_ENTITLEMENT, type PlusEntitlement } from "../lib/plus";
 
@@ -28,6 +29,8 @@ export default function Study(){
  const [dueOnly,setDueOnly]=useState(dueParam==="1");
  const [teachText,setTeachText]=useState("");
  const [focusSeconds,setFocusSeconds]=useState(1500),[focusRunning,setFocusRunning]=useState(false);
+ const [gameXP,setGameXP]=useState(0);
+ const focusAwarded=useRef(false); const focusRunId=useRef("focus-"+Date.now());
  const modeMotion=useRef(new Animated.Value(1)).current;
  const flashMotion=useRef(new Animated.Value(1)).current;
  const questionMotion=useRef(new Animated.Value(1)).current;
@@ -43,7 +46,7 @@ export default function Study(){
  useEffect(()=>{let active=true;loadPlusEntitlement().then(value=>{if(active)setPlusAccess(value)}).catch(()=>{});return()=>{active=false};},[]);
  useEffect(()=>{let active=true;const day=new Date().toISOString().slice(0,10);AsyncStorage.getItem("snapstudy:energy:v1").then(raw=>{if(!active)return;const saved=raw?JSON.parse(raw):null;if(saved?.day===day){setHearts(typeof saved.hearts==="number"?saved.hearts:5);setStamina(typeof saved.stamina==="number"?saved.stamina:100);}}).catch(()=>{});return()=>{active=false};},[]);
  useEffect(()=>{if(!focusRunning)return;const timer=setInterval(()=>setFocusSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(timer);},[focusRunning]);
- useEffect(()=>{if(focusSeconds===0)setFocusRunning(false);},[focusSeconds]);
+ useEffect(()=>{if(focusSeconds===0){setFocusRunning(false);if(!focusAwarded.current){focusAwarded.current=true;awardXP(focusRunId.current,40,"focus","25-minute focus session",{focusSessions:1,focusMinutes:25}).then(next=>setGameXP(next.totalXp)).catch(e=>console.warn("Could not award focus XP",e));}}},[focusSeconds]);
  useEffect(()=>{
   let active=true;
   async function load(){
@@ -139,7 +142,7 @@ export default function Study(){
  const visibleCardIndices=useMemo(()=>{if(!data)return [];const all=data.flashcards.map((_,i)=>i);return dueOnly?all.filter(i=>{const entry=reviewSchedule[cardKey(data.flashcards[i].question)];return !entry||entry.dueAt<=Date.now()}):all;},[data,dueOnly,reviewSchedule]);
  const activeCardIndex=visibleCardIndices.length?visibleCardIndices[Math.min(card,visibleCardIndices.length-1)]:0;
  const activeCard=data?.flashcards[activeCardIndex];
- useEffect(()=>{if(!data)return;let active=true;loadStudyData<typeof reviewSchedule>("reviewSchedule",{}).then(value=>{if(active)setReviewSchedule(value||{});}).catch(()=>{});return()=>{active=false};},[data?.topic]);
+ useEffect(()=>{if(!data)return;let active=true;loadStudyData<typeof reviewSchedule>("reviewSchedule",{}).then(value=>{if(active)setReviewSchedule(value||{});}).catch(()=>{});loadGamification().then(value=>{if(active)setGameXP(value.totalXp);}).catch(()=>{});return()=>{active=false};},[data?.topic]);
  async function rateCard(rating:"again"|"hard"|"good"|"easy"){
   if(!activeCard)return;
   const key=cardKey(activeCard.question),old=reviewSchedule[key];
@@ -149,6 +152,8 @@ export default function Study(){
   const next={...reviewSchedule,[key]:{dueAt,intervalDays,repetitions:rating==="again"?0:(old?.repetitions||0)+1,lastRating:rating}};
   setReviewSchedule(next);
   await saveStudyData("reviewSchedule",next).catch(()=>{});
+  const today=new Date().toISOString().slice(0,10);
+  await awardXP("card:"+today+":"+key,5,"card","Flashcard reviewed",{cardsReviewed:1}).then(value=>setGameXP(value.totalXp)).catch(e=>console.warn("Could not award flashcard XP",e));
   if(visibleCardIndices.length>1){setCard((card+1)%visibleCardIndices.length);setShowAnswer(false);}else if(dueOnly){setShowAnswer(false);}
  }
  const dueCount=data?data.flashcards.filter(x=>{const entry=reviewSchedule[cardKey(x.question)];return !entry||entry.dueAt<=Date.now()}).length:0;
@@ -183,6 +188,7 @@ export default function Study(){
  return <SafeAreaView style={[s.safe,{direction:language==="ar"?"rtl":"ltr"}]}><Animated.ScrollView style={{opacity:modeMotion,transform:[{translateY:modeMotion.interpolate({inputRange:[0,1],outputRange:[8,0]})}]}} contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
   <Pressable onPress={()=>router.replace("/")}><Text style={s.back}>{t("newScan")}</Text></Pressable>
   <Text style={s.eyebrow}>{t("studySession")}</Text><Text style={s.title}>{data.topic}</Text>
+  <Pressable onPress={()=>router.push("/progress")} style={{backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:14,padding:12,marginTop:9,marginBottom:10,flexDirection:"row",alignItems:"center",gap:10}}><View style={{flex:1}}><Text style={{color:c.accent,fontSize:11,fontWeight:"900"}}>LEVEL {getLevel(gameXP).level} · {gameXP.toLocaleString()} XP</Text><View style={{height:6,backgroundColor:c.border,borderRadius:6,overflow:"hidden",marginTop:8}}><View style={{height:"100%",width:(getLevel(gameXP).progress*100)+"%",backgroundColor:c.accent}}/></View><Text style={{color:c.muted,fontSize:10,marginTop:5}}>{getLevel(gameXP).nextXp-gameXP} XP to next level</Text></View><Ionicons name="trophy-outline" size={20} color={c.accent}/></Pressable>
   <Pressable style={s.goPlus} onPress={()=>router.push("/plus")}><Text style={s.goPlusText}>SNAPSTUDY PLUS</Text><Text style={s.goPlusArrow}>↗</Text></Pressable>
   <View style={s.energyHud}><View style={s.hudHearts}><Ionicons name="heart" size={17} color="#F06A9B"/><Text style={s.hudText}>{hearts}/5</Text></View><View style={s.hudStamina}><Ionicons name="flash" size={17} color="#9B7BFF"/><View style={s.hudTrack}><View style={[s.hudFill,{width:stamina+"%"}]}/></View><Text style={s.hudText}>{stamina}%</Text></View></View>
   <AdBanner />
@@ -191,7 +197,7 @@ export default function Study(){
   {mode==="concepts"&&<View style={s.sectionStack}><Text style={s.heading}>{t("keyConcepts")}</Text><Text style={s.mutedLeft}>{t("keyConceptHint")}</Text>{keyConcepts.map((item,i)=><View style={s.conceptCard} key={i}><Text style={s.conceptNumber}>{String(i+1).padStart(2,"0")}</Text><View style={{flex:1}}><Text style={s.conceptQuestion}>{item.question}</Text><Text style={s.body}>{item.answer}</Text></View></View>)}</View>}
   {mode==="plan"&&<View style={s.sectionStack}><Text style={s.heading}>{t("studyPlan")}</Text><Text style={s.mutedLeft}>{language==="sv"?"Ett enkelt upplägg för att repetera det viktigaste.":language==="ar"?"خطة بسيطة لمراجعة أهم المعلومات.":"A simple sequence to review the most important material."}</Text>{planSteps.map((step,i)=><View style={s.planRow} key={step}><View style={s.planNumber}><Text style={s.planNumberText}>{i+1}</Text></View><Text style={s.planText}>{step}</Text></View>)}<Pressable style={s.primaryBtn} onPress={()=>{setMode("focus");setFocusRunning(true);}}><Text style={s.primaryText}>{t("startFocus")}</Text></Pressable></View>}
   {mode==="teach"&&<View style={s.sectionStack}><Text style={s.heading}>{t("teachBack")}</Text><Text style={s.mutedLeft}>{t("teachBackTip")}</Text><TextInput multiline value={teachText} onChangeText={setTeachText} placeholder={t("writeExplanation")} placeholderTextColor={c.subtle} style={s.teachInput}/><Text style={s.mutedLeft}>{language==="sv"?"Jämför din förklaring med sammanfattningen när du är klar.":language==="ar"?"قارن شرحك بالملخص عند الانتهاء.":"When you're done, compare your explanation with the summary."}</Text><Pressable style={s.secondaryBtn} onPress={()=>setMode("summary")}><Text style={s.btnText}>{language==="sv"?"Visa sammanfattningen":language==="ar"?"عرض الملخص":"Review summary"}</Text></Pressable></View>}
-  {mode==="focus"&&<View style={s.sectionStack}><Text style={s.heading}>{t("focusTimer")}</Text><Text style={s.mutedLeft}>{t("focusReady")}</Text><View style={s.timerCard}><Text style={s.clock}>{clock}</Text><Text style={s.timerCaption}>{focusSeconds===0?t("focusDone"):t("minutes")}</Text><View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>setFocusRunning(v=>!v)}><Text style={s.btnText}>{focusRunning?t("pause"):focusSeconds===0?t("resume"):t("startFocus")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setFocusRunning(false);setFocusSeconds(1500);}}><Text style={s.primaryText}>{t("reset")}</Text></Pressable></View></View></View>}
+  {mode==="focus"&&<View style={s.sectionStack}><Text style={s.heading}>{t("focusTimer")}</Text><Text style={s.mutedLeft}>{t("focusReady")}</Text><View style={s.timerCard}><Text style={s.clock}>{clock}</Text><Text style={s.timerCaption}>{focusSeconds===0?t("focusDone"):t("minutes")}</Text><View style={s.row}><Pressable style={s.secondaryBtn} onPress={()=>setFocusRunning(v=>!v)}><Text style={s.btnText}>{focusRunning?t("pause"):focusSeconds===0?t("resume"):t("startFocus")}</Text></Pressable><Pressable style={s.primaryBtn} onPress={()=>{setFocusRunning(false);setFocusSeconds(1500);focusAwarded.current=false;focusRunId.current="focus-"+Date.now();}}><Text style={s.primaryText}>{t("reset")}</Text></Pressable></View></View></View>}
   {mode === "flashcards" && (
    <View>
     <View style={s.reviewHeader}>
@@ -284,7 +290,7 @@ export default function Study(){
                 <Animated.View style={{ opacity: feedbackMotion, transform: [{ translateY: feedbackMotion.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
                   <Text style={s.feedback}>{selected === currentQuiz?.answer ? t("correct") : t("notQuite")}</Text>
                   <Text style={s.explain}>{currentQuiz?.explanation}</Text>
-                  <Pressable style={s.primaryBtn} onPress={() => { setQuizIndex(value => value + 1); setSelected(null); }}>
+                  <Pressable style={s.primaryBtn} onPress={async () => { if(quizIndex===data.quiz.length-1){const today=new Date().toISOString().slice(0,10);await awardXP("quiz:"+today+":"+data.topic,25,"quiz","Quiz completed",{quizzesCompleted:1,tasksCompleted:1}).then(value=>setGameXP(value.totalXp)).catch(e=>console.warn("Could not award quiz XP",e));} setQuizIndex(value => value + 1); setSelected(null); }}>
                     <Text style={s.primaryText}>{quizIndex === data.quiz.length - 1 ? t("finish") : t("next")}</Text>
                   </Pressable>
                 </Animated.View>
