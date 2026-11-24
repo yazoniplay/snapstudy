@@ -1,120 +1,55 @@
+// Multi-provider study AI fallback
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const prompt = `Read all supplied images of handwritten or printed study notes as pages from the same set of notes. Combine information across all pages and avoid repeating facts when pages overlap.
-Return ONLY valid JSON with exactly this shape:
-{
-  "topic": "short topic",
-  "summary": "student-friendly summary",
-  "flashcards": [{"question": "...", "answer": "..."}],
-  "quiz": [{"question": "...", "options": ["...", "...", "...", "..."], "answer": 0, "explanation": "..."}],
-  "practiceTest": [{"question": "...", "answer": "..."}]
+const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
+const prompt = "Read all supplied note images as one set. Return only JSON with topic, summary, flashcards [{question,answer}], quiz [{question,options,answer,explanation}], practiceTest [{question,answer}]. Make 8-12 flashcards, 6 quizzes, 5 practice questions. Use only the notes.";
+const env = (k:string) => Deno.env.get(k)?.trim() || "";
+type P = {id:string;key:string;url:string;model:string};
+function providers():P[] {
+ const list:P[]=[
+ {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-3.5-flash-lite"},
+ {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"meta-llama/llama-4-scout-17b-16e-instruct"},
+ {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"meta/llama-3.2-90b-vision-instruct"},
+ {id:"tokenharbor",key:env("TOKENHARBOR_API_KEY"),url:env("TOKENHARBOR_BASE_URL"),model:env("TOKENHARBOR_MODEL")||"deepseek-v4.1-flash:free"},
+ {id:"huggingface",key:env("HUGGINGFACE_API_KEY")||env("HF_TOKEN"),url:env("HUGGINGFACE_BASE_URL")||"https://router.huggingface.co/v1",model:env("HUGGINGFACE_MODEL")||"Qwen/Qwen2.5-VL-72B-Instruct"},
+ {id:"openrouter",key:env("OPENROUTER_API_KEY"),url:env("OPENROUTER_BASE_URL")||"https://openrouter.ai/api/v1",model:env("OPENROUTER_MODEL")||"openrouter/free"},
+ {id:"vercel",key:env("AI_GATEWAY_API_KEY")||env("VERCEL_AI_GATEWAY_API_KEY"),url:env("VERCEL_AI_GATEWAY_BASE_URL")||"https://ai-gateway.vercel.sh/v1",model:env("VERCEL_AI_GATEWAY_MODEL")||"google/gemini-2.5-flash"},
+ {id:"zai",key:env("ZAI_API_KEY")||env("ZHIPU_API_KEY"),url:env("ZAI_BASE_URL")||"https://open.bigmodel.cn/api/paas/v4",model:env("ZAI_MODEL")||"glm-4.5v"},
+ {id:"siliconflow",key:env("SILICONFLOW_API_KEY"),url:env("SILICONFLOW_BASE_URL")||"https://api.siliconflow.com/v1",model:env("SILICONFLOW_MODEL")||"Qwen/Qwen2.5-VL-72B-Instruct"},
+ {id:"orcarouter",key:env("ORCAROUTER_API_KEY"),url:env("ORCAROUTER_BASE_URL"),model:env("ORCAROUTER_MODEL")||"auto:free"},
+ {id:"bazaarlink",key:env("BAZAARLINK_API_KEY"),url:env("BAZAARLINK_BASE_URL"),model:env("BAZAARLINK_MODEL")||"auto:free"},
+ {id:"cloudflare",key:env("CLOUDFLARE_API_TOKEN"),url:env("CLOUDFLARE_BASE_URL")||(env("CLOUDFLARE_ACCOUNT_ID")?"https://api.cloudflare.com/client/v4/accounts/"+env("CLOUDFLARE_ACCOUNT_ID")+"/ai/v1":""),model:env("CLOUDFLARE_MODEL")||"@cf/meta/llama-4-scout-17b-16e-instruct"},
+ {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"Llama-4-Maverick-17B-128E-Instruct"}
+ ];
+ const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
+ return list.filter(p=>p.key&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
 }
-Create 8-12 flashcards, 6 quiz questions, and 5 practice-test questions.
-The quiz answer must be a zero-based index into options.
-Use only information supported by the notes. If something is unreadable, do not invent details.`;
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-
-  try {
-    const body = await req.json();
-    const { language = "en", mimeType = "image/jpeg" } = body;
-    const supplied = Array.isArray(body.images) && body.images.length ? body.images : (typeof body.imageBase64 === "string" ? [{ imageBase64: body.imageBase64, mimeType }] : []);
-    const images = supplied.filter((item: any) => typeof item?.imageBase64 === "string" && item.imageBase64).slice(0, 6);
-    if (!images.length) throw new Error("Choose at least one photo of your notes.");
-
-    const languageInstruction = language === "sv"
-      ? "Write every generated field in natural Swedish."
-      : language === "ar"
-      ? "اكتب جميع الحقول المُنشأة باللغة العربية الفصحى الواضحة."
-      : "Write every generated field in natural English.";
-
-    const key = Deno.env.get("GEMINI_API_KEY");
-    if (!key) throw new Error("GEMINI_API_KEY is not configured");
-
-    // The Interactions API is the recommended endpoint for current Gemini models.
-    // store:false avoids retaining students' uploaded notes as saved interactions.
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": key,
-      },
-      body: JSON.stringify({
-        model: "gemini-3.5-flash-lite",
-        store: false,
-        system_instruction: "You are SnapStudy, a careful study assistant. Follow the requested JSON structure exactly. Do not use markdown fences or add commentary.",
-        input: [
-          { type: "text", text: prompt + "\n\n" + languageInstruction },
-          ...images.map((item: any) => ({ type: "image", data: item.imageBase64, mime_type: item.mimeType || "image/jpeg" })),
-        ],
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      const message = result?.error?.message || "Gemini Interactions API request failed";
-      throw new Error(message);
-    }
-
-    // Interactions API returns generated text inside steps[].content[].
-    // Also accept output_text/outputs for SDK and API response compatibility.
-    const textParts: string[] = [];
-    if (typeof result?.output_text === "string" && result.output_text.trim()) {
-      textParts.push(result.output_text);
-    }
-    const collectText = (items: unknown) => {
-      if (!Array.isArray(items)) return;
-      for (const item of items) {
-        if (item && typeof item === "object") {
-          const part = item as { type?: string; text?: string; content?: unknown[] };
-          if (part.type === "text" && typeof part.text === "string") textParts.push(part.text);
-          if (Array.isArray(part.content)) collectText(part.content);
-        }
-      }
-    };
-    collectText(result?.outputs);
-    collectText(result?.output);
-    if (Array.isArray(result?.steps)) {
-      for (const step of result.steps) {
-        if (step && typeof step === "object") {
-          const item = step as { type?: string; content?: unknown[] };
-          if (item.type === "model_output") collectText(item.content);
-        }
-      }
-    }
-
-    const outputText = textParts.join("\\n").trim();
-    if (!outputText) {
-      const status = typeof result?.status === "string" ? result.status : "unknown";
-      throw new Error(`Gemini returned no readable text (status: ${status}). This is an API response parsing issue, not necessarily an image-quality problem.`);
-    }
-    const cleanedText = outputText.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-    let parsed;
-    try {
-      parsed = JSON.parse(cleanedText);
-    } catch {
-      throw new Error("Gemini responded, but its study content was not valid JSON. Please try again.");
-    }
-    if (!parsed || typeof parsed.topic !== "string" || typeof parsed.summary !== "string" ||
-        !Array.isArray(parsed.flashcards) || !Array.isArray(parsed.quiz) || !Array.isArray(parsed.practiceTest)) {
-      throw new Error("Gemini returned study content in an unexpected format. Please try again.");
-    }
-
-    return new Response(JSON.stringify(parsed), {
-      headers: { ...cors, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : "Unknown AI service error",
-    }), {
-      status: 500,
-      headers: { ...cors, "Content-Type": "application/json" },
-    });
-  }
+function parse(raw:string) {
+ const s=raw.replace(/^\s*\`\`\`(?:json)?\s*/i,"").replace(/\s*\`\`\`\s*$/,"").trim();
+ const v=JSON.parse(s);
+ if(!v||typeof v.topic!=="string"||typeof v.summary!=="string"||!Array.isArray(v.flashcards)||!Array.isArray(v.quiz)||!Array.isArray(v.practiceTest))throw new Error("Invalid study JSON");
+ return v;
+}
+async function run(p:P,images:any[],lang:string) {
+ const instruction=lang==="sv"?"Write every field in natural Swedish.":lang==="ar"?"اكتب باللغة العربية الفصحى.":"Write every field in natural English.";
+ if(p.url==="gemini") {
+  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})});
+  const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Gemini failed");
+  return parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
+ }
+ const content=[{type:"text",text:prompt+"\n"+instruction},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
+ const response=await fetch(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+p.key},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:8000})});
+ const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
+ const c=data.choices?.[0]?.message?.content;return parse(typeof c==="string"?c:Array.isArray(c)?c.map((x:any)=>x.text||"").join("\n"):"");
+}
+serve(async(req)=>{
+ if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
+ if(req.method!=="POST")return new Response("Method not allowed",{status:405,headers:cors});
+ try{
+  const body=await req.json(),src=Array.isArray(body.images)&&body.images.length?body.images:body.imageBase64?[{imageBase64:body.imageBase64,mimeType:body.mimeType}]:[];
+  const images=src.filter((x:any)=>x?.imageBase64).slice(0,6);if(!images.length)throw new Error("Choose notes images.");
+  const ps=providers();if(!ps.length)throw new Error("Configure at least one AI provider secret in Supabase.");
+  const failures=[];
+  for(const p of ps){try{const result=await run(p,images,body.language||"en");console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}}
+  throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
+ }catch(e){return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
 });
