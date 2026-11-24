@@ -4,6 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { awardXP, loadGamification } from "../lib/gamification";
+import { useTheme } from "../lib/theme";
 
 type FocusMode="focus"|"short"|"long";
 const DURATIONS:Record<FocusMode,number>={focus:25*60,short:5*60,long:15*60};
@@ -15,7 +16,7 @@ export default function FocusRoom(){
  const [xp,setXp]=useState(0);
  const completed=useRef(false);
  const runId=useRef("focus-room-"+Date.now());
- const styles=s;
+ const styles=makeStyles(c);
  useEffect(()=>{let active=true;loadGamification().then(v=>{if(active)setXp(v.totalXp)}).catch(()=>{});return()=>{active=false}},[]);
  useEffect(()=>{if(!running)return;const timer=setInterval(()=>setSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(timer)},[running]);
  useEffect(()=>{
@@ -62,12 +63,12 @@ export default function FocusRoom(){
   </ImageBackground>
  </SafeAreaView>;
 }
-const s=StyleSheet.create({
- safe:{flex:1,backgroundColor:"#21183D"},background:{flex:1},overlay:{flex:1,paddingHorizontal:22,paddingTop:12,paddingBottom:18,justifyContent:"space-between"},
+const makeStyles=(c:{bg:string;surface:string;border:string;text:string;muted:string;accent:string;accentSoft:string;onAccent:string})=>StyleSheet.create({
+ safe:{flex:1,backgroundColor:c.bg},background:{flex:1},overlay:{flex:1,paddingHorizontal:22,paddingTop:12,paddingBottom:18,justifyContent:"space-between"},
  topBar:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",minHeight:44},back:{flexDirection:"row",alignItems:"center",gap:2,paddingVertical:9,paddingRight:12},backText:{color:"#FFFFFF",fontSize:12,fontWeight:"700"},brand:{flexDirection:"row",alignItems:"center",gap:7},brandText:{color:"#F0E9FF",fontSize:10,fontWeight:"900",letterSpacing:2},iconButton:{width:40,height:40,borderRadius:14,backgroundColor:"#FFFFFF1A",borderWidth:1,borderColor:"#FFFFFF30",alignItems:"center",justifyContent:"center"},
- center:{alignItems:"center",width:"100%",maxWidth:720,alignSelf:"center",paddingVertical:18},modeTabs:{flexDirection:"row",gap:8,backgroundColor:"#FFFFFF16",borderWidth:1,borderColor:"#FFFFFF28",borderRadius:18,padding:5},modeTab:{paddingHorizontal:14,paddingVertical:10,borderRadius:13},modeActive:{backgroundColor:"#FFFFFF"},modeText:{color:"#F2EFFF",fontSize:11,fontWeight:"800"},modeTextActive:{color:"#5E459B"},
+ center:{alignItems:"center",width:"100%",maxWidth:720,alignSelf:"center",paddingVertical:18},modeTabs:{flexDirection:"row",gap:8,backgroundColor:"#FFFFFF16",borderWidth:1,borderColor:"#FFFFFF28",borderRadius:18,padding:5},modeTab:{paddingHorizontal:14,paddingVertical:10,borderRadius:13},modeActive:{backgroundColor:c.accent},modeText:{color:"#F2EFFF",fontSize:11,fontWeight:"800"},modeTextActive:{color:c.onAccent},
  headline:{color:"#FFFFFF",fontSize:25,fontWeight:"900",letterSpacing:-.5,textAlign:"center",marginTop:26},subtitle:{color:"#E3DCEF",fontSize:13,textAlign:"center",marginTop:7},
  timerWrap:{marginTop:25,marginBottom:22},timerRing:{width:264,height:264,borderRadius:132,borderWidth:1.5,borderColor:"#FFFFFF70",backgroundColor:"#FFFFFF0B",alignItems:"center",justifyContent:"center",padding:12},timerInner:{width:"100%",height:"100%",borderRadius:120,borderWidth:1,borderColor:"#FFFFFF20",alignItems:"center",justifyContent:"center",backgroundColor:"#1C15382A"},clock:{color:"#FFFFFF",fontSize:62,fontWeight:"300",letterSpacing:-2,fontVariant:["tabular-nums"]},timerCaption:{color:"#E5DDF5",fontSize:9,fontWeight:"900",letterSpacing:1.6,marginTop:7},
- controls:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:12},startButton:{minWidth:156,height:50,borderRadius:18,backgroundColor:"#FFFFFF",flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingHorizontal:20},startText:{color:"#5D459C",fontSize:13,fontWeight:"900"},resetButton:{width:50,height:50,borderRadius:18,backgroundColor:"#FFFFFF1C",borderWidth:1,borderColor:"#FFFFFF35",alignItems:"center",justifyContent:"center"},completeText:{color:"#F8E8FF",fontSize:11,fontWeight:"800",textAlign:"center",marginTop:16},
+ controls:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:12},startButton:{minWidth:156,height:50,borderRadius:18,backgroundColor:c.accent,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingHorizontal:20},startText:{color:c.onAccent,fontSize:13,fontWeight:"900"},resetButton:{width:50,height:50,borderRadius:18,backgroundColor:"#FFFFFF1C",borderWidth:1,borderColor:"#FFFFFF35",alignItems:"center",justifyContent:"center"},completeText:{color:"#F8E8FF",fontSize:11,fontWeight:"800",textAlign:"center",marginTop:16},
  bottom:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:20,backgroundColor:"#17132980",borderWidth:1,borderColor:"#FFFFFF20",borderRadius:20,paddingVertical:13,paddingHorizontal:16,alignSelf:"center",width:"100%",maxWidth:620},bottomStat:{flexDirection:"row",alignItems:"center",gap:10},statIcon:{width:34,height:34,borderRadius:12,backgroundColor:"#FFFFFF18",alignItems:"center",justifyContent:"center"},statLabel:{color:"#C9BFE0",fontSize:8,fontWeight:"900",letterSpacing:1.2},statValue:{color:"#FFFFFF",fontSize:12,fontWeight:"900",marginTop:3},bottomDivider:{width:1,height:30,backgroundColor:"#FFFFFF30"}
 });
