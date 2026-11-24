@@ -50,6 +50,20 @@ export async function awardXP(id: string, amount: number, kind: XPKind, title: s
       state.events.unshift({ id: "achievement:" + achievement.id, xp: achievement.xp, kind: "achievement", title: achievement.title, date });
     }
   }
+  const dailyEvents = state.events.filter(item => item.date === date);
+  const questRules = [
+    { id: "cards", goal: 10, kind: "card" as XPKind, bonus: 30, title: "Daily quest: 10 flashcards" },
+    { id: "quiz", goal: 1, kind: "quiz" as XPKind, bonus: 40, title: "Daily quest: finish a quiz" },
+    { id: "focus", goal: 1, kind: "focus" as XPKind, bonus: 50, title: "Daily quest: focus session" },
+  ];
+  for (const quest of questRules) {
+    const completed = dailyEvents.filter(item => item.kind === quest.kind && !item.id.startsWith("quest:")).length;
+    const questId = "quest:" + date + ":" + quest.id;
+    if (completed >= quest.goal && !state.events.some(item => item.id === questId)) {
+      state.totalXp += quest.bonus;
+      state.events.unshift({ id: questId, xp: quest.bonus, kind: "achievement", title: quest.title, date });
+    }
+  }
   await saveStudyData(KEY, state);
   return state;
 }
