@@ -18,7 +18,7 @@ function providers():P[] {
  {id:"orcarouter",key:env("ORCAROUTER_API_KEY"),url:env("ORCAROUTER_BASE_URL"),model:env("ORCAROUTER_MODEL")||"auto:free"},
  {id:"bazaarlink",key:env("BAZAARLINK_API_KEY"),url:env("BAZAARLINK_BASE_URL"),model:env("BAZAARLINK_MODEL")||"auto:free"},
  {id:"cloudflare",key:env("CLOUDFLARE_API_TOKEN"),url:env("CLOUDFLARE_BASE_URL")||(env("CLOUDFLARE_ACCOUNT_ID")?"https://api.cloudflare.com/client/v4/accounts/"+env("CLOUDFLARE_ACCOUNT_ID")+"/ai/v1":""),model:env("CLOUDFLARE_MODEL")||"@cf/meta/llama-4-scout-17b-16e-instruct"},
- {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"Llama-4-Maverick-17B-128E-Instruct"}
+ {id:"ollama",key:env("OLLAMA_API_KEY"),url:env("OLLAMA_BASE_URL")||"https://ollama.com/v1",model:env("OLLAMA_MODEL")||"llama3.3"},\n {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"Llama-4-Maverick-17B-128E-Instruct"}
  ];
  const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
  return list.filter(p=>p.key&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
