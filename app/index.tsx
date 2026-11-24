@@ -10,6 +10,8 @@ import BottomNav from "../components/BottomNav";
 import StudyDashboard from "../components/StudyDashboard";
 import SnapStudyMark from "../components/SnapStudyMark";
 import AdBanner from "../components/AdBanner";
+import { LinearGradient } from "expo-linear-gradient";
+import { getLevel, loadGamification, type GamificationState } from "../lib/gamification";
 import { supabase } from "../lib/supabase";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -22,6 +24,7 @@ export default function Home() {
   const [camera, setCamera] = useState(false);
   const [firstName, setFirstName] = useState("there");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [gameState, setGameState] = useState<GamificationState | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const entrance = useRef(new Animated.Value(0)).current;
   const splashPulse = useRef(new Animated.Value(0)).current;
@@ -37,6 +40,8 @@ export default function Home() {
     return () => pulse.stop();
   }, [splashPulse]);
   const [permission, requestPermission] = useCameraPermissions();
+  useEffect(() => { let active=true; loadGamification().then(value=>{if(active)setGameState(value);}).catch(()=>{}); return ()=>{active=false}; }, []);
+  const level = getLevel(gameState?.totalXp || 0);
 
   useEffect(() => {
     let active = true;
@@ -121,40 +126,26 @@ export default function Home() {
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
   return <SafeAreaView style={s.safe}>
-    <Animated.ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false} style={{opacity:entrance, transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}}>
-      <View style={s.header}><View><View style={s.brandRow}><SnapStudyMark size={30} /><Text style={s.eyebrow}>SNAPSTUDY</Text></View><Text style={s.title}>{t("studySmarter")}</Text><Text style={s.sub}>{language==="sv"?"Hej":language==="ar"?"مرحبًا":"Hey"} {firstName} — {t("ready").toLowerCase()}</Text></View><Pressable style={s.avatar} onPress={()=>router.push("/account")}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{firstName[0]?.toUpperCase() ?? "S"}</Text>}</Pressable></View>
-
-      <View style={s.hero}>
-        <View style={s.heroIconBox}><Ionicons name="document-text-outline" size={24} color={c.accent}/></View>
-        <Text style={s.heroTitle}>{t("turnNotes")}</Text>
-        <Text style={s.heroSub}>{t("scanSub")}</Text>
-        <Pressable style={s.primary} onPress={cameraOpen} disabled={busy}>
-          <Ionicons name="camera-outline" size={18} color={c.bg}/>
-          <Text style={s.primaryText}>{busy ? (language==="sv"?"Förbereder…":language==="ar"?"جارٍ التحضير…":"Preparing…") : t("scanNotes")}</Text>
-        </Pressable>
-        <Pressable style={s.secondary} onPress={library} disabled={busy}>
-          <Ionicons name="images-outline" size={18} color={c.text}/>
-          <Text style={s.secondaryText}>{t("choosePhotos")}</Text>
-        </Pressable>
+    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:20,paddingTop:20,paddingBottom:28,gap:15}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[12,0]})}]}}>
+      <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
+        <View style={{flex:1}}><View style={{flexDirection:"row",alignItems:"center",gap:8}}><SnapStudyMark size={27}/><Text style={{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:2}}>SNAPSTUDY</Text></View><Text style={{color:c.text,fontSize:27,fontWeight:"900",letterSpacing:-.8,marginTop:11}}>{language==="sv"?"Hej, "+firstName+" 👋":"Good to see you, "+firstName+" 👋"}</Text><Text style={{color:c.muted,fontSize:13,marginTop:4}}>{language==="sv"?"Vad vill du lära dig idag?":"What would you like to learn today?"}</Text></View>
+        <Pressable onPress={()=>router.push("/account")} style={{width:44,height:44,borderRadius:16,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
       </View>
-
-      <AdBanner />
+      <LinearGradient colors={["#7557E8","#9C78F3","#B995F5"]} start={{x:0,y:0}} end={{x:1,y:1}} style={{borderRadius:24,padding:18,overflow:"hidden"}}>
+        <View style={{flexDirection:"row",alignItems:"center",gap:7,marginBottom:10}}><Text style={{color:"#F4ECFF",fontSize:9,fontWeight:"900",letterSpacing:1.5}}>{language==="sv"?"DIN STUDIESTUDIO":"YOUR STUDY SPACE"}</Text><Ionicons name="sparkles" size={14} color="#F9E9FF"/></View>
+        <Text style={{color:"#FFFFFF",fontSize:23,fontWeight:"900",letterSpacing:-.5,lineHeight:28}}>{language==="sv"?"Förvandla anteckningar till framsteg":"Turn your notes into progress"}</Text>
+        <Text style={{color:"#F2EBFF",fontSize:12,lineHeight:18,marginTop:7,marginBottom:15}}>{language==="sv"?"Skapa kort, quiz och sammanfattningar från dina sidor.":"Create flashcards, quizzes and summaries from your notes."}</Text>
+        <View style={{flexDirection:"row",gap:9}}><Pressable onPress={cameraOpen} disabled={busy} style={{flex:1,minHeight:44,borderRadius:13,backgroundColor:"#FFFFFF",flexDirection:"row",alignItems:"center",justifyContent:"center",gap:7}}><Ionicons name="camera-outline" size={18} color="#6A4BD6"/><Text style={{color:"#5E43C4",fontSize:12,fontWeight:"900"}}>{busy?"Preparing…":t("scanNotes")}</Text></Pressable><Pressable onPress={library} disabled={busy} style={{width:48,borderRadius:13,backgroundColor:"#FFFFFF25",borderWidth:1,borderColor:"#FFFFFF45",alignItems:"center",justifyContent:"center"}}><Ionicons name="images-outline" size={20} color="#FFFFFF"/></Pressable></View>
+      </LinearGradient>
+      <View style={{flexDirection:"row",gap:10}}>
+        <Pressable onPress={()=>router.push("/focus")} style={{flex:1,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:18,padding:13,minHeight:112}}><View style={{width:35,height:35,borderRadius:12,backgroundColor:"#E9E2FF",alignItems:"center",justifyContent:"center"}}><Ionicons name="timer-outline" size={20} color="#7657E8"/></View><Text style={{color:c.text,fontSize:14,fontWeight:"900",marginTop:10}}>{language==="sv"?"Fokusläge":"Focus room"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:4}}>25 min · Pomodoro</Text></Pressable>
+        <Pressable onPress={()=>router.push("/history")} style={{flex:1,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:18,padding:13,minHeight:112}}><View style={{width:35,height:35,borderRadius:12,backgroundColor:"#FFE9D9",alignItems:"center",justifyContent:"center"}}><Ionicons name="library-outline" size={20} color="#D8834C"/></View><Text style={{color:c.text,fontSize:14,fontWeight:"900",marginTop:10}}>{language==="sv"?"Mina studier":"My study sets"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:4}}>{language==="sv"?"Fortsätt repetera":"Keep learning"}</Text></Pressable>
+      </View>
+      <Pressable onPress={()=>router.push("/progress")} style={{borderRadius:19,overflow:"hidden"}}><LinearGradient colors={["#251943","#3B286A"]} style={{padding:15}}><View style={{flexDirection:"row",alignItems:"center",gap:11}}><View style={{width:45,height:45,borderRadius:15,backgroundColor:"#7D61E6",borderWidth:1,borderColor:"#B9A9FF",alignItems:"center",justifyContent:"center"}}><Text style={{color:"#FFFFFF",fontSize:18,fontWeight:"900"}}>{level.level}</Text></View><View style={{flex:1}}><View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}><Text style={{color:"#FFFFFF",fontSize:13,fontWeight:"900"}}>{language==="sv"?"Din studienivå":"Your study level"}</Text><Text style={{color:"#D6C8FF",fontSize:10,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()} XP</Text></View><View style={{height:7,borderRadius:8,backgroundColor:"#FFFFFF24",overflow:"hidden",marginTop:8}}><View style={{height:"100%",width:(level.progress*100)+"%",backgroundColor:"#F6C96B",borderRadius:8}}/></View><Text style={{color:"#D6C8FF",fontSize:10,fontWeight:"700",marginTop:6}}>{Math.max(0,level.nextXp-(gameState?.totalXp||0))} XP to next level · {language==="sv"?"Uppdrag":"Quests"} →</Text></View></View></LinearGradient></Pressable>
       <StudyDashboard />
-
-      <Pressable onPress={()=>router.push("/progress")} style={{marginTop:2,marginBottom:18,borderRadius:22,overflow:"hidden",backgroundColor:"#30205E",padding:18,flexDirection:"row",alignItems:"center",gap:14}}>
-        <View style={{width:52,height:52,borderRadius:18,backgroundColor:"#6D4AFF",alignItems:"center",justifyContent:"center",borderWidth:2,borderColor:"#A995FF"}}>
-          <Ionicons name="game-controller-outline" size={27} color="#FFFFFF"/>
-        </View>
-        <View style={{flex:1}}>
-          <Text style={{color:"#C9B9FF",fontSize:10,fontWeight:"900",letterSpacing:1.8}}>YOUR STUDY RPG</Text>
-          <Text style={{color:"#FFFFFF",fontSize:19,fontWeight:"900",marginTop:4}}>Level up today</Text>
-          <Text style={{color:"#D8D0F5",fontSize:12,marginTop:3}}>Quests · XP · achievements</Text>
-        </View>
-        <View style={{width:34,height:34,borderRadius:17,backgroundColor:"#FFFFFF20",alignItems:"center",justifyContent:"center"}}><Ionicons name="chevron-forward" size={19} color="#FFFFFF"/></View>
-      </Pressable>
-
-    </Animated.ScrollView>
-    <BottomNav />
+      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:17,borderWidth:1,borderColor:"#D8C8FF",backgroundColor:c.surface,flexDirection:"row",alignItems:"center",gap:11,padding:12}}><LinearGradient colors={["#A78BFA","#D7A6F2"]} style={{width:38,height:38,borderRadius:12,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color="#FFFFFF"/></LinearGradient><View style={{flex:1}}><Text style={{color:"#9470E9",fontSize:9,fontWeight:"900",letterSpacing:1.2}}>SNAPSTUDY PRO</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Få mer ut av varje pass":"Make every study session count"}</Text></View><Ionicons name="chevron-forward" size={17} color="#9B7BEA"/></Pressable>
+      <AdBanner />
+    </Animated.ScrollView><BottomNav/>
   </SafeAreaView>;
 }
 
