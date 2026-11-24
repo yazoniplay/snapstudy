@@ -11,7 +11,7 @@ SnapStudy is an Expo app that turns photos of handwritten notes into study mater
 
 The `analyze-notes` Supabase Edge Function tries each configured provider in order. A provider failure, timeout, or invalid study JSON causes it to continue to the next provider. Each request is bounded to 9 seconds so a long provider outage does not stall the study flow indefinitely.
 
-Supported provider IDs: `gemini`, `groq`, `nvidia`, `tokenharbor`, `huggingface`, `openrouter`, `vercel`, `zai`, `siliconflow`, `orcarouter`, `bazaarlink`, `cloudflare`, and `sambanova`, plus remote/cloud `ollama`.
+Supported provider IDs: `gemini`, `groq`, `nvidia`, `tokenharbor`, `huggingface`, `openrouter`, `vercel`, `zai`, `siliconflow`, `orcarouter`, `bazaarlink`, `cloudflare`, and `sambanova`, remote/cloud `ollama`, `agentrouter`, `routeway`, `requesty`, `fastrouter`, `opencodezen`, `llm7`, and `aihorde`.
 
 Configure provider credentials as **Supabase Edge Function secrets** (never put provider keys in Expo/public environment variables). Set any available keys with the Supabase CLI, for example:
 
@@ -23,16 +23,16 @@ Provider key names:
 - Gemini: `GEMINI_API_KEY`
 - Groq: `GROQ_API_KEY`
 - NVIDIA: `NVIDIA_API_KEY`
-- TokenHarbor: `TOKENHARBOR_API_KEY` and `TOKENHARBOR_BASE_URL`
+- TokenHarbor: `TOKEN_HARBOR_KEY` (or `TOKENHARBOR_API_KEY`); endpoint defaults to `https://tokenharbor.ai/v1`
 - Hugging Face: `HUGGINGFACE_API_KEY` (or `HF_TOKEN`)
 - OpenRouter: `OPENROUTER_API_KEY`
-- Vercel AI Gateway: `AI_GATEWAY_API_KEY` (or `VERCEL_AI_GATEWAY_API_KEY`)
-- Z.ai / Zhipu: `ZAI_API_KEY` (or `ZHIPU_API_KEY`)
+- Vercel AI Gateway: `AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL`, and `AI_GATEWAY_MODEL` (or the `VERCEL_AI_GATEWAY_*` aliases)
+- Z.ai / Zhipu: `ZAI_API_KEY` (or `ZHIPU_API_KEY`); default endpoint `https://api.z.ai/api/paas/v4`
 - SiliconFlow: `SILICONFLOW_API_KEY`
 - OrcaRouter: `ORCAROUTER_API_KEY` and `ORCAROUTER_BASE_URL`
 - BazaarLink: `BAZAARLINK_API_KEY` and `BAZAARLINK_BASE_URL`
 - Cloudflare Workers AI: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
-- Remote Ollama: `OLLAMA_API_KEY`, optional `OLLAMA_BASE_URL` (local Ollama on your computer cannot be reached from the hosted Edge Function)\n- SambaNova: `SAMBANOVA_API_KEY`
+- Remote Ollama: `OLLAMA_API_KEY`, optional `OLLAMA_BASE_URL` (local Ollama on your computer cannot be reached from the hosted Edge Function)\n- AgentRouter: `AGENTROUTER_API_KEY` (optional `AGENTROUTER_BASE_URL` / `AGENTROUTER_MODEL`)\n- Routeway: `ROUTEWAY_API_KEY`\n- Requesty: `REQUESTY_API_KEY`\n- FastRouter: `FASTROUTER_API_KEY`\n- OpenCode Zen: `OPENCODE_ZEN_API_KEY`\n- LLM7: optional `LLM7_API_KEY` (keyless endpoint supported)\n- AI Horde: optional `AIHORDE_API_KEY` (anonymous key is used if omitted)\n- SambaNova: `SAMBANOVA_API_KEY`
 
 Optional `*_MODEL` secrets override the default model for each provider. Optional `AI_PROVIDER_ORDER` accepts a comma-separated list of provider IDs, such as `groq,cloudflare,gemini,openrouter`. Router providers with no known public-compatible endpoint require their `*_BASE_URL` to be set.
 
