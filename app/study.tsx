@@ -244,12 +244,25 @@ export default function Study(){
   )}
    {mode === "quiz" && (
     <View>
-      {quizDone ? (
+      {hearts <= 0 ? (
+        <View style={s.hero}>
+          <Text style={s.heading}>Out of hearts!</Text>
+          <Text style={s.bigScore}>💔 0</Text>
+          <Text style={s.body}>You ran out of hearts. Try the quiz again to earn them back.</Text>
+          <Pressable style={s.primaryBtn} onPress={() => {
+            const day = new Date().toISOString().slice(0, 10);
+            setQuizIndex(0); setScore(0); setSelected(null); setHearts(5); setStamina(100);
+            AsyncStorage.setItem("snapstudy:energy:v1", JSON.stringify({ day, hearts: 5, stamina: 100 })).catch(() => {});
+          }}>
+            <Text style={s.primaryText}>Try again</Text>
+          </Pressable>
+        </View>
+      ) : quizDone ? (
         <View style={s.hero}>
           <Text style={s.heading}>{t("quizComplete")}</Text>
           <Text style={s.bigScore}>{score}/{data.quiz.length}</Text>
           <Text style={s.body}>{t("score")}: {Math.round(score / Math.max(1, data.quiz.length) * 100)}%</Text>
-          <Pressable style={s.primaryBtn} onPress={() => { setQuizIndex(0); setScore(0); setSelected(null); setHearts(5); }}>
+          <Pressable style={s.primaryBtn} onPress={() => { const day = new Date().toISOString().slice(0, 10); setQuizIndex(0); setScore(0); setSelected(null); setHearts(5); AsyncStorage.setItem("snapstudy:energy:v1", JSON.stringify({ day, hearts: 5, stamina })).catch(() => {}); }}>
             <Text style={s.primaryText}>{t("retakeQuiz")}</Text>
           </Pressable>
         </View>
