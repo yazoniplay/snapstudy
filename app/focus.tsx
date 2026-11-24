@@ -51,7 +51,7 @@ export default function FocusRoom(){
       <Animated.View style={[styles.timerRing,{transform:[{scale:breathe.interpolate({inputRange:[0,1],outputRange:[1,1.025]})}]}]}><View style={styles.timerInner}>
        <Text style={styles.clock}>{clock}</Text>
        <Text style={styles.timerCaption}>{finished?(mode==="focus"?"+40 XP EARNED":"BREAK COMPLETE"):running?(mode==="focus"?"FOCUSING":"TAKE A MOMENT"):(mode==="focus"?"READY WHEN YOU ARE":"YOUR BREAK")}</Text>
-      </View></View>
+      </View></Animated.View>
      </View>
      <View style={styles.controls}>
       <Pressable onPress={()=>{if(finished){setSeconds(DURATIONS[mode]);completed.current=false;runId.current="focus-room-"+Date.now();}setFinished(false);setRunning(finished?true:!running)}} style={styles.startButton}><Text style={styles.startText}>{running?"Pause":finished?"Start again":"Start session"}</Text><Ionicons name={running?"pause":"play"} size={17} color="#5D459C"/></Pressable>
