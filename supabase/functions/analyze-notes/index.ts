@@ -9,20 +9,27 @@ function providers():P[] {
  {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-3.5-flash-lite"},
  {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"meta-llama/llama-4-scout-17b-16e-instruct"},
  {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"meta/llama-3.2-90b-vision-instruct"},
- {id:"tokenharbor",key:env("TOKENHARBOR_API_KEY"),url:env("TOKENHARBOR_BASE_URL"),model:env("TOKENHARBOR_MODEL")||"deepseek-v4.1-flash:free"},
+ {id:"tokenharbor",key:env("TOKEN_HARBOR_KEY")||env("TOKENHARBOR_API_KEY"),url:env("TOKEN_HARBOR_BASE_URL")||env("TOKENHARBOR_BASE_URL")||"https://tokenharbor.ai/v1",model:env("TOKEN_HARBOR_MODEL")||env("TOKENHARBOR_MODEL")||"deepseek-v4.1-flash:free"},
  {id:"huggingface",key:env("HUGGINGFACE_API_KEY")||env("HF_TOKEN"),url:env("HUGGINGFACE_BASE_URL")||"https://router.huggingface.co/v1",model:env("HUGGINGFACE_MODEL")||"Qwen/Qwen2.5-VL-72B-Instruct"},
  {id:"openrouter",key:env("OPENROUTER_API_KEY"),url:env("OPENROUTER_BASE_URL")||"https://openrouter.ai/api/v1",model:env("OPENROUTER_MODEL")||"openrouter/free"},
- {id:"vercel",key:env("AI_GATEWAY_API_KEY")||env("VERCEL_AI_GATEWAY_API_KEY"),url:env("VERCEL_AI_GATEWAY_BASE_URL")||"https://ai-gateway.vercel.sh/v1",model:env("VERCEL_AI_GATEWAY_MODEL")||"google/gemini-2.5-flash"},
- {id:"zai",key:env("ZAI_API_KEY")||env("ZHIPU_API_KEY"),url:env("ZAI_BASE_URL")||"https://open.bigmodel.cn/api/paas/v4",model:env("ZAI_MODEL")||"glm-4.5v"},
- {id:"siliconflow",key:env("SILICONFLOW_API_KEY"),url:env("SILICONFLOW_BASE_URL")||"https://api.siliconflow.com/v1",model:env("SILICONFLOW_MODEL")||"Qwen/Qwen2.5-VL-72B-Instruct"},
+ {id:"vercel",key:env("AI_GATEWAY_API_KEY")||env("VERCEL_AI_GATEWAY_API_KEY"),url:env("AI_GATEWAY_BASE_URL")||env("VERCEL_AI_GATEWAY_BASE_URL")||"https://ai-gateway.vercel.sh/v1",model:env("AI_GATEWAY_MODEL")||env("VERCEL_AI_GATEWAY_MODEL")||"openai/gpt-oss-120b"},
+ {id:"zai",key:env("ZAI_API_KEY")||env("ZHIPU_API_KEY"),url:env("ZAI_BASE_URL")||"https://api.z.ai/api/paas/v4",model:env("ZAI_MODEL")||"glm-4.7-flash"},
+ {id:"siliconflow",key:env("SILICONFLOW_API_KEY"),url:env("SILICONFLOW_BASE_URL")||"https://api.siliconflow.com/v1",model:env("SILICONFLOW_MODEL")||"Qwen/Qwen3-30B-A3B-Instruct-2507"},
  {id:"orcarouter",key:env("ORCAROUTER_API_KEY"),url:env("ORCAROUTER_BASE_URL"),model:env("ORCAROUTER_MODEL")||"auto:free"},
  {id:"bazaarlink",key:env("BAZAARLINK_API_KEY"),url:env("BAZAARLINK_BASE_URL"),model:env("BAZAARLINK_MODEL")||"auto:free"},
- {id:"cloudflare",key:env("CLOUDFLARE_API_TOKEN"),url:env("CLOUDFLARE_BASE_URL")||(env("CLOUDFLARE_ACCOUNT_ID")?"https://api.cloudflare.com/client/v4/accounts/"+env("CLOUDFLARE_ACCOUNT_ID")+"/ai/v1":""),model:env("CLOUDFLARE_MODEL")||"@cf/meta/llama-4-scout-17b-16e-instruct"},
+ {id:"cloudflare",key:env("CLOUDFLARE_API_TOKEN"),url:env("CLOUDFLARE_BASE_URL")||(env("CLOUDFLARE_ACCOUNT_ID")?"https://api.cloudflare.com/client/v4/accounts/"+env("CLOUDFLARE_ACCOUNT_ID")+"/ai/v1":""),model:env("CLOUDFLARE_WORKERS_AI_MODEL")||env("CLOUDFLARE_MODEL")||"@cf/zai-org/glm-4.7-flash"},
  {id:"ollama",key:env("OLLAMA_API_KEY"),url:env("OLLAMA_BASE_URL")||"https://ollama.com/v1",model:env("OLLAMA_MODEL")||"llama3.3"},
- {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"Llama-4-Maverick-17B-128E-Instruct"}
+ {id:"agentrouter",key:env("AGENTROUTER_API_KEY"),url:env("AGENTROUTER_BASE_URL")||"https://agentrouter.org/v1",model:env("AGENTROUTER_MODEL")||"deepseek-v4-flash"},
+ {id:"routeway",key:env("ROUTEWAY_API_KEY"),url:env("ROUTEWAY_BASE_URL")||"https://api.routeway.ai/v1",model:env("ROUTEWAY_MODEL")||"minimax-m3.1-flash:free"},
+ {id:"requesty",key:env("REQUESTY_API_KEY"),url:env("REQUESTY_BASE_URL")||"https://router.requesty.ai/v1",model:env("REQUESTY_MODEL")||"nvidia/muse-glimmer-30b"},
+ {id:"fastrouter",key:env("FASTROUTER_API_KEY"),url:env("FASTROUTER_BASE_URL")||"https://api.fastrouter.ai/api/v1",model:env("FASTROUTER_MODEL")||"openai/gpt-oss-120b:free"},
+ {id:"opencodezen",key:env("OPENCODE_ZEN_API_KEY"),url:env("OPENCODE_ZEN_BASE_URL")||"https://opencode.ai/zen/v1",model:env("OPENCODE_ZEN_MODEL")||"nemotron-3.5-lightning-free"},
+ {id:"llm7",key:env("LLM7_API_KEY"),url:env("LLM7_BASE_URL")||"https://api.llm7.io/v1",model:env("LLM7_MODEL")||"codestral-latest"},
+ {id:"aihorde",key:env("AIHORDE_API_KEY")||"0000000000",url:env("AIHORDE_BASE_URL")||"https://oai.aihorde.net/v1",model:env("AIHORDE_MODEL")||"koboldcpp/Qwen_Qwen3-0.6B-IQ4_XS"},
+ {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"deepseek-ai/DeepSeek-V3.2"}
  ];
  const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
- return list.filter(p=>p.key&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
+ return list.filter(p=>(p.key||p.id==="llm7")&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
 }
 function parse(raw:string) {
  const s=raw.replace(/^\s*\`\`\`(?:json)?\s*/i,"").replace(/\s*\`\`\`\s*$/,"").trim();
