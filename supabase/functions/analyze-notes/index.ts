@@ -24,12 +24,11 @@ function providers():P[] {
  {id:"requesty",key:env("REQUESTY_API_KEY"),url:env("REQUESTY_BASE_URL")||"https://router.requesty.ai/v1",model:env("REQUESTY_MODEL")||"nvidia/muse-glimmer-30b"},
  {id:"fastrouter",key:env("FASTROUTER_API_KEY"),url:env("FASTROUTER_BASE_URL")||"https://api.fastrouter.ai/api/v1",model:env("FASTROUTER_MODEL")||"openai/gpt-oss-120b:free"},
  {id:"opencodezen",key:env("OPENCODE_API_KEY")||env("OPENCODE_ZEN_API_KEY"),url:env("OPENCODE_ZEN_BASE_URL")||"https://opencode.ai/zen/v1",model:env("OPENCODE_ZEN_MODEL")||"nemotron-3.5-lightning-free"},
- {id:"llm7",key:env("LLM7_API_KEY"),url:env("LLM7_BASE_URL")||"https://api.llm7.io/v1",model:env("LLM7_MODEL")||"codestral-latest"},
  {id:"aihorde",key:env("AIHORDE_API_KEY")||"0000000000",url:env("AIHORDE_BASE_URL")||"https://oai.aihorde.net/v1",model:env("AIHORDE_MODEL")||"koboldcpp/Qwen_Qwen3-0.6B-IQ4_XS"},
  {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"deepseek-ai/DeepSeek-V3.2"}
  ];
  const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
- return list.filter(p=>(p.key||p.id==="llm7")&&(p.url==="gemini"||p.url)).filter(p=>!["llm7","aihorde"].includes(p.id)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
+ return list.filter(p=>(p.key||p.id==="aihorde")&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
 }
 function parse(raw:string) {
  const s=raw.replace(/^\s*\`\`\`(?:json)?\s*/i,"").replace(/\s*\`\`\`\s*$/,"").trim();
