@@ -1,7 +1,8 @@
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Alert, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text as NativeText, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
