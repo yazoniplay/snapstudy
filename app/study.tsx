@@ -27,7 +27,9 @@ export default function Study(){
  const [card,setCard]=useState(0),[showAnswer,setShowAnswer]=useState(false),[quizIndex,setQuizIndex]=useState(0),[score,setScore]=useState(0),[selected,setSelected]=useState<number|null>(null),[testIndex,setTestIndex]=useState(0),[showTestAnswer,setShowTestAnswer]=useState(false);
  const [reviewSchedule,setReviewSchedule]=useState<Record<string,{dueAt:number;intervalDays:number;repetitions:number;lastRating:string}>>({});
  const [dueOnly,setDueOnly]=useState(dueParam==="1");
- const [teachText,setTeachText]=useState("");\n const [writtenIndex,setWrittenIndex]=useState(0),[writtenText,setWrittenText]=useState(""),[writtenReveal,setWrittenReveal]=useState(false);\n const [clozeIndex,setClozeIndex]=useState(0),[clozeText,setClozeText]=useState(""),[clozeReveal,setClozeReveal]=useState(false);
+ const [teachText,setTeachText]=useState("");
+ const [writtenIndex,setWrittenIndex]=useState(0),[writtenText,setWrittenText]=useState(""),[writtenReveal,setWrittenReveal]=useState(false);
+ const [clozeIndex,setClozeIndex]=useState(0),[clozeText,setClozeText]=useState(""),[clozeReveal,setClozeReveal]=useState(false);
  const [focusSeconds,setFocusSeconds]=useState(1500),[focusRunning,setFocusRunning]=useState(false);
  const [gameXP,setGameXP]=useState(0);
  const focusAwarded=useRef(false); const focusRunId=useRef("focus-"+Date.now());
@@ -104,8 +106,14 @@ export default function Study(){
       }
       return;
     }
-    if(images.some(item=>item.base64)){
-      const x=await analyzeNotes(images,language);
+    if(images.some(item=>item.base64)||notesParam==="1"){
+      let x:StudyResult;
+      if(notesParam==="1"){
+        const pasted=await AsyncStorage.getItem("snapstudy:pending-notes");
+        if(!pasted?.trim())throw new Error("Your pasted notes were empty. Go back and paste them again.");
+        x=await analyzeNotesText(pasted,language);
+        await AsyncStorage.removeItem("snapstudy:pending-notes");
+      }else{x=await analyzeNotes(images,language);}
       if(!active) return;
       setData(x);
       try{
