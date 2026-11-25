@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
@@ -23,6 +24,12 @@ export default function Account() {
   const [handle, setHandle] = useState("");
   const [currentStreak, setCurrentStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
+  const [dailyGoal, setDailyGoal] = useState(30);
+  const [focusMinutes, setFocusMinutes] = useState(25);
+  const [breakMinutes, setBreakMinutes] = useState(5);
+  const [settingsReady, setSettingsReady] = useState(false);
+  useEffect(() => { AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); setSettingsReady(true); }).catch(()=>setSettingsReady(true)); }, []);
+  function savePreference(key: string, value: number, setter: (value:number)=>void) { setter(value); AsyncStorage.setItem(key,String(value)).catch(()=>{}); supabase.auth.updateUser({data:{[key.replace("snapstudy:","").replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase())]:value}}).then(()=>{}).catch(()=>{}); }
   const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#F8FAFC"];
   useEffect(() => { setColorDraft(accentColor); }, [accentColor]);
   useEffect(() => {
@@ -119,6 +126,17 @@ export default function Account() {
           <View style={s.streakStats}><View style={s.streakTile}><Text style={s.streakNumber}>{currentStreak}</Text><Text style={s.cardText}>{t("currentDays")}</Text></View><View style={s.streakTile}><Text style={s.streakNumber}>{longestStreak}</Text><Text style={s.cardText}>{t("personalBest")}</Text></View></View>
           <Text style={s.cardText}>{t("streakHelp")}</Text>
         </View>
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-circle-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Your account</Text><Text style={s.sectionSub}>Profile, identity and progress</Text></View></View>
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="options-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Study preferences</Text><Text style={s.sectionSub}>Set the pace that works for you</Text></View></View>
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Daily study goal</Text><Text style={s.cardText}>Choose how many minutes you want to study each day.</Text>
+          <View style={s.choiceRow}>{[15,30,45,60,90].map(value=><Pressable key={value} style={[s.choiceChip,dailyGoal===value&&s.choiceChipActive]} onPress={()=>savePreference("snapstudy:daily-goal",value,setDailyGoal)}><Text style={[s.choiceText,dailyGoal===value&&s.choiceTextActive]}>{value}m</Text></Pressable>)}</View>
+          <View style={s.preferenceDivider}/><Text style={s.cardTitle}>Focus session</Text><Text style={s.cardText}>Length of a single Pomodoro session.</Text>
+          <View style={s.choiceRow}>{[15,20,25,30,45].map(value=><Pressable key={value} style={[s.choiceChip,focusMinutes===value&&s.choiceChipActive]} onPress={()=>savePreference("snapstudy:focus-minutes",value,setFocusMinutes)}><Text style={[s.choiceText,focusMinutes===value&&s.choiceTextActive]}>{value}m</Text></Pressable>)}</View>
+          <View style={s.preferenceDivider}/><Text style={s.cardTitle}>Short break</Text><Text style={s.cardText}>Take a breather between focus sessions.</Text>
+          <View style={s.choiceRow}>{[5,10,15].map(value=><Pressable key={value} style={[s.choiceChip,breakMinutes===value&&s.choiceChipActive]} onPress={()=>savePreference("snapstudy:break-minutes",value,setBreakMinutes)}><Text style={[s.choiceText,breakMinutes===value&&s.choiceTextActive]}>{value}m</Text></Pressable>)}</View>
+        </View>
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="globe-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Language</Text><Text style={s.sectionSub}>App interface and learning language</Text></View></View>
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("language")}</Text>
           <Text style={s.cardText}>{t("languageSub")}</Text>
@@ -127,6 +145,7 @@ export default function Account() {
           </View>
         </View>
 
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="color-palette-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Appearance & personalization</Text><Text style={s.sectionSub}>Make SnapStudy feel like yours</Text></View></View>
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("appearance")}</Text>
           <Text style={s.cardText}>{t("appearanceSub")}</Text>
@@ -154,6 +173,7 @@ export default function Account() {
           </Pressable>
         </View>
 
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="shield-checkmark-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Account & security</Text><Text style={s.sectionSub}>Your sign-in and account controls</Text></View></View>
         <AdBanner />
 
         <View style={s.card}>
@@ -171,6 +191,7 @@ export default function Account() {
 
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
   safe:{flex:1,backgroundColor:c.bg},
+  sectionHeading:{flexDirection:"row",alignItems:"center",gap:12,marginTop:18,marginBottom:10},sectionIcon:{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"},sectionCopy:{flex:1},sectionTitle:{color:c.text,fontSize:15,fontWeight:"900"},sectionSub:{color:c.muted,fontSize:11,marginTop:3},choiceRow:{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12},choiceChip:{minWidth:47,paddingHorizontal:12,paddingVertical:10,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,alignItems:"center"},choiceChipActive:{backgroundColor:c.accentSoft,borderColor:c.accent},choiceText:{color:c.muted,fontSize:12,fontWeight:"800"},choiceTextActive:{color:c.accent},preferenceDivider:{height:1,backgroundColor:c.border,marginVertical:16},
   container:{padding:20,paddingTop:22,paddingBottom:25},
   center:{flex:1,alignItems:"center",justifyContent:"center"},
   back:{color:c.muted,fontSize:13,fontWeight:"700",marginBottom:25},
