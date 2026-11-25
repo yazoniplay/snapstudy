@@ -18,7 +18,10 @@ import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 export default function Home() {
-  const { colors:c, mode } = useTheme(); const {t,language}=useLanguage();
+  const { colors:c, mode } = useTheme();
+  const glass = mode === "dark" ? "rgba(255,255,255,0.075)" : "rgba(255,255,255,0.78)";
+  const glassEdge = mode === "dark" ? "rgba(255,255,255,0.19)" : "rgba(255,255,255,0.92)";
+  const cardScale = useRef(new Animated.Value(1)).current; const {t,language}=useLanguage();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [booting, setBooting] = useState(true);
@@ -150,7 +153,7 @@ export default function Home() {
         </View>
         <Pressable onPress={()=>router.push("/account")} style={{width:46,height:46,borderRadius:16,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
       </View>
-      <View style={{backgroundColor:c.surface,borderRadius:24,borderWidth:1,borderColor:c.border,padding:17,overflow:"hidden"}}>
+      <Animated.View style={{transform:[{scale:cardScale}]}}><Pressable onPressIn={()=>Animated.spring(cardScale,{toValue:0.985,useNativeDriver:true,speed:28,bounciness:4}).start()} onPressOut={()=>Animated.spring(cardScale,{toValue:1,useNativeDriver:true,speed:22,bounciness:6}).start()}><View style={{backgroundColor:glass,borderRadius:24,borderWidth:1,borderColor:glassEdge,padding:17,overflow:"hidden",shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:mode==="dark"?0.24:0.12,shadowRadius:24,shadowOffset:{width:0,height:12},elevation:7}}>
         <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:13}}>
           <View style={{flexDirection:"row",alignItems:"center",gap:7}}><View style={{width:7,height:7,borderRadius:4,backgroundColor:c.accent}}/><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.5}}>{language==="sv"?"DAGS ATT PLUGGA":"READY TO STUDY"}</Text></View>
           <Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>25 min · 1 goal</Text>
@@ -161,9 +164,9 @@ export default function Home() {
           <Pressable onPress={cameraOpen} disabled={busy} style={{flex:1,minHeight:47,borderRadius:14,backgroundColor:c.accent,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:8}}><Ionicons name="camera-outline" size={18} color={c.onAccent}/><Text style={{color:c.onAccent,fontSize:12,fontWeight:"900"}}>{busy?"Preparing…":t("scanNotes")}</Text></Pressable>
           <Pressable onPress={library} disabled={busy} style={{width:48,minHeight:47,borderRadius:14,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"}}><Ionicons name="images-outline" size={20} color={c.accent}/></Pressable>
         </View>
-      </View>
+      </View></Pressable></Animated.View>
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:10}}>
-        <Pressable onPress={()=>router.push("/focus")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:c.surface,borderWidth:1,borderColor:c.border}}>
+        <Pressable onPress={()=>router.push("/focus")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:glass,borderWidth:1,borderColor:glassEdge,shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:0.12,shadowRadius:14,shadowOffset:{width:0,height:6},elevation:3}}>
           <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="timer-outline" size={20} color={c.accent}/></View>
           <View style={{flex:1}}><Text style={{color:c.text,fontSize:12,fontWeight:"900"}}>{language==="sv"?"Fokus":"Focus room"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3}}>Pomodoro · 25 min</Text></View><Ionicons name="chevron-forward" size={15} color={c.muted}/>
         </Pressable>
@@ -172,7 +175,7 @@ export default function Home() {
           <View style={{flex:1}}><Text style={{color:c.text,fontSize:12,fontWeight:"900"}}>{language==="sv"?"Studie-set":"Study sets"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3}}>{language==="sv"?"Repetera":"Keep learning"}</Text></View><Ionicons name="chevron-forward" size={15} color={c.muted}/>
         </Pressable>
       </View>
-      <Pressable onPress={()=>router.push("/progress")} style={{borderRadius:20,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,padding:15}}>
+      <Pressable onPress={()=>router.push("/progress")} style={{borderRadius:20,backgroundColor:glass,borderWidth:1,borderColor:glassEdge,padding:15,shadowColor:c.accent,shadowOpacity:0.12,shadowRadius:18,shadowOffset:{width:0,height:7},elevation:4}}>
         <View style={{flexDirection:"row",alignItems:"center",gap:12}}>
           <View style={{width:44,height:44,borderRadius:15,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"}}><Text style={{color:c.onAccent,fontSize:17,fontWeight:"900"}}>{level.level}</Text></View>
           <View style={{flex:1}}>
@@ -183,7 +186,7 @@ export default function Home() {
         </View>
       </Pressable>
       <StudyDashboard />
-      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:18,borderWidth:1,borderColor:c.border,backgroundColor:c.surface,flexDirection:"row",alignItems:"center",gap:11,padding:13}}>
+      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:18,borderWidth:1,borderColor:c.border,backgroundColor:glass,flexDirection:"row",alignItems:"center",gap:11,padding:13,shadowColor:c.accent,shadowOpacity:0.1,shadowRadius:15,shadowOffset:{width:0,height:6},elevation:3}}>
         <LinearGradient colors={[c.accent,c.accent+"B8"]} style={{width:39,height:39,borderRadius:13,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color="#FFFFFF"/></LinearGradient>
         <View style={{flex:1}}><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.3}}>SNAPSTUDY PLUS</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Mer fokus. Mer framsteg.":"Make every study session count."}</Text></View><Ionicons name="chevron-forward" size={17} color={c.accent}/>
       </Pressable>
