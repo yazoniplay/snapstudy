@@ -14,6 +14,12 @@ export async function analyzeNotes(image:StudyImage|StudyImage[],language:StudyL
  if(!images.length)throw new Error("Choose at least one clear photo of your notes.");
  return postStudy({images:images.map(item=>({imageBase64:item.base64,mimeType:item.mimeType})),imageBase64:images[0].base64,mimeType:images[0].mimeType,language,action:"analyze"});
 }
+export async function analyzeNotesText(notesText:string,language:StudyLanguage="en"):Promise<StudyResult>{
+ const text=notesText.trim();
+ if(text.length<20)throw new Error("Paste at least a few lines of notes (20 characters or more).");
+ if(text.length>40000)throw new Error("Your notes are too long. Please paste up to 40,000 characters at a time.");
+ return postStudy({notesText:text,language,action:"analyze"});
+}
 export async function translateStudyResult(studyResult:StudyResult,language:StudyLanguage):Promise<StudyResult>{
  return postStudy({studyResult,language,action:"translate"});
 }
