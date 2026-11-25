@@ -153,7 +153,7 @@ export default function Account() {
           {!wideSettings && <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>}
           <Text style={s.eyebrow}>{t("accountEyebrow")}</Text>
           <Text style={s.title}>{wideSettings ? categoryLabel(selectedSettings) : (language==="sv"?"Inställningar":language==="ar"?"الإعدادات":"Settings")}</Text>
-          <Text style={s.sub}>{wideSettings ? settingsCategories.find(item => item.title === selectedSettings)?.subtitle : "Personalize your study space and account."}</Text>
+          <Text style={s.sub}>{wideSettings ? categorySubtitle(settingsCategories.find(item => item.title === selectedSettings)?.subtitle || "") : (language==="sv"?"Anpassa din studieplats och ditt konto.":language==="ar"?"خصّص مساحة الدراسة وحسابك.":"Personalize your study space and account.")}</Text>
 
         {(!wideSettings || selectedSettings === "Profile") && (<>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-outline" size={18} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Profile</Text><Text style={s.sectionSub}>Your name, username and photo</Text></View></View>
