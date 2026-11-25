@@ -1,5 +1,6 @@
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Alert, ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text as NativeText, TextInput as NativeTextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
