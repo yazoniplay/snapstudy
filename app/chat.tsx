@@ -7,7 +7,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 
-type ChatMessage = { id:string; friendship_id:string; sender_id:string; message_type:"text"|"image"|"gift"; body:string|null; media_path:string|null; gift_code:string|null; created_at:string; read_at:string|null; imageUrl?:string|null };
+type ChatReaction = {message_id:string;user_id:string;emoji:string};
+type ChatMessage = { id:string; friendship_id:string; sender_id:string; message_type:"text"|"image"|"gift"; body:string|null; media_path:string|null; gift_code:string|null; created_at:string; read_at:string|null; reply_to?:string|null; edited_at?:string|null; deleted_at?:string|null; imageUrl?:string|null; reactions?:ChatReaction[] };
 const GIFTS: Record<string,{emoji:string;label:string}> = {
   heart:{emoji:"💗",label:"A little love"}, star:{emoji:"⭐",label:"You're a star"},
   book:{emoji:"📚",label:"Study buddy"}, trophy:{emoji:"🏆",label:"You did it"},
@@ -27,6 +28,8 @@ export default function Chat() {
   const [loading,setLoading] = useState(true);
   const [sending,setSending] = useState(false);
   const [giftPicker,setGiftPicker] = useState(false);
+  const [replyTo,setReplyTo] = useState<string|null>(null);
+  const [editingMessageId,setEditingMessageId] = useState<string|null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
   const loadMessages = useCallback(async () => {
@@ -34,13 +37,17 @@ export default function Chat() {
     const {data:{user}} = await supabase.auth.getUser();
     if (!user) { router.replace("/auth"); return; }
     setUserId(user.id);
-    const {data,error} = await supabase.from("messages").select("id,friendship_id,sender_id,message_type,body,media_path,gift_code,created_at,read_at").eq("friendship_id",friendshipId).order("created_at",{ascending:true}).limit(250);
+    const {data,error} = await supabase.from("messages").select("id,friendship_id,sender_id,message_type,body,media_path,gift_code,created_at,read_at,reply_to,edited_at,deleted_at").eq("friendship_id",friendshipId).order("created_at",{ascending:true}).limit(250);
     if (error) { Alert.alert("Couldn't load chat",error.message); setLoading(false); return; }
     const rows = (data || []) as ChatMessage[];
+    const ids=rows.map(message=>message.id);
+    let reactionRows:ChatReaction[]=[];
+    if(ids.length){const {data:reactions}=await supabase.from("message_reactions").select("message_id,user_id,emoji").in("message_id",ids);reactionRows=(reactions||[]) as ChatReaction[];}
     const hydrated = await Promise.all(rows.map(async message => {
-      if (message.message_type !== "image" || !message.media_path) return message;
+      const reactions=reactionRows.filter(reaction=>reaction.message_id===message.id);
+      if (message.message_type !== "image" || !message.media_path) return {...message,reactions};
       const {data: signed} = await supabase.storage.from("chat-images").createSignedUrl(message.media_path,3600);
-      return {...message,imageUrl:signed?.signedUrl || null};
+      return {...message,imageUrl:signed?.signedUrl || null,reactions};
     }));
     setMessages(hydrated);
     setLoading(false);
@@ -52,7 +59,8 @@ export default function Chat() {
   useEffect(()=>{
     loadMessages();
     const channel = supabase.channel("snapstudy-chat-"+friendshipId)
-      .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"friendship_id=eq."+friendshipId},()=>{loadMessages();})
+      .on("postgres_changes",{event:"*",schema:"public",table:"messages",filter:"friendship_id=eq."+friendshipId},()=>{loadMessages();})
+      .on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"},()=>{loadMessages();})
       .subscribe();
     return ()=>{supabase.removeChannel(channel);};
   },[friendshipId,loadMessages]);
