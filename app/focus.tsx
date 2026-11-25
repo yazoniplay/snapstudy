@@ -58,7 +58,7 @@ export default function FocusRoom(){
       <Pressable onPress={reset} style={styles.resetButton}><Ionicons name="refresh" size={20} color="#FFFFFF"/></Pressable>
      </View>
      {finished&&mode==="focus"?<Text style={styles.completeText}>Beautiful work. You added 40 XP to your study journey.</Text>:null}
-    </View>
+    </Animated.View>
     <View style={styles.bottom}>
      <View style={styles.bottomStat}><View style={styles.statIcon}><Ionicons name="flash" size={17} color="#F7D18A"/></View><View><Text style={styles.statLabel}>TOTAL XP</Text><Text style={styles.statValue}>{xp.toLocaleString()}</Text></View></View>
      <View style={styles.bottomDivider}/>
