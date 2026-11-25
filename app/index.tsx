@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Alert, Animated, Easing, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Animated, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useFocusEffect } from "expo-router";
@@ -35,18 +35,9 @@ export default function Home() {
   const [welcomeLine,setWelcomeLine] = useState("What would you like to learn today?");
   const cameraRef = useRef<CameraView>(null);
   const entrance = useRef(new Animated.Value(0)).current;
-  const splashPulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.spring(entrance, { toValue: 1, friction: 8, tension: 55, useNativeDriver: true }).start();
   }, [entrance]);
-  useEffect(() => {
-    const pulse = Animated.loop(Animated.sequence([
-      Animated.timing(splashPulse, { toValue: 1, duration: 850, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      Animated.timing(splashPulse, { toValue: 0, duration: 850, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-    ]));
-    pulse.start();
-    return () => pulse.stop();
-  }, [splashPulse]);
   const [permission, requestPermission] = useCameraPermissions();
   useEffect(() => { let active=true; loadGamification().then(value=>{if(active)setGameState(value);}).catch(()=>{}); return ()=>{active=false}; }, []);
   const level = getLevel(gameState?.totalXp || 0);
