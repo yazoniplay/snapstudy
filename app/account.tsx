@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
+import { Alert, Image, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -101,6 +101,22 @@ export default function Account() {
     const { error } = await supabase.auth.signOut();
     if (error) Alert.alert("Couldn't sign out", error.message);
     else router.replace("/auth");
+  }
+
+  async function exportStudyData(){
+    try{
+      const keys=(await AsyncStorage.getAllKeys()).filter(key=>key.startsWith("snapstudy:"));
+      const pairs=await AsyncStorage.multiGet(keys);
+      const payload={exportedAt:new Date().toISOString(),app:"SnapStudy",localData:Object.fromEntries(pairs.filter(([,value])=>value!==null))};
+      await Share.share({title:"SnapStudy data export",message:JSON.stringify(payload,null,2)});
+    }catch(error:any){Alert.alert("Export failed",error?.message||"Could not export your study data.");}
+  }
+
+  async function sendPasswordReset(){
+    if(!email){Alert.alert("No email found","Sign in again to manage your password.");return;}
+    const {error}=await supabase.auth.resetPasswordForEmail(email);
+    if(error)Alert.alert("Password reset failed",error.message);
+    else Alert.alert("Check your email","We sent a password reset link to your account email.");
   }
 
   if (loading) return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.muted}>{t("loadingAccount")}</Text></View></SafeAreaView>;
@@ -240,6 +256,9 @@ export default function Account() {
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("session")}</Text>
           <Text style={s.cardText}>{t("sessionSub")}</Text>
+          <Pressable style={s.secondary} onPress={sendPasswordReset}><Text style={s.secondaryText}>{language==="sv"?"Skicka länk för lösenordsåterställning":"Send password reset link"}</Text></Pressable>
+          <Pressable style={s.secondary} onPress={exportStudyData}><Text style={s.secondaryText}>{language==="sv"?"Exportera mina studiedata":"Export my study data"}</Text></Pressable>
+          <Text style={s.cardText}>{language==="sv"?"Exporten innehåller lokalt sparade SnapStudy-inställningar och studiedata.":"The export includes locally stored SnapStudy preferences and study data."}</Text>
           <Pressable style={s.danger} onPress={signOut}>
             <Text style={s.dangerText}>{t("signOut")}</Text>
           </Pressable>
