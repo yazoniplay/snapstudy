@@ -12,7 +12,8 @@ const goals = [{value:"10",title:"10 minutes",sub:"A quick daily session"},{valu
 export default function Onboarding() {
  const {colors:c,mode,setMode}=useTheme(); const s=makeStyles(c);
  useEffect(()=>{let active=true;supabase.auth.getUser().then(({data,error})=>{if(!active)return;if(error||!data.user)router.replace("/auth");else if(data.user.user_metadata?.onboarding_completed)router.replace("/");}).catch(()=>{if(active)router.replace("/auth");});return()=>{active=false};},[]);
- const [step,setStep]=useState(0); const progressMotion=useRef(new Animated.Value(0)).current;\n useEffect(()=>{Animated.spring(progressMotion,{toValue:step,friction:9,tension:55,useNativeDriver:false}).start();},[step,progressMotion]); const [selected,setSelected]=useState<string[]>(["Maths","Science"]); const [goal,setGoal]=useState("20"); const [busy,setBusy]=useState(false); const [error,setError]=useState("");
+ const [step,setStep]=useState(0); const progressMotion=useRef(new Animated.Value(0)).current;
+ useEffect(()=>{Animated.spring(progressMotion,{toValue:step,friction:9,tension:55,useNativeDriver:false}).start();},[step,progressMotion]); const [selected,setSelected]=useState<string[]>(["Maths","Science"]); const [goal,setGoal]=useState("20"); const [busy,setBusy]=useState(false); const [error,setError]=useState("");
  function toggle(subject:string){setSelected(old=>old.includes(subject)?old.filter(x=>x!==subject):[...old,subject]);}
  async function finish(){
   if(!selected.length){setError("Pick at least one subject.");return;}
