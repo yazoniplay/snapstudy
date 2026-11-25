@@ -40,7 +40,7 @@ function providers():P[] {
  const list:P[]=[
  {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-3.5-flash-lite"},
  {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"qwen/qwen3.8-27b"},
- {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"nvidia/nemotron-nano-12b-v2-vl"},
+ {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"nvidia/nemotron-3.5-super-vl-120b-a12b"},
  {id:"tokenharbor",key:env("TOKEN_HARBOR_KEY")||env("TOKENHARBOR_API_KEY"),url:env("TOKEN_HARBOR_BASE_URL")||env("TOKENHARBOR_BASE_URL")||"https://tokenharbor.ai/v1",model:env("TOKEN_HARBOR_MODEL")||env("TOKENHARBOR_MODEL")||"deepseek-v4.1-flash:free"},
  {id:"huggingface",key:env("HUGGINGFACE_API_KEY")||env("HF_TOKEN"),url:env("HUGGINGFACE_BASE_URL")||"https://router.huggingface.co/v1",model:env("HUGGINGFACE_MODEL")||"Qwen/Qwen2.5-VL-72B-Instruct"},
  {id:"openrouter",key:env("OPENROUTER_API_KEY"),url:env("OPENROUTER_BASE_URL")||"https://openrouter.ai/api/v1",model:env("OPENROUTER_MODEL")||"openrouter/free"},
@@ -56,7 +56,7 @@ function providers():P[] {
  {id:"requesty",key:env("REQUESTY_API_KEY"),url:env("REQUESTY_BASE_URL")||"https://router.requesty.ai/v1",model:env("REQUESTY_MODEL")||"nvidia/muse-glimmer-30b"},
  {id:"fastrouter",key:env("FASTROUTER_API_KEY"),url:env("FASTROUTER_BASE_URL")||"https://api.fastrouter.ai/api/v1",model:env("FASTROUTER_MODEL")||"openai/gpt-oss-120b:free"},
  {id:"opencodezen",key:env("OPENCODE_API_KEY")||env("OPENCODE_ZEN_API_KEY"),url:env("OPENCODE_ZEN_BASE_URL")||"https://opencode.ai/zen/v1",model:env("OPENCODE_ZEN_MODEL")||"nemotron-3.5-lightning-free"},
- {id:"aihorde",key:env("AIHORDE_API_KEY")||"0000000000",url:env("AIHORDE_BASE_URL")||"https://oai.aihorde.net/v1",model:env("AIHORDE_MODEL")||"koboldcpp/Qwen_Qwen3-0.6B-IQ4_XS"},
+ {id:"aihorde",key:env("AIHORDE_API_KEY")||"0000000000",url:env("AIHORDE_BASE_URL")||"https://oai.aihorde.net/v1",model:env("AIHORDE_MODEL")||"auto"},
  {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"deepseek-ai/DeepSeek-V3.2"}
  ];
  const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
@@ -81,21 +81,62 @@ async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<
  const controller=new AbortController();
  const timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{return await fetch(url,{...init,signal:controller.signal});}
- finally{clearTimeout(timer);}
+ catch(error){
+  if(error instanceof DOMException&&error.name==="AbortError")throw new Error("Provider request timed out after "+timeoutMs+"ms");
+  throw error;
+ }finally{clearTimeout(timer);}
 }
-async function run(p:P,images:any[],lang:string,notesText="") {
- const providerTimeout=p.id==="gemini"?18000:p.id==="groq"?15000:p.id==="cloudflare"?15000:p.id==="tokenharbor"?25000:15000;
+async function availableHordeChatModels(p:P):Promise<string[]>{
+ try{
+  const response=await fetchTimed(p.url.replace(/\\/$/,"")+"/models",{method:"GET",headers:{...(p.key?{"Authorization":"Bearer "+p.key}:{})}},5000);
+  if(!response.ok)return [];
+  const body=await response.json();
+  return (Array.isArray(body.data)?body.data:[]).map((item:any)=>String(item?.id||"")).filter(Boolean);
+ }catch{return [];}
+}
+async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
+ const providerTimeout=Math.max(3000,Math.min(budgetMs,p.id==="gemini"?15000:p.id==="groq"?26000:p.id==="tokenharbor"?28000:p.id==="cloudflare"?22000:p.id==="nvidia"?18000:p.id==="opencodezen"?12000:20000));
  const instruction=lang&&lang!=="auto"?`EXPLICIT OUTPUT LANGUAGE: ${lang}. Write every student-facing field in this language, naturally and consistently. This explicit output language is the only reason to translate away from the source language.`:"AUTOMATIC SOURCE-LANGUAGE MODE (MANDATORY): Inspect the pasted text or OCR-readable image text first, identify the dominant language carrying the lesson, and write every student-facing field in that same language. The UI language is irrelevant and must not override the source. Swedish source material—including a photo of Swedish notes—must produce natural Swedish throughout, with å, ä and ö preserved. Never translate Swedish into English by default. Do not mix languages unless the source itself requires it.";
  const sourceText=notesText? "\n\nSOURCE NOTES (use only these facts):\n"+notesText : "";
- if(p.url==="gemini") {
-  const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},providerTimeout);
-  const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Gemini failed");
-  return parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
- }
  const content=[{type:"text",text:prompt+"\n"+instruction+sourceText},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
- const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model:p.model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:12000})},providerTimeout);
- const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
- const c=data.choices?.[0]?.message?.content;return parse(typeof c==="string"?c:Array.isArray(c)?c.map((x:any)=>x.text||"").join("\n"):"");
+ if(p.url==="gemini") {
+  const candidates=[p.model,...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim()),"gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.5-flash"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
+  const errors:string[]=[];
+  for(const model of candidates){
+   try{
+    const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},Math.min(providerTimeout,11000));
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error?.message||"Gemini HTTP "+response.status);
+    const result=parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
+    console.log("Gemini model success",model);return result;
+   }catch(e){const message=e instanceof Error?e.message:String(e);errors.push(model+": "+message.slice(0,100));console.warn("Gemini model fallback",model,message.slice(0,160));}
+  }
+  throw new Error("Gemini models exhausted: "+errors.join(" | "));
+ }
+ let models=[p.model];
+ if(p.id==="nvidia"){
+  models=[p.model,...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim()),"nvidia/nemotron-3.5-super-vl-120b-a12b","nvidia/nemotron-3.5-super-120b-a12b"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
+ }
+ if(p.id==="aihorde"){
+  const live=await availableHordeChatModels(p);
+  if(live.length){
+   const preferred=env("AIHORDE_MODEL").trim();
+   const chosen=preferred&&preferred!=="auto"&&live.includes(preferred)?preferred:live[0];
+   models=[chosen];
+   console.log("AI Horde live model selected",chosen);
+  }else if(p.model==="auto")throw new Error("AI Horde could not load its live chat model list");
+ }
+ const errors:string[]=[];
+ for(const model of models){
+  try{
+   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:12000})},providerTimeout);
+   const data=await response.json();
+   if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
+   const answer=data.choices?.[0]?.message?.content;
+   return parse(typeof answer==="string"?answer:Array.isArray(answer)?answer.map((x:any)=>x.text||"").join("\n"):"");
+  }catch(e){const message=e instanceof Error?e.message:String(e);errors.push(model+": "+message.slice(0,120));console.warn("AI model fallback",p.id,model,message.slice(0,180));}
+ }
+ throw new Error(errors.join(" | ")||"No model available");
 }
 serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
@@ -104,8 +145,12 @@ serve(async(req)=>{
   const body=await req.json(),notesText=typeof body.notesText==="string"?body.notesText.trim():"",src=Array.isArray(body.images)&&body.images.length?body.images:body.imageBase64?[{imageBase64:body.imageBase64,mimeType:body.mimeType}]:[];
   const images=src.filter((x:any)=>x?.imageBase64).slice(0,6);if(!images.length&&!notesText)throw new Error("Paste your notes or choose notes images.");if(notesText.length>40000)throw new Error("Notes are too long. Paste up to 40,000 characters.");
   const ps=providers();if(!ps.length)throw new Error("Configure at least one AI provider secret in Supabase.");
-  const failures=[];
-  for(const p of ps){try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText);console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}}
+  const failures=[],deadline=Date.now()+112000;
+  for(const p of ps){
+   const remaining=deadline-Date.now();if(remaining<4000){failures.push("remaining providers skipped: request time budget reached");break;}
+   try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText,Math.min(remaining,30000));console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}
+   catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}
+  }
   throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
  }catch(e){return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
 });
