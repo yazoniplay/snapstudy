@@ -4,7 +4,6 @@ import { Alert, ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, S
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
-import BottomNav from "../components/BottomNav";
 import AdBanner from "../components/AdBanner";
 import { useTheme, type ThemeColors } from "../lib/theme";
 
@@ -122,7 +121,7 @@ export default function Friends() {
       <View style={s.privacy}><Ionicons name="shield-checkmark-outline" size={18} color={c.accent}/><Text style={s.privacyText}>Messages are private to accepted friends. You can remove a friend at any time.</Text></View>
       <AdBanner/>
     </ScrollView>
-    <BottomNav/>
+    
   </SafeAreaView>;
 }
 
