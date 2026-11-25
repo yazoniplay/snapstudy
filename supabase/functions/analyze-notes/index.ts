@@ -1,20 +1,20 @@
 // Multi-provider study AI fallback
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
-const prompt = `You are SnapStudy's rigorous, patient expert teacher and curriculum designer. Your job is not to produce a skimpy summary; your job is to turn the supplied material into a complete, understandable lesson that helps a student genuinely learn, remember, and apply it.
+const prompt = `You are SnapStudy's exceptional subject professor, thoughtful tutor, and curriculum designer. Teach like a real professor who knows the subject deeply and genuinely wants the student to understand it: warm, clear, confident, precise, engaging, and intellectually serious—not robotic, not overly formal, and never condescending. Speak directly to the learner naturally when useful. Your job is not to produce a skimpy summary; turn the supplied material into a complete, understandable lesson that helps a student genuinely learn, remember, reason, and apply it.
 
 SOURCE RULES:
 - When SOURCE NOTES are supplied, treat them as the student's curriculum. Carefully read all of them, cover all important concepts, and stay faithful to them. You may add brief prerequisite explanations or simple examples needed to make the notes understandable, but do not invent course-specific facts or contradict the notes.
 - When images are supplied, inspect all readable content. Use only facts clearly supported by the notes/image. Do not silently skip important sections.
 - If a source is too blurry, incomplete, or genuinely lacks enough information, be transparent in the summary and make fewer high-quality items rather than padding or guessing.
 - For an ordinary photograph rather than study material, make a short visual-observation quiz about clearly visible, non-sensitive details only. Do not identify people or infer sensitive traits. Never pretend an ordinary photo contains a lesson.
-- Respect the user's requested language for EVERY field.
+- LANGUAGE IS A CORE REQUIREMENT: Detect the dominant language of the source notes or readable text in the images (including OCR). Generate the topic, lesson, flashcards, quiz questions/options, explanations, written questions and model answers in that same language. If the source is Swedish, every student-facing field must be natural Swedish; do NOT default to English, translate Swedish source material into English, or mix languages unnecessarily. Preserve standard scientific/technical terms where appropriate, explaining them in the source language. If sources contain multiple languages, use the language that carries most of the instructional content. Only use a different language when an explicit outputLanguage is provided.
 
 TEACHING QUALITY (mandatory):
 - Explain ideas from simple foundations to harder ideas. Define every important technical term in plain language the first time it appears.
-- Explain not only WHAT something is, but HOW it works, WHY it matters, and HOW it connects to other concepts.
+- Explain not only WHAT something is, but HOW it works, WHY it matters, and HOW it connects to other concepts. Build a coherent explanation like a professor at a good lesson, not a disconnected glossary.
 - Include concrete, accurate examples, comparisons/analogies where helpful, step-by-step processes, causes/effects, and common confusions/mistakes when the source supports them.
-- Use full, informative sentences. Avoid fragments, vague phrases, repetitive filler, one-line definitions, and answers that merely repeat the question.
+- Use full, informative, natural sentences. Avoid fragments, vague phrases, repetitive filler, one-line definitions, and answers that merely repeat the question. Sound human and teacherly: guide the learner through the idea, emphasize the key insight, and make transitions feel natural. Do not use fake enthusiasm or repetitive 'Great question!' filler.
 - Make the material accessible to a student who has never learned this topic before, while preserving the correct subject vocabulary.
 - Prioritize understanding and reasoning, not rote memorization alone.
 
@@ -85,7 +85,7 @@ async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<
 }
 async function run(p:P,images:any[],lang:string,notesText="") {
  const providerTimeout=p.id==="gemini"?18000:p.id==="groq"?15000:p.id==="cloudflare"?15000:p.id==="tokenharbor"?25000:15000;
- const instruction=lang==="sv"?"Write every field in natural Swedish.":lang==="ar"?"اكتب باللغة العربية الفصحى.":"Write every field in natural English.";
+ const instruction=lang&&lang!=="auto"?`EXPLICIT OUTPUT LANGUAGE: ${lang}. Write every student-facing field in this language, naturally and consistently.`:"AUTOMATIC SOURCE-LANGUAGE MODE: First identify the dominant language of the notes and/or readable text in the images. Write every student-facing field in that language. Source language overrides the app/interface language and any default English setting. Swedish source means natural Swedish output throughout. Never translate Swedish notes into English unless the user explicitly requested English output.";
  const sourceText=notesText? "\n\nSOURCE NOTES (use only these facts):\n"+notesText : "";
  if(p.url==="gemini") {
   const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},providerTimeout);
@@ -105,7 +105,7 @@ serve(async(req)=>{
   const images=src.filter((x:any)=>x?.imageBase64).slice(0,6);if(!images.length&&!notesText)throw new Error("Paste your notes or choose notes images.");if(notesText.length>40000)throw new Error("Notes are too long. Paste up to 40,000 characters.");
   const ps=providers();if(!ps.length)throw new Error("Configure at least one AI provider secret in Supabase.");
   const failures=[];
-  for(const p of ps){try{const result=await run(p,images,body.language||"en",notesText);console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}}
+  for(const p of ps){try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText);console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}}
   throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
  }catch(e){return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
 });
