@@ -1,6 +1,6 @@
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Animated, Pressable, SafeAreaView, StyleSheet, , View } from "react-native";
+import { ActivityIndicator, Animated, Pressable, SafeAreaView, StyleSheet, View } from "react-native";
 import SnapStudyMark from "../components/SnapStudyMark";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
