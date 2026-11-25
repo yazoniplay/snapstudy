@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Animated, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import SnapStudyMark from "../components/SnapStudyMark";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -13,6 +15,9 @@ export default function Auth() {
   const [password,setPassword] = useState("");
   const [busy,setBusy] = useState(false);
   const [message,setMessage] = useState("");
+  const entrance = useState(() => new Animated.Value(0))[0];
+  const pressScale = useState(() => new Animated.Value(1))[0];
+  useEffect(() => { Animated.spring(entrance,{toValue:1,friction:8,tension:48,useNativeDriver:true}).start(); },[entrance]);
 
   async function submit() {
     setMessage("");
@@ -51,9 +56,9 @@ export default function Auth() {
     <Text style={s.label}>EMAIL</Text><TextInput value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={c.subtle} autoCapitalize="none" keyboardType="email-address" autoComplete="email" style={s.input}/>
     <Text style={s.label}>PASSWORD</Text><TextInput value={password} onChangeText={setPassword} placeholder="At least 6 characters" placeholderTextColor={c.subtle} secureTextEntry autoComplete={mode==="signup"?"new-password":"current-password"} style={s.input}/>
     {!!message&&<Text style={s.message}>{message}</Text>}
-    <Pressable style={[s.primary,busy&&{opacity:.7}]} onPress={submit} disabled={busy}>{busy?<ActivityIndicator color={c.onAccent}/>:<Text style={s.primaryText}>{mode==="signup"?"Create my account":"Log in"}</Text>}</Pressable>
+    <Animated.View style={{transform:[{scale:pressScale}]}}><Pressable style={[s.primary,busy&&{opacity:.7}]} onPressIn={()=>Animated.spring(pressScale,{toValue:.975,useNativeDriver:true,speed:28,bounciness:3}).start()} onPressOut={()=>Animated.spring(pressScale,{toValue:1,useNativeDriver:true,speed:22,bounciness:5}).start()} onPress={submit} disabled={busy}>{busy?<ActivityIndicator color={c.onAccent}/>:<Text style={s.primaryText}>{mode==="signup"?"Create my account":"Log in"}</Text>}</Pressable></Animated.View>
     <Text style={s.foot}>Your account keeps your preferences and progress together.</Text>
-  </View></SafeAreaView>;
+  </Animated.View></SafeAreaView>;
 }
 
 const makeStyles=(c:ThemeColors)=>StyleSheet.create({
