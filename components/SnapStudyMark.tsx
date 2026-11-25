@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { StyleSheet, View } from "react-native";
 
 export default function SnapStudyMark({ size = 32 }: { size?: number }) {
   return (
@@ -9,8 +10,9 @@ export default function SnapStudyMark({ size = 32 }: { size?: number }) {
       end={{ x: 1, y: 1 }}
       style={[styles.mark, { width: size, height: size, borderRadius: size * 0.32 }]}
     >
-      <Text style={[styles.letter, { fontSize: size * 0.63, lineHeight: size * 0.76 }]}>S</Text>
-      <View style={[styles.glint, { width: size * 0.16, height: size * 0.16, borderRadius: size }]} />
+      <Ionicons name="book-outline" size={size * 0.57} color="#FFFFFF" />
+      <View style={[styles.spark, { width: size * 0.18, height: size * 0.18, borderRadius: size }]} />
+      <View style={[styles.glint, { width: size * 0.11, height: size * 0.11, borderRadius: size }]} />
     </LinearGradient>
   );
 }
@@ -26,6 +28,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 5,
   },
-  letter: { color: "#FFFFFF", fontWeight: "900", letterSpacing: -1.5, textAlign: "center" },
-  glint: { position: "absolute", right: "18%", top: "17%", backgroundColor: "rgba(255,255,255,0.82)" },
+  spark: { position: "absolute", right: "16%", top: "16%", backgroundColor: "#FFFFFF", opacity: 0.95 },
+  glint: { position: "absolute", left: "18%", bottom: "18%", backgroundColor: "rgba(255,255,255,0.62)" },
 });
