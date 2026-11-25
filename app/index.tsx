@@ -8,7 +8,6 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { imageToBase64, setPendingImages } from "../lib/image";
-import BottomNav from "../components/BottomNav";
 import StudyDashboard from "../components/StudyDashboard";
 import SnapStudyMark from "../components/SnapStudyMark";
 import LoadingScreen from "../components/LoadingScreen";
@@ -199,7 +198,7 @@ export default function Home() {
         </View>
       </View>
     </Modal>
-<BottomNav/>
+
   </SafeAreaView>;
 }
 
