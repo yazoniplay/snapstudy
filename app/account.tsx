@@ -31,7 +31,10 @@ export default function Account() {
   const [focusMinutes, setFocusMinutes] = useState(25);
   const [breakMinutes, setBreakMinutes] = useState(5);
   const [motionEnabled, setMotionEnabled] = useState(true);
-  useEffect(() => { AsyncStorage.getItem("snapstudy:motion").then(value=>{if(value==="off")setMotionEnabled(false);}).catch(()=>{}); AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); }).catch(()=>{}); }, []);
+  const [cardDensity,setCardDensity]=useState<"comfortable"|"compact">("comfortable");
+  const [fontScale,setFontScale]=useState<"small"|"normal"|"large">("normal");
+  const [contentLanguage,setContentLanguage]=useState<"auto"|"en"|"sv"|"ar">("auto");
+  useEffect(() => { AsyncStorage.getItem("snapstudy:motion").then(value=>{if(value==="off")setMotionEnabled(false);}).catch(()=>{}); AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes","snapstudy:card-density","snapstudy:font-scale","snapstudy:content-language"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); if(values[3]?.[1]==="compact")setCardDensity("compact"); if(["small","normal","large"].includes(values[4]?.[1]||""))setFontScale(values[4]?.[1] as "small"|"normal"|"large"); if(["auto","en","sv","ar"].includes(values[5]?.[1]||""))setContentLanguage(values[5]?.[1] as "auto"|"en"|"sv"|"ar"); }).catch(()=>{}); }, []);
   function savePreference(key: string, value: number, setter: (value:number)=>void) { setter(value); AsyncStorage.setItem(key,String(value)).catch(()=>{}); supabase.auth.updateUser({data:{[key.replace("snapstudy:","").replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase())]:value}}).then(()=>{}).catch(()=>{}); }
   const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#6366F1","#A855F7","#F43F5E","#84CC16","#0F766E","#F8FAFC","#111827"];
   useEffect(() => { setColorDraft(accentColor); }, [accentColor]);
@@ -108,6 +111,7 @@ export default function Account() {
     { title: "Study preferences", subtitle: "Goals and focus timing", icon: "options-outline" as const },
     { title: "Language", subtitle: "App and learning language", icon: "globe-outline" as const },
     { title: "Appearance", subtitle: "Theme, motion and colors", icon: "color-palette-outline" as const },
+    { title: "Customization", subtitle: "Layout, text size and study language", icon: "options-outline" as const },
     { title: "Account", subtitle: "Security and sign out", icon: "shield-checkmark-outline" as const },
   ];
 
@@ -214,6 +218,20 @@ export default function Account() {
         </View>
 
 
+        </>)}
+        {(!wideSettings || selectedSettings === "Customization") && (<>
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="options-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>{language==="sv"?"Anpassning":"Customization"}</Text><Text style={s.sectionSub}>{language==="sv"?"Gör studieupplevelsen personlig":"Tune your study experience"}</Text></View></View>
+        <View style={s.card}>
+          <Text style={s.cardTitle}>{language==="sv"?"Kortlayout":"Card layout"}</Text><Text style={s.cardText}>{language==="sv"?"Välj hur tätt korten visas på startsidan.":"Choose how compact dashboard cards appear."}</Text>
+          <View style={s.choiceRow}>{(["comfortable","compact"] as const).map(value=><Pressable key={value} style={[s.choiceChip,cardDensity===value&&s.choiceChipActive]} onPress={()=>{setCardDensity(value);AsyncStorage.setItem("snapstudy:card-density",value).catch(()=>{});supabase.auth.updateUser({data:{cardDensity:value}}).catch(()=>{});}}><Text style={[s.choiceText,cardDensity===value&&s.choiceTextActive]}>{value==="comfortable"?(language==="sv"?"Luftig":"Comfortable"):(language==="sv"?"Kompakt":"Compact")}</Text></Pressable>)}</View>
+          <View style={s.preferenceDivider}/>
+          <Text style={s.cardTitle}>{language==="sv"?"Textstorlek":"Text size"}</Text><Text style={s.cardText}>{language==="sv"?"Välj en storlek som är lätt att läsa.":"Choose a comfortable reading size."}</Text>
+          <View style={s.choiceRow}>{(["small","normal","large"] as const).map(value=><Pressable key={value} style={[s.choiceChip,fontScale===value&&s.choiceChipActive]} onPress={()=>{setFontScale(value);AsyncStorage.setItem("snapstudy:font-scale",value).catch(()=>{});supabase.auth.updateUser({data:{fontScale:value}}).catch(()=>{});}}><Text style={[s.choiceText,fontScale===value&&s.choiceTextActive]}>{value==="small"?(language==="sv"?"Liten":"Small"):value==="normal"?"Normal":(language==="sv"?"Stor":"Large")}</Text></Pressable>)}</View>
+          <View style={s.preferenceDivider}/>
+          <Text style={s.cardTitle}>{language==="sv"?"Språk för studiematerial":"Study material language"}</Text><Text style={s.cardText}>{language==="sv"?"Välj om AI ska följa anteckningarnas språk eller använda ett valt språk.":"Choose whether AI follows your notes or uses a preferred language."}</Text>
+          <View style={s.choiceRow}>{(["auto","en","sv","ar"] as const).map(value=><Pressable key={value} style={[s.choiceChip,contentLanguage===value&&s.choiceChipActive]} onPress={()=>{setContentLanguage(value);AsyncStorage.setItem("snapstudy:content-language",value).catch(()=>{});supabase.auth.updateUser({data:{studyContentLanguage:value}}).catch(()=>{});}}><Text style={[s.choiceText,contentLanguage===value&&s.choiceTextActive]}>{value==="auto"?(language==="sv"?"Automatiskt":"Auto"):value==="en"?"English":value==="sv"?"Svenska":"العربية"}</Text></Pressable>)}</View>
+          <Text style={[s.cardText,{marginTop:9}]}>{language==="sv"?"Automatiskt behåller språket från dina anteckningar. Fler språk för studiematerial och gränssnitt läggs till i kommande uppdateringar.":"Auto preserves the language of your notes. More study and interface languages are being added in future updates."}</Text>
+        </View>
         </>)}
         {(!wideSettings || selectedSettings === "Account") && (<>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="shield-checkmark-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Account & security</Text><Text style={s.sectionSub}>Your sign-in and account controls</Text></View></View>
