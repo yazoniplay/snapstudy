@@ -12,6 +12,7 @@ import StudyDashboard from "../components/StudyDashboard";
 import SnapStudyMark from "../components/SnapStudyMark";
 import AdBanner from "../components/AdBanner";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { getLevel, loadGamification, type GamificationState } from "../lib/gamification";
 import { supabase } from "../lib/supabase";
 
