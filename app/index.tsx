@@ -18,7 +18,7 @@ import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 export default function Home() {
-  const { colors:c, setMode } = useTheme(); const {t,language}=useLanguage();
+  const { colors:c, mode } = useTheme(); const {t,language}=useLanguage();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [booting, setBooting] = useState(true);
@@ -70,9 +70,6 @@ export default function Home() {
         }
         if (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) {
           setFirstName(user.user_metadata.full_name.trim().split(/\s+/)[0]);
-        }
-        if (user.user_metadata?.theme === "light" || user.user_metadata?.theme === "dark") {
-          setMode(user.user_metadata.theme);
         }
         await minimumSplash;
         if (active) setBooting(false);
@@ -191,7 +188,7 @@ export default function Home() {
         <View style={{flex:1}}><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.3}}>SNAPSTUDY PLUS</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Mer fokus. Mer framsteg.":"Make every study session count."}</Text></View><Ionicons name="chevron-forward" size={17} color={c.accent}/>
       </Pressable>
       <AdBanner />
-    </Animated.ScrollView><BottomNav/></Animated.ScrollView><BottomNav/>
+    </Animated.ScrollView><BottomNav/>
   </SafeAreaView>;
 }
 
