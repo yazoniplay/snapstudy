@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "./LocalizedText";
+import { Pressable, StyleSheet, Text as NativeText, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, usePathname } from "expo-router";
 
