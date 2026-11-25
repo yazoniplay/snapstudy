@@ -139,12 +139,19 @@ export default function Chat() {
         {loading ? <ActivityIndicator color={c.accent} style={{marginTop:40}}/> : messages.length===0 ? <View style={s.empty}><Text style={s.emptyEmoji}>💬</Text><Text style={s.emptyTitle}>Say hey to {friendName.split(" ")[0]}!</Text><Text style={s.emptyText}>Share a question, send a note photo, or drop a little gift.</Text></View> : messages.map(message=>{
           const mine=message.sender_id===userId;
           const gift=message.gift_code?GIFTS[message.gift_code]:null;
+          const replied=message.reply_to?messages.find(item=>item.id===message.reply_to):null;
+          const reactionGroups=(message.reactions||[]).reduce((groups:Record<string,{count:number;mine:boolean}>,reaction)=>{groups[reaction.emoji]??={count:0,mine:false};groups[reaction.emoji].count++;if(reaction.user_id===userId)groups[reaction.emoji].mine=true;return groups;},{});
           return <View key={message.id} style={[s.messageRow,mine?s.mineRow:s.theirRow]}>
-            <View style={[s.bubble,mine?s.mineBubble:s.theirBubble,message.message_type==="gift"&&s.giftBubble]}>
-              {message.message_type==="text"&&<Text style={[s.messageText,mine&&s.mineText]}>{message.body}</Text>}
+            <Pressable onLongPress={()=>openMessageActions(message,mine)} delayLongPress={350} style={[s.bubble,mine?s.mineBubble:s.theirBubble,message.message_type==="gift"&&s.giftBubble]}>
+              {replied&&<View style={s.replyPreview}><Text style={[s.replyPreviewName,mine&&s.mineText]}>{replied.sender_id===userId?"You":friendName}</Text><Text numberOfLines={2} style={[s.replyPreviewText,mine&&s.mineText]}>{replied.deleted_at?"Message deleted":replied.body||(replied.message_type==="image"?"📷 Photo":"🎁 Gift")}</Text></View>}
+              {message.message_type==="text"&&<Text style={[s.messageText,mine&&s.mineText]}>{message.deleted_at?"This message was deleted.":message.body}</Text>}
               {message.message_type==="image"&&(message.imageUrl?<Image source={{uri:message.imageUrl}} style={s.sentImage} resizeMode="cover"/>:<Text style={s.messageText}>Photo unavailable</Text>)}
               {message.message_type==="gift"&&gift&&<View style={s.giftContent}><Text style={s.giftEmoji}>{gift.emoji}</Text><Text style={[s.giftLabel,mine&&s.mineText]}>{gift.label}</Text></View>}
-              <Text style={[s.time,mine&&s.mineTime]}>{new Date(message.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}{mine&&message.read_at?" · Seen":""}</Text>
+              <Text style={[s.time,mine&&s.mineTime]}>{new Date(message.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}{message.edited_at&&!message.deleted_at?" · Edited":""}{mine&&message.read_at?" · Seen":""}</Text>
+            </Pressable>
+            <View style={s.messageExtras}>
+              <View style={s.reactionRow}>{Object.entries(reactionGroups).map(([emoji,value])=><Pressable key={emoji} style={[s.reactionChip,value.mine&&s.reactionMine]} onPress={()=>toggleReaction(message,emoji)}><Text style={s.reactionText}>{emoji} {value.count}</Text></Pressable>)}<Pressable style={s.quickReact} onPress={()=>toggleReaction(message,"👍")}><Text style={s.quickReactText}>＋</Text></Pressable></View>
+              <Pressable style={s.replyButton} onPress={()=>{setReplyTo(message.id);setEditingMessageId(null);}}><Ionicons name="return-up-back-outline" size={13} color={c.subtle}/><Text style={s.replyButtonText}>Reply</Text></Pressable>
             </View>
           </View>;
         })}
