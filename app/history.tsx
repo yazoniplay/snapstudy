@@ -1,5 +1,6 @@
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text as NativeText, View } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { loadStudyData } from "../lib/cloud-study-data";
