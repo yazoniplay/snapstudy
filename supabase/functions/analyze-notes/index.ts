@@ -133,10 +133,17 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
   throw new Error("Gemini models exhausted: "+errors.join(" | "));
  }
  let models=[p.model];
+ if(p.id==="cloudflare"){
+  const visionModels=["@cf/qwen/qwen3.8-27b","@cf/google/gemma-4-26b-a4b-it"];
+  const configured=env("CLOUDFLARE_FALLBACK_MODELS").split(",").map(x=>x.trim()).filter(Boolean);
+  models=images.length?[...visionModels,p.model,...configured]:[p.model,...configured,...visionModels];
+  models=models.filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,4);
+ }
  if(p.id==="nvidia"){
   models=[p.model,...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim()),"nvidia/nemotron-3.5-super-vl-120b-a12b","nvidia/nemotron-3.5-super-120b-a12b"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
  }
  if(p.id==="aihorde"){
+  if(images.length)throw new Error("AI Horde text models are skipped for image notes because the selected worker does not declare vision support");
   const live=await availableHordeChatModels(p);
   if(live.length){
    const preferred=env("AIHORDE_MODEL").trim();
@@ -148,7 +155,7 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  const errors:string[]=[];
  for(const model of models){
   try{
-   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},providerTimeout);
+   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen","cloudflare"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},providerTimeout);
    const data=await response.json();
    if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
    const answer=data.choices?.[0]?.message?.content;
