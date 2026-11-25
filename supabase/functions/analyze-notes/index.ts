@@ -140,7 +140,7 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
   models=models.filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,4);
  }
  if(p.id==="nvidia"){
-  models=[p.model,...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim()),"nvidia/nemotron-3.5-super-vl-120b-a12b","nvidia/nemotron-3.5-super-120b-a12b"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
+  models=[p.model,...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim()),"nvidia/nemotron-3.5-super-vl-120b-a12b","nvidia/nemotron-3.5-super-120b-a12b"].filter((x,i,a)=>x&&a.indexOf(x)===i); models=images.length?models.filter(x=>/vl|vision/i.test(x)).slice(0,3):models.slice(0,3);
  }
  if(p.id==="aihorde"){
   if(images.length)throw new Error("AI Horde text models are skipped for image notes because the selected worker does not declare vision support");
