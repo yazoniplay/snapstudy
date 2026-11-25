@@ -230,7 +230,7 @@ export default function Study(){
       <Animated.View style={{ opacity: flashMotion, transform: [{ scale: flashMotion.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }, { rotateY: flashMotion.interpolate({ inputRange: [0, 1], outputRange: ["-6deg", "0deg"] }) }] }}>
        <Pressable style={s.flashcard} onPress={() => setShowAnswer(value => !value)}>
         <Text style={s.flashLabel}>{showAnswer ? t("answer").toLocaleUpperCase() : t("question").toLocaleUpperCase()}</Text>
-        <Text style={[s.flashText, { writingDirection: language === "ar" ? "rtl" : "auto" }]}>{showAnswer ? activeCard?.answer : activeCard?.question}</Text>
+        <MarkdownText style={[s.flashText, { writingDirection: language === "ar" ? "rtl" : "auto" }]}>{showAnswer ? activeCard?.answer || "" : activeCard?.question || ""}</MarkdownText>
         <Text style={s.tap}>{t("tapReveal")}</Text>
        </Pressable>
       </Animated.View>
