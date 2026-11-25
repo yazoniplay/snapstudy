@@ -135,7 +135,6 @@ export default function Home() {
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
         {([
           {title:language==="sv"?"Skanna anteckningar":"Scan notes",sub:language==="sv"?"Foto → studiepaket":"Photo to study set",icon:"camera-outline" as const,colors:["#8B5CF6","#6D28D9"] as [string,string],onPress:cameraOpen},
-          {title:language==="sv"?"Skapa med text":"Create from text",sub:language==="sv"?"Klistra in anteckningar":"Paste your notes",icon:"document-text-outline" as const,colors:["#F97365","#EA580C"] as [string,string],onPress:()=>{ if(pastedNotes.trim().length>=20) makeStudyFromText(); else Alert.alert(language==="sv"?"Klistra in anteckningar":"Paste your notes","Add your notes in the text box below, then create your study set."); }},
           {title:language==="sv"?"Fokusrum":"Focus room",sub:"Pomodoro · 25 min",icon:"timer-outline" as const,colors:["#F59E0B","#EA580C"] as [string,string],onPress:()=>router.push("/focus")},
           {title:language==="sv"?"Studie-set":"Study sets",sub:language==="sv"?"Repetera och fortsätt":"Review and continue",icon:"albums-outline" as const,colors:["#0EA5E9","#2563EB"] as [string,string],onPress:()=>router.push("/history")}
         ]).map((item,index)=><Pressable key={item.title} onPress={item.onPress} disabled={busy&&index===0} style={{width:"48.5%",flexGrow:1,minWidth:145,borderRadius:19,overflow:"hidden",minHeight:112}}>
