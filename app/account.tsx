@@ -16,7 +16,7 @@ export default function Account() {
   const wideSettings = viewportWidth >= 1000;
   const [selectedSettings, setSelectedSettings] = useState("Profile");
   const { language, setLanguage, t } = useLanguage();
-  const s = makeStyles(c);
+  const s = makeStyles(c,fontScale==="small"?0.92:fontScale==="large"?1.12:1);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -272,46 +272,46 @@ export default function Account() {
   );
 }
 
-const makeStyles = (c: ThemeColors) => StyleSheet.create({
+const makeStyles = (c: ThemeColors, scale=1) => StyleSheet.create({
   safe:{flex:1,backgroundColor:c.bg},
   sidebar:{width:286,backgroundColor:c.surfaceAlt,borderRightWidth:1,borderRightColor:c.border,paddingHorizontal:14,paddingTop:24,paddingBottom:16},
   sidebarHeader:{paddingHorizontal:13,paddingBottom:20,borderBottomWidth:1,borderBottomColor:c.border,marginBottom:12},
-  sidebarTitle:{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-.7},
-  sidebarSubtitle:{color:c.muted,fontSize:11,fontWeight:"700",marginTop:4},
+  sidebarTitle:{color:c.text,fontSize:25*scale,fontWeight:"900",letterSpacing:-.7},
+  sidebarSubtitle:{color:c.muted,fontSize:11*scale,fontWeight:"700",marginTop:4},
   sidebarItem:{flexDirection:"row",alignItems:"center",gap:10,paddingHorizontal:10,paddingVertical:11,borderRadius:12,marginBottom:4},
   sidebarItemActive:{backgroundColor:c.accentSoft},
   sidebarIcon:{width:30,height:30,borderRadius:9,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},
   sidebarIconActive:{backgroundColor:c.surface},
-  sidebarItemTitle:{color:c.text,fontSize:12,fontWeight:"800"},
+  sidebarItemTitle:{color:c.text,fontSize:12*scale,fontWeight:"800"},
   sidebarItemTitleActive:{color:c.accent},
-  sidebarItemSubtitle:{color:c.muted,fontSize:10,marginTop:2},
+  sidebarItemSubtitle:{color:c.muted,fontSize:10*scale,marginTop:2},
   sidebarBack:{flexDirection:"row",alignItems:"center",gap:8,marginTop:"auto",padding:12,borderTopWidth:1,borderTopColor:c.border},
-  sidebarBackText:{color:c.muted,fontSize:12,fontWeight:"800"},
+  sidebarBackText:{color:c.muted,fontSize:12*scale,fontWeight:"800"},
   desktopContent:{paddingHorizontal:34,paddingTop:30,paddingBottom:44,maxWidth:1050,flexGrow:1},
 
   motionRow:{flexDirection:"row",alignItems:"center",gap:12,paddingVertical:12,marginTop:6},motionCopy:{flex:1},motionSwitch:{width:46,height:27,borderRadius:99,backgroundColor:c.border,padding:3,justifyContent:"center"},motionSwitchOn:{backgroundColor:c.accent},motionKnob:{width:21,height:21,borderRadius:11,backgroundColor:"#FFFFFF",alignSelf:"flex-start"},motionKnobOn:{alignSelf:"flex-end"},
-  sectionHeading:{flexDirection:"row",alignItems:"center",gap:10,marginTop:25,marginBottom:9,paddingHorizontal:3},sectionIcon:{width:29,height:29,borderRadius:9,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"},sectionCopy:{flex:1},sectionTitle:{color:c.text,fontSize:14,fontWeight:"800",letterSpacing:-.2},sectionSub:{color:c.muted,fontSize:11,marginTop:2},choiceRow:{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12},choiceChip:{minWidth:47,paddingHorizontal:12,paddingVertical:10,borderRadius:10,borderWidth:1,borderColor:c.border,backgroundColor:c.surfaceAlt,alignItems:"center"},choiceChipActive:{backgroundColor:c.accentSoft,borderColor:c.accent},choiceText:{color:c.muted,fontSize:12,fontWeight:"800"},choiceTextActive:{color:c.accent},preferenceDivider:{height:1,backgroundColor:c.border,marginVertical:16},
+  sectionHeading:{flexDirection:"row",alignItems:"center",gap:10,marginTop:25,marginBottom:9,paddingHorizontal:3},sectionIcon:{width:29,height:29,borderRadius:9,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"},sectionCopy:{flex:1},sectionTitle:{color:c.text,fontSize:14*scale,fontWeight:"800",letterSpacing:-.2},sectionSub:{color:c.muted,fontSize:11*scale,marginTop:2},choiceRow:{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12},choiceChip:{minWidth:47,paddingHorizontal:12,paddingVertical:10,borderRadius:10,borderWidth:1,borderColor:c.border,backgroundColor:c.surfaceAlt,alignItems:"center"},choiceChipActive:{backgroundColor:c.accentSoft,borderColor:c.accent},choiceText:{color:c.muted,fontSize:12*scale,fontWeight:"800"},choiceTextActive:{color:c.accent},preferenceDivider:{height:1,backgroundColor:c.border,marginVertical:16},
   container:{paddingHorizontal:22,paddingTop:22,paddingBottom:34,width:"100%",maxWidth:760,alignSelf:"center"},
   center:{flex:1,alignItems:"center",justifyContent:"center"},
-  back:{color:c.muted,fontSize:13,fontWeight:"700",marginBottom:25},
-  eyebrow:{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:2},
-  title:{color:c.text,fontSize:32,fontWeight:"900",letterSpacing:-1,marginTop:7},
-  sub:{color:c.muted,fontSize:13,marginTop:6,marginBottom:22},
-  avatarWrap:{alignItems:"flex-start",marginBottom:18},avatar:{width:86,height:86,borderRadius:28,backgroundColor:c.accent,alignItems:"center",justifyContent:"center",marginBottom:7,overflow:"hidden"},avatarImage:{width:"100%",height:"100%"},avatarEdit:{color:c.accent,fontSize:12,fontWeight:"900"},
-  avatarText:{color:c.onAccent,fontSize:27,fontWeight:"900"},
+  back:{color:c.muted,fontSize:13*scale,fontWeight:"700",marginBottom:25},
+  eyebrow:{color:c.muted,fontSize:10*scale,fontWeight:"900",letterSpacing:2},
+  title:{color:c.text,fontSize:32*scale,fontWeight:"900",letterSpacing:-1,marginTop:7},
+  sub:{color:c.muted,fontSize:13*scale,marginTop:6,marginBottom:22},
+  avatarWrap:{alignItems:"flex-start",marginBottom:18},avatar:{width:86,height:86,borderRadius:28,backgroundColor:c.accent,alignItems:"center",justifyContent:"center",marginBottom:7,overflow:"hidden"},avatarImage:{width:"100%",height:"100%"},avatarEdit:{color:c.accent,fontSize:12*scale,fontWeight:"900"},
+  avatarText:{color:c.onAccent,fontSize:27*scale,fontWeight:"900"},
   card:{backgroundColor:c.surface,borderWidth:0,borderColor:"transparent",borderRadius:13,padding:17,marginBottom:7},
-  label:{color:c.text,fontSize:11,fontWeight:"800",marginBottom:6,marginTop:2},
-  input:{height:46,borderRadius:10,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:13,color:c.text,fontSize:13,marginBottom:12},
+  label:{color:c.text,fontSize:11*scale,fontWeight:"800",marginBottom:6,marginTop:2},
+  input:{height:46,borderRadius:10,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:13,color:c.text,fontSize:13*scale,marginBottom:12},
   disabled:{opacity:.55},
   primary:{height:48,borderRadius:13,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},
   primaryText:{color:c.onAccent,fontWeight:"900"},
-  swatchGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginTop:15,marginBottom:12},swatch:{width:30,height:30,borderRadius:11,borderWidth:2,borderColor:"transparent"},swatchSelected:{borderColor:c.text,transform:[{scale:1.1}]},colorInputRow:{flexDirection:"row",alignItems:"center",gap:10,marginBottom:12},colorPreview:{width:32,height:32,borderRadius:11,borderWidth:1,borderColor:c.border},colorInput:{flex:1,height:44,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:12,color:c.text,fontSize:13,fontWeight:"800"},resetColor:{alignItems:"center",paddingVertical:10,marginTop:4},themeRow:{flexDirection:"row",gap:9,marginTop:13},themeButton:{flex:1,paddingVertical:12,borderRadius:12,borderWidth:1,borderColor:c.border,alignItems:"center",backgroundColor:c.input},themeButtonActive:{backgroundColor:c.accentSoft,borderColor:c.accent},themeButtonText:{color:c.muted,fontWeight:"900",fontSize:12},themeButtonTextActive:{color:c.text},
-  streakStats:{flexDirection:"row",gap:10,marginTop:12,marginBottom:6},streakTile:{flex:1,padding:13,borderRadius:14,backgroundColor:c.surfaceAlt,borderWidth:1,borderColor:c.border},streakNumber:{color:c.accent,fontSize:28,fontWeight:"900"},
-  secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},
-  cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
-  cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
-  creditsTitle:{color:c.text,fontSize:19,fontWeight:"900",letterSpacing:-.4,marginBottom:6},creditsIntro:{color:c.muted,fontSize:12,lineHeight:18,marginBottom:16},creditSectionTitle:{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.2,marginBottom:7,marginTop:4},creditRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:59,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorTags:{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:15},creatorTag:{paddingHorizontal:10,paddingVertical:7,borderRadius:999,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creatorTagText:{color:c.accent,fontSize:10,fontWeight:"800"},  creatorCard:{padding:18},creatorHeader:{flexDirection:"row",alignItems:"center",gap:12,marginBottom:15},creatorMark:{width:54,height:54,borderRadius:18,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},creatorMarkText:{color:c.onAccent,fontSize:29,fontWeight:"900",letterSpacing:-1},creatorEyebrow:{color:c.muted,fontSize:8,fontWeight:"900",letterSpacing:1.1},creatorTitle:{color:c.text,fontSize:21,fontWeight:"900",letterSpacing:1.2,marginTop:3},creatorRole:{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3},creatorBody:{color:c.text,fontSize:13,lineHeight:20,marginBottom:15},creatorDivider:{height:1,backgroundColor:c.border,marginBottom:15},creatorLinksTitle:{color:c.muted,fontSize:9,fontWeight:"900",letterSpacing:1.1,marginBottom:8},creatorLinkRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:58,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorLinkIcon:{width:37,height:37,borderRadius:12,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},creatorLinkText:{color:c.text,fontSize:13,fontWeight:"900"},creatorLinkSub:{color:c.muted,fontSize:10,marginTop:3},
-  creditsBox:{marginTop:15,marginBottom:8,padding:13,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creditsTitle:{color:c.text,fontSize:13,fontWeight:"900",marginBottom:5},creditsText:{color:c.muted,fontSize:12,lineHeight:18},danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
+  swatchGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginTop:15,marginBottom:12},swatch:{width:30,height:30,borderRadius:11,borderWidth:2,borderColor:"transparent"},swatchSelected:{borderColor:c.text,transform:[{scale:1.1}]},colorInputRow:{flexDirection:"row",alignItems:"center",gap:10,marginBottom:12},colorPreview:{width:32,height:32,borderRadius:11,borderWidth:1,borderColor:c.border},colorInput:{flex:1,height:44,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:12,color:c.text,fontSize:13*scale,fontWeight:"800"},resetColor:{alignItems:"center",paddingVertical:10,marginTop:4},themeRow:{flexDirection:"row",gap:9,marginTop:13},themeButton:{flex:1,paddingVertical:12,borderRadius:12,borderWidth:1,borderColor:c.border,alignItems:"center",backgroundColor:c.input},themeButtonActive:{backgroundColor:c.accentSoft,borderColor:c.accent},themeButtonText:{color:c.muted,fontWeight:"900",fontSize:12*scale},themeButtonTextActive:{color:c.text},
+  streakStats:{flexDirection:"row",gap:10,marginTop:12,marginBottom:6},streakTile:{flex:1,padding:13,borderRadius:14,backgroundColor:c.surfaceAlt,borderWidth:1,borderColor:c.border},streakNumber:{color:c.accent,fontSize:28*scale,fontWeight:"900"},
+  secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12*scale,fontWeight:"900"},
+  cardTitle:{color:c.text,fontSize:14*scale,fontWeight:"900"},
+  cardText:{color:c.muted,fontSize:12*scale,lineHeight:18,marginTop:5},
+  creditsTitle:{color:c.text,fontSize:19*scale,fontWeight:"900",letterSpacing:-.4,marginBottom:6},creditsIntro:{color:c.muted,fontSize:12*scale,lineHeight:18,marginBottom:16},creditSectionTitle:{color:c.muted,fontSize:10*scale,fontWeight:"900",letterSpacing:1.2,marginBottom:7,marginTop:4},creditRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:59,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorTags:{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:15},creatorTag:{paddingHorizontal:10,paddingVertical:7,borderRadius:999,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creatorTagText:{color:c.accent,fontSize:10*scale,fontWeight:"800"},  creatorCard:{padding:18},creatorHeader:{flexDirection:"row",alignItems:"center",gap:12,marginBottom:15},creatorMark:{width:54,height:54,borderRadius:18,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},creatorMarkText:{color:c.onAccent,fontSize:29*scale,fontWeight:"900",letterSpacing:-1},creatorEyebrow:{color:c.muted,fontSize:8*scale,fontWeight:"900",letterSpacing:1.1},creatorTitle:{color:c.text,fontSize:21*scale,fontWeight:"900",letterSpacing:1.2,marginTop:3},creatorRole:{color:c.muted,fontSize:10*scale,fontWeight:"700",marginTop:3},creatorBody:{color:c.text,fontSize:13*scale,lineHeight:20,marginBottom:15},creatorDivider:{height:1,backgroundColor:c.border,marginBottom:15},creatorLinksTitle:{color:c.muted,fontSize:9*scale,fontWeight:"900",letterSpacing:1.1,marginBottom:8},creatorLinkRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:58,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorLinkIcon:{width:37,height:37,borderRadius:12,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},creatorLinkText:{color:c.text,fontSize:13*scale,fontWeight:"900"},creatorLinkSub:{color:c.muted,fontSize:10*scale,marginTop:3},
+  creditsBox:{marginTop:15,marginBottom:8,padding:13,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creditsTitle:{color:c.text,fontSize:13*scale,fontWeight:"900",marginBottom:5},creditsText:{color:c.muted,fontSize:12*scale,lineHeight:18},danger:{height:46,borderRadius:13,borderWidth:1,borderColor:c.dangerBorder,alignItems:"center",justifyContent:"center",marginTop:14},
   dangerText:{color:c.danger,fontWeight:"900"},
   muted:{color:c.muted},
 });
