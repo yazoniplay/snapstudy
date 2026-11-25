@@ -1,7 +1,7 @@
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text as NativeText, TextInput as NativeTextInput, View, useWindowDimensions } from "react-native";
+import { Alert, Image, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, , View, useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
