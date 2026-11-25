@@ -69,10 +69,27 @@ export default function Chat() {
     const body = draft.trim();
     if (!body || sending || !friendshipId || !userId) return;
     setSending(true); setDraft("");
-    const {error} = await supabase.from("messages").insert({friendship_id:friendshipId,sender_id:userId,message_type:"text",body});
-    if (error) { setDraft(body); Alert.alert("Message not sent",error.message); }
-    else await loadMessages();
+    const result=editingMessageId
+      ? await supabase.from("messages").update({body,edited_at:new Date().toISOString()}).eq("id",editingMessageId).eq("sender_id",userId)
+      : await supabase.from("messages").insert({friendship_id:friendshipId,sender_id:userId,message_type:"text",body,reply_to:replyTo});
+    if (result.error) { setDraft(body); Alert.alert("Message not sent",result.error.message); }
+    else {setReplyTo(null);setEditingMessageId(null);await loadMessages();}
     setSending(false);
+  }
+  async function toggleReaction(message:ChatMessage,emoji:string) {
+    if(!userId)return;
+    const own=message.reactions?.find(reaction=>reaction.user_id===userId&&reaction.emoji===emoji);
+    const result=own
+      ? await supabase.from("message_reactions").delete().eq("message_id",message.id).eq("user_id",userId).eq("emoji",emoji)
+      : await supabase.from("message_reactions").insert({message_id:message.id,user_id:userId,emoji});
+    if(result.error)Alert.alert("Reaction not saved",result.error.message);else await loadMessages();
+  }
+  function openMessageActions(message:ChatMessage,mine:boolean) {
+    const buttons:any[]=[{text:"Reply",onPress:()=>{setReplyTo(message.id);setEditingMessageId(null);}}];
+    if(mine&&message.message_type==="text"&&!message.deleted_at)buttons.push({text:"Edit",onPress:()=>{setDraft(message.body||"");setEditingMessageId(message.id);setReplyTo(null);}});
+    if(mine&&message.message_type==="text"&&!message.deleted_at)buttons.push({text:"Delete",style:"destructive",onPress:async()=>{const {error}=await supabase.from("messages").update({body:"This message was deleted.",deleted_at:new Date().toISOString(),edited_at:null}).eq("id",message.id).eq("sender_id",userId);if(error)Alert.alert("Couldn't delete message",error.message);else await loadMessages();}});
+    buttons.push({text:"Cancel",style:"cancel"});
+    Alert.alert("Message actions","Reply, react, or manage your message.",buttons);
   }
 
   async function sendImage() {
