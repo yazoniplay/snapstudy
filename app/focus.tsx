@@ -16,6 +16,7 @@ export default function FocusRoom(){
  const [seconds,setSeconds]=useState(DEFAULT_DURATIONS.focus);
  const [running,setRunning]=useState(false);
  const [finished,setFinished]=useState(false);
+ const [motionEnabled,setMotionEnabled]=useState(true);
  const [xp,setXp]=useState(0);
  const completed=useRef(false);
  const runId=useRef("focus-room-"+Date.now());
@@ -24,7 +25,8 @@ export default function FocusRoom(){
  const breathe=useRef(new Animated.Value(0)).current;
  useEffect(()=>{AsyncStorage.multiGet(["snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values=>{const focus=Number(values[0]?.[1]);const rest=Number(values[1]?.[1]);const next={...DEFAULT_DURATIONS,focus:[15,20,25,30,45].includes(focus)?focus*60:DEFAULT_DURATIONS.focus,short:[5,10,15].includes(rest)?rest*60:DEFAULT_DURATIONS.short};setDurations(next);setSeconds(next.focus);}).catch(()=>{});},[]);
  useEffect(()=>{Animated.spring(appear,{toValue:1,useNativeDriver:true,friction:8,tension:48}).start();},[appear]);
- useEffect(()=>{const loop=Animated.loop(Animated.sequence([Animated.timing(breathe,{toValue:1,duration:1900,useNativeDriver:true}),Animated.timing(breathe,{toValue:0,duration:1900,useNativeDriver:true})]));loop.start();return()=>loop.stop();},[breathe]);
+ useEffect(()=>{let active=true;AsyncStorage.getItem("snapstudy:motion").then(value=>{if(active)setMotionEnabled(value!=="off");}).catch(()=>{});return()=>{active=false}},[]);
+ useEffect(()=>{if(!motionEnabled){breathe.setValue(0);return;}const loop=Animated.loop(Animated.sequence([Animated.timing(breathe,{toValue:1,duration:1900,useNativeDriver:true}),Animated.timing(breathe,{toValue:0,duration:1900,useNativeDriver:true})]));loop.start();return()=>loop.stop();},[breathe,motionEnabled]);
  useEffect(()=>{let active=true;loadGamification().then(v=>{if(active)setXp(v.totalXp)}).catch(()=>{});return()=>{active=false}},[]);
  useEffect(()=>{if(!running)return;const timer=setInterval(()=>setSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(timer)},[running]);
  useEffect(()=>{
