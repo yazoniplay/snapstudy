@@ -38,7 +38,7 @@ const env = (k:string) => Deno.env.get(k)?.trim() || "";
 type P = {id:string;key:string;url:string;model:string};
 function providers():P[] {
  const list:P[]=[
- {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-3.5-flash-lite"},
+ {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-2.5-flash-lite"},
  {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"qwen/qwen3.8-27b"},
  {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"nvidia/nemotron-3.5-super-vl-120b-a12b"},
  {id:"tokenharbor",key:env("TOKEN_HARBOR_KEY")||env("TOKENHARBOR_API_KEY"),url:env("TOKEN_HARBOR_BASE_URL")||env("TOKENHARBOR_BASE_URL")||"https://tokenharbor.ai/v1",model:env("TOKEN_HARBOR_MODEL")||env("TOKENHARBOR_MODEL")||"deepseek-v4.1-flash:free"},
@@ -62,20 +62,39 @@ function providers():P[] {
  const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
  return list.filter(p=>(p.key||p.id==="aihorde")&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
 }
-function parse(raw:string) {
- const s=raw.replace(/^\s*```(?:json)?\s*/i,"").replace(/\s*```\s*$/,"").trim();
- const v=JSON.parse(s);
- if(!v||typeof v.topic!=="string"||typeof v.summary!=="string"||!Array.isArray(v.flashcards)||!Array.isArray(v.quiz)||!Array.isArray(v.practiceTest))throw new Error("Invalid study JSON");
- const words=(value:string)=>String(value||"").toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu," ").split(/[\s-]+/).map(x=>x.replace(/(ing|ed|es|s)$/,"")).filter(x=>x.length>2&&!["the","and","are","was","were","that","this","with","from","into","does","have","has","what","which","when","where","person","individual"].includes(x));
- for(const q of v.quiz){
-  if(!Array.isArray(q?.options)||!q.options.length)continue;
-  const explanationWords=words(q.explanation);
-  const scores=q.options.map((option:string)=>words(option).filter(token=>explanationWords.some(word=>word===token||word.startsWith(token)||token.startsWith(word))).length);
-  const best=Math.max(...scores),bestIndex=scores.indexOf(best),answer=Number(q.answer);
-  if((!Number.isInteger(answer)||answer<0||answer>=q.options.length)&&Number.isInteger(answer)&&answer>=1&&answer<=q.options.length)q.answer=answer-1;
-  else if(best>0&&bestIndex!==answer&&best>=(scores[answer]||0)+1)q.answer=bestIndex;
+function extractJson(raw:string):string {
+ let text=String(raw||"").trim().replace(/^\uFEFF/,"");
+ text=text.replace(/^\s*```(?:json|javascript|js)?\s*/i,"").replace(/\s*```\s*$/,"").trim();
+ const first=text.indexOf("{"); if(first<0)throw new Error("Provider did not return a JSON object");
+ let depth=0,inString=false,escaped=false;
+ for(let i=first;i<text.length;i++){
+  const ch=text[i];
+  if(inString){if(escaped)escaped=false;else if(ch==="\\\\")escaped=true;else if(ch==='"')inString=false;continue;}
+  if(ch==='"'){inString=true;continue;}
+  if(ch==="{")depth++;else if(ch==="}"){depth--;if(depth===0)return text.slice(first,i+1).replace(/,\s*([}\]])/g,"$1");}
  }
- return v;
+ throw new Error("Provider returned incomplete JSON");
+}
+function parse(raw:string) {
+ const v=JSON.parse(extractJson(raw));
+ if(!v||typeof v!=="object")throw new Error("Invalid study JSON");
+ const text=(x:any)=>typeof x==="string"?x.trim():typeof x==="number"?String(x):"";
+ const topic=text(v.topic)||"Study session",summary=text(v.summary);
+ const flashcards=Array.isArray(v.flashcards)?v.flashcards.map((x:any)=>({question:text(x?.question),answer:text(x?.answer)})).filter((x:any)=>x.question&&x.answer):[];
+ const quiz=Array.isArray(v.quiz)?v.quiz.map((q:any)=>{
+  const options=Array.isArray(q?.options)?q.options.map(text).filter(Boolean):[];
+  let answer=q?.answer;
+  if(typeof answer==="string"){
+   const letter=answer.trim().toUpperCase().match(/^([A-D])(?:[.)])?$/);
+   if(letter)answer=letter[1].charCodeAt(0)-65;
+   else {const exact=options.findIndex((x:string)=>x.trim().toLowerCase()===answer.trim().toLowerCase());answer=exact;}
+  }
+  answer=Number(answer);
+  return {question:text(q?.question),options,answer,explanation:text(q?.explanation),topic:text(q?.topic)||undefined};
+ }).filter((q:any)=>q.question&&q.options.length===4&&Number.isInteger(q.answer)&&q.answer>=0&&q.answer<4):[];
+ const practiceTest=Array.isArray(v.practiceTest)?v.practiceTest.map((x:any)=>({question:text(x?.question),answer:text(x?.answer)})).filter((x:any)=>x.question&&x.answer):[];
+ if(!summary||(!flashcards.length&&!quiz.length&&!practiceTest.length))throw new Error("Invalid study JSON: missing lesson or practice items");
+ return {topic,summary,flashcards,quiz,practiceTest};
 }
 async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<Response> {
  const controller=new AbortController();
@@ -100,11 +119,11 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  const sourceText=notesText? "\n\nSOURCE NOTES (use only these facts):\n"+notesText : "";
  const content=[{type:"text",text:prompt+"\n"+instruction+sourceText},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
  if(p.url==="gemini") {
-  const candidates=[p.model,...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim()),"gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.5-flash"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
+  const candidates=[p.model,...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim()),"gemini-2.5-flash-lite","gemini-2.5-flash","gemini-3-flash"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
   const errors:string[]=[];
   for(const model of candidates){
    try{
-    const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},Math.min(providerTimeout,11000));
+    const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},Math.min(providerTimeout,16000));
     const data=await response.json();
     if(!response.ok)throw new Error(data.error?.message||"Gemini HTTP "+response.status);
     const result=parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
@@ -129,7 +148,7 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  const errors:string[]=[];
  for(const model of models){
   try{
-   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:12000})},providerTimeout);
+   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},providerTimeout);
    const data=await response.json();
    if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
    const answer=data.choices?.[0]?.message?.content;
