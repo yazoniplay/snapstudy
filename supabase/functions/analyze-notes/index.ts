@@ -57,9 +57,10 @@ async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<
  try{return await fetch(url,{...init,signal:controller.signal});}
  finally{clearTimeout(timer);}
 }
-async function run(p:P,images:any[],lang:string) {
+async function run(p:P,images:any[],lang:string,notesText="") {
  const providerTimeout=p.id==="gemini"?18000:p.id==="groq"?15000:p.id==="cloudflare"?15000:p.id==="tokenharbor"?25000:15000;
  const instruction=lang==="sv"?"Write every field in natural Swedish.":lang==="ar"?"اكتب باللغة العربية الفصحى.":"Write every field in natural English.";
+ const sourceText=notesText? "\\n\\nSOURCE NOTES (use only these facts):\\n"+notesText : "";
  if(p.url==="gemini") {
   const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},providerTimeout);
   const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Gemini failed");
@@ -78,7 +79,7 @@ serve(async(req)=>{
   const images=src.filter((x:any)=>x?.imageBase64).slice(0,6);if(!images.length)throw new Error("Choose notes images.");
   const ps=providers();if(!ps.length)throw new Error("Configure at least one AI provider secret in Supabase.");
   const failures=[];
-  for(const p of ps){try{const result=await run(p,images,body.language||"en");console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}}
+  for(const p of ps){try{const result=await run(p,images,body.language||"en",notesText);console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}}
   throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
  }catch(e){return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
 });
