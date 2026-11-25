@@ -109,12 +109,14 @@ export default function Study(){
     }
     if(images.some(item=>item.base64)||notesParam==="1"){
       let x:StudyResult;
+      const savedContentLanguage=await AsyncStorage.getItem("snapstudy:content-language");
+      const generationLanguage=(savedContentLanguage==="en"||savedContentLanguage==="sv"||savedContentLanguage==="ar")?savedContentLanguage:language;
       if(notesParam==="1"){
         const pasted=await AsyncStorage.getItem("snapstudy:pending-notes");
         if(!pasted?.trim())throw new Error("Your pasted notes were empty. Go back and paste them again.");
-        x=await analyzeNotesText(pasted,language);
+        x=await analyzeNotesText(pasted,generationLanguage);
         await AsyncStorage.removeItem("snapstudy:pending-notes");
-      }else{x=await analyzeNotes(images,language);}
+      }else{x=await analyzeNotes(images,generationLanguage);}
       if(!active) return;
       setData(x);
       try{
