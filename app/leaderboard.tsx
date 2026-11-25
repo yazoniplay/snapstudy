@@ -1,6 +1,6 @@
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text as NativeText, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import BottomNav from "../components/BottomNav";
 import { supabase } from "../lib/supabase";
