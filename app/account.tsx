@@ -104,8 +104,8 @@ export default function Account() {
       <ScrollView contentContainerStyle={s.container}>
         <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>
         <Text style={s.eyebrow}>{t("accountEyebrow")}</Text>
-        <Text style={s.title}>{t("profile")}</Text>
-        <Text style={s.sub}>{t("manageAccount")}</Text>
+        <Text style={s.title}>Settings</Text>
+        <Text style={s.sub}>Personalize your study space and account.</Text>
 
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-outline" size={18} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Profile</Text><Text style={s.sectionSub}>Your name, username and photo</Text></View></View>
         <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
