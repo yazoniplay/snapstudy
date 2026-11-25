@@ -1,3 +1,4 @@
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "./LocalizedText";
 import { View } from "react-native";
 
 export default function AdBanner() {
