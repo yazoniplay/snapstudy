@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, Switch } from "react-native";
+import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -19,7 +19,6 @@ export default function Account() {
   const [saving, setSaving] = useState(false);
   const [colorDraft, setColorDraft] = useState(accentColor);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [handle, setHandle] = useState("");
   const [currentStreak, setCurrentStreak] = useState(0);
@@ -35,8 +34,9 @@ export default function Account() {
       }
       setEmail(user.email ?? "");
       setName((user.user_metadata?.full_name as string) ?? "");
-      const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,leaderboard_opt_in,current_streak,longest_streak").eq("id", user.id).maybeSingle();
-      if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setLeaderboardOptIn(!!profileResult.data.leaderboard_opt_in); setCurrentStreak(profileResult.data.current_streak || 0); setLongestStreak(profileResult.data.longest_streak || 0); }
+      const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,current_streak,longest_streak").eq("id", user.id).maybeSingle();
+      if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setCurrentStreak(profileResult.data.current_streak || 0); setLongestStreak(profileResult.data.longest_streak || 0); }
+      supabase.from("profiles").update({ leaderboard_opt_in: true }).eq("id", user.id).then(() => {});
       const savedAccent = user.user_metadata?.accent_color;
       if (typeof savedAccent === "string" && /^#[0-9A-Fa-f]{6}$/.test(savedAccent)) { setAccentColor(savedAccent); setColorDraft(savedAccent.toUpperCase()); }
       setLoading(false);
@@ -83,13 +83,6 @@ export default function Account() {
     } finally { setAvatarBusy(false); }
   }
 
-  async function toggleLeaderboard(value: boolean) {
-    setLeaderboardOptIn(value);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLeaderboardOptIn(!value); return; }
-    const { error } = await supabase.from("profiles").update({ leaderboard_opt_in: value }).eq("id", user.id);
-    if (error) { setLeaderboardOptIn(!value); Alert.alert(t("leaderboardUpdateFailed"), error.message); }
-  }
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
@@ -119,7 +112,7 @@ export default function Account() {
           </Pressable>
         </View>
 
-        <View style={s.card}><Text style={s.cardTitle}>{t("streakLeaderboard")}</Text><Text style={s.cardText}>{t("leaderboardDescription")}</Text><View style={s.privacyRow}><View style={{flex:1}}><Text style={s.privacyTitle}>{leaderboardOptIn ? t("visibleLeaderboard") : t("privateProfile")}</Text><Text style={s.cardText}>{leaderboardOptIn ? t("streakVisible") : t("streakPrivate")}</Text></View><Switch value={leaderboardOptIn} onValueChange={toggleLeaderboard} trackColor={{false:c.border,true:c.accent}} thumbColor={c.surface}/></View><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>{t("viewLeaderboard")}</Text></Pressable></View>
+        <View style={s.card}><Text style={s.cardTitle}>Streak leaderboard 🔥</Text><Text style={s.cardText}>You’re automatically included in the SnapStudy community leaderboard. Keep studying daily to climb the rankings.</Text><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>{t("viewLeaderboard")}</Text></Pressable></View>
 
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("studyStreak")}</Text>
@@ -194,7 +187,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   primaryText:{color:c.onAccent,fontWeight:"900"},
   swatchGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginTop:15,marginBottom:12},swatch:{width:30,height:30,borderRadius:11,borderWidth:2,borderColor:"transparent"},swatchSelected:{borderColor:c.text,transform:[{scale:1.1}]},colorInputRow:{flexDirection:"row",alignItems:"center",gap:10,marginBottom:12},colorPreview:{width:32,height:32,borderRadius:11,borderWidth:1,borderColor:c.border},colorInput:{flex:1,height:44,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:12,color:c.text,fontSize:13,fontWeight:"800"},resetColor:{alignItems:"center",paddingVertical:10,marginTop:4},themeRow:{flexDirection:"row",gap:9,marginTop:13},themeButton:{flex:1,paddingVertical:12,borderRadius:12,borderWidth:1,borderColor:c.border,alignItems:"center",backgroundColor:c.input},themeButtonActive:{backgroundColor:c.accentSoft,borderColor:c.accent},themeButtonText:{color:c.muted,fontWeight:"900",fontSize:12},themeButtonTextActive:{color:c.text},
   streakStats:{flexDirection:"row",gap:10,marginTop:12,marginBottom:6},streakTile:{flex:1,padding:13,borderRadius:14,backgroundColor:c.surfaceAlt,borderWidth:1,borderColor:c.border},streakNumber:{color:c.accent,fontSize:28,fontWeight:"900"},
-  secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},privacyRow:{flexDirection:"row",alignItems:"center",gap:12,marginTop:14},privacyTitle:{color:c.text,fontSize:12,fontWeight:"900"},
+  secondary:{marginTop:13,borderRadius:12,borderWidth:1,borderColor:c.border,paddingVertical:12,alignItems:"center"},secondaryText:{color:c.accent,fontSize:12,fontWeight:"900"},
   cardTitle:{color:c.text,fontSize:14,fontWeight:"900"},
   cardText:{color:c.muted,fontSize:12,lineHeight:18,marginTop:5},
   creditsTitle:{color:c.text,fontSize:19,fontWeight:"900",letterSpacing:-.4,marginBottom:6},creditsIntro:{color:c.muted,fontSize:12,lineHeight:18,marginBottom:16},creditSectionTitle:{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.2,marginBottom:7,marginTop:4},creditRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:59,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorTags:{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:15},creatorTag:{paddingHorizontal:10,paddingVertical:7,borderRadius:999,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border},creatorTagText:{color:c.accent,fontSize:10,fontWeight:"800"},  creatorCard:{padding:18},creatorHeader:{flexDirection:"row",alignItems:"center",gap:12,marginBottom:15},creatorMark:{width:54,height:54,borderRadius:18,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},creatorMarkText:{color:c.onAccent,fontSize:29,fontWeight:"900",letterSpacing:-1},creatorEyebrow:{color:c.muted,fontSize:8,fontWeight:"900",letterSpacing:1.1},creatorTitle:{color:c.text,fontSize:21,fontWeight:"900",letterSpacing:1.2,marginTop:3},creatorRole:{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3},creatorBody:{color:c.text,fontSize:13,lineHeight:20,marginBottom:15},creatorDivider:{height:1,backgroundColor:c.border,marginBottom:15},creatorLinksTitle:{color:c.muted,fontSize:9,fontWeight:"900",letterSpacing:1.1,marginBottom:8},creatorLinkRow:{flexDirection:"row",alignItems:"center",gap:11,minHeight:58,paddingVertical:8,borderBottomWidth:1,borderBottomColor:c.border},creatorLinkIcon:{width:37,height:37,borderRadius:12,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},creatorLinkText:{color:c.text,fontSize:13,fontWeight:"900"},creatorLinkSub:{color:c.muted,fontSize:10,marginTop:3},
