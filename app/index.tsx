@@ -24,7 +24,8 @@ export default function Home() {
   const glassEdge = mode === "dark" ? "rgba(255,255,255,0.19)" : "rgba(255,255,255,0.92)";
   const cardScale = useRef(new Animated.Value(1)).current; const {t,language}=useLanguage();
   const s = makeStyles(c);
-  const [busy, setBusy] = useState(false);\n  const [pastedNotes,setPastedNotes]=useState("");
+  const [busy, setBusy] = useState(false);
+  const [pastedNotes,setPastedNotes]=useState("");
   const [booting, setBooting] = useState(true);
   const [camera, setCamera] = useState(false);
   const [firstName, setFirstName] = useState("there");
@@ -86,7 +87,15 @@ export default function Home() {
     return () => { active = false; };
   }, []);
 
-  async function makeStudyFromText(){\n    const notes=pastedNotes.trim();\n    if(notes.length<20){Alert.alert("Add your notes","Paste at least a few lines of notes first.");return;}\n    try{setBusy(true);await AsyncStorage.setItem("snapstudy:pending-notes",notes);router.push("/study?notes=1");}\n    catch{Alert.alert("Couldn’t save notes","Please try again.");}\n    finally{setBusy(false);}\n  }\n\n  async function openImages(uris: string[]) {
+  async function makeStudyFromText(){
+    const notes=pastedNotes.trim();
+    if(notes.length<20){Alert.alert("Add your notes","Paste at least a few lines of notes first.");return;}
+    try{setBusy(true);await AsyncStorage.setItem("snapstudy:pending-notes",notes);router.push("/study?notes=1");}
+    catch{Alert.alert("Couldn’t save notes","Please try again.");}
+    finally{setBusy(false);}
+  }
+
+  async function openImages(uris: string[]) {
     if (!uris.length) return;
     try {
       setBusy(true);
