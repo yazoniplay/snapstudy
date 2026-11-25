@@ -58,3 +58,11 @@ export function LanguageProvider({children}:{children:React.ReactNode}) {
  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useLanguage(){return useContext(Context);}
+export function translateUiText(value:string,language:AppLanguage):string{
+ const normalized=value.trim();
+ if(!normalized)return value;
+ const key=(Object.keys(dictionaries.en) as TranslationKey[]).find(item=>dictionaries.en[item]===normalized);
+ if(!key)return value;
+ const translated=((dictionaries as any)[language]?.[key]||(extraDictionaries[language] as any)?.[key]) as string|undefined;
+ return translated?value.replace(normalized,translated):value;
+}
