@@ -126,7 +126,7 @@ export default function Account() {
           })}
           <Pressable onPress={() => router.replace("/")} style={s.sidebarBack}><Ionicons name="arrow-back-outline" size={17} color={c.muted}/><Text style={s.sidebarBackText}>{t("back")}</Text></Pressable>
         </View>}
-        <ScrollView contentContainerStyle={[s.container, wideSettings && s.desktopContent]}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={[s.container, wideSettings && s.desktopContent]}>
           {!wideSettings && <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>}
           <Text style={s.eyebrow}>{t("accountEyebrow")}</Text>
           <Text style={s.title}>{wideSettings ? selectedSettings : "Settings"}</Text>
