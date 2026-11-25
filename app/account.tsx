@@ -107,7 +107,7 @@ export default function Account() {
         <Text style={s.title}>{t("profile")}</Text>
         <Text style={s.sub}>{t("manageAccount")}</Text>
 
-        <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-outline" size={18} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Profile</Text><Text style={s.sectionSub}>Your name, username and photo</Text></View></View>\n        <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
 
         <View style={s.card}>
           <Text style={s.label}>{t("name")}</Text>
@@ -119,14 +119,14 @@ export default function Account() {
           </Pressable>
         </View>
 
-        <View style={s.card}><Text style={s.cardTitle}>Streak leaderboard 🔥</Text><Text style={s.cardText}>You’re automatically included in the SnapStudy community leaderboard. Keep studying daily to climb the rankings.</Text><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>{t("viewLeaderboard")}</Text></Pressable></View>
+        <View style={s.card}><View style={{flexDirection:"row",alignItems:"center",gap:8}}><Ionicons name="trophy-outline" size={18} color={c.accent}/><Text style={s.cardTitle}>Streak leaderboard</Text></View><Text style={s.cardText}>You’re automatically included in the SnapStudy community leaderboard. Keep studying daily to climb the rankings.</Text><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>{t("viewLeaderboard")}</Text></Pressable></View>
 
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("studyStreak")}</Text>
           <View style={s.streakStats}><View style={s.streakTile}><Text style={s.streakNumber}>{currentStreak}</Text><Text style={s.cardText}>{t("currentDays")}</Text></View><View style={s.streakTile}><Text style={s.streakNumber}>{longestStreak}</Text><Text style={s.cardText}>{t("personalBest")}</Text></View></View>
           <Text style={s.cardText}>{t("streakHelp")}</Text>
         </View>
-        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-circle-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Your account</Text><Text style={s.sectionSub}>Profile, identity and progress</Text></View></View>
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-circle-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Study activity</Text><Text style={s.sectionSub}>Your streaks and community progress</Text></View></View>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="options-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Study preferences</Text><Text style={s.sectionSub}>Set the pace that works for you</Text></View></View>
         <View style={s.card}>
           <Text style={s.cardTitle}>Daily study goal</Text><Text style={s.cardText}>Choose how many minutes you want to study each day.</Text>
@@ -193,8 +193,8 @@ export default function Account() {
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
   safe:{flex:1,backgroundColor:c.bg},
   motionRow:{flexDirection:"row",alignItems:"center",gap:12,paddingVertical:12,marginTop:6},motionCopy:{flex:1},motionSwitch:{width:46,height:27,borderRadius:99,backgroundColor:c.border,padding:3,justifyContent:"center"},motionSwitchOn:{backgroundColor:c.accent},motionKnob:{width:21,height:21,borderRadius:11,backgroundColor:"#FFFFFF",alignSelf:"flex-start"},motionKnobOn:{alignSelf:"flex-end"},
-  sectionHeading:{flexDirection:"row",alignItems:"center",gap:12,marginTop:18,marginBottom:10},sectionIcon:{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"},sectionCopy:{flex:1},sectionTitle:{color:c.text,fontSize:15,fontWeight:"900"},sectionSub:{color:c.muted,fontSize:11,marginTop:3},choiceRow:{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12},choiceChip:{minWidth:47,paddingHorizontal:12,paddingVertical:10,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,alignItems:"center"},choiceChipActive:{backgroundColor:c.accentSoft,borderColor:c.accent},choiceText:{color:c.muted,fontSize:12,fontWeight:"800"},choiceTextActive:{color:c.accent},preferenceDivider:{height:1,backgroundColor:c.border,marginVertical:16},
-  container:{padding:20,paddingTop:22,paddingBottom:25},
+  sectionHeading:{flexDirection:"row",alignItems:"center",gap:9,marginTop:24,marginBottom:9,paddingHorizontal:4},sectionIcon:{width:22,height:22,alignItems:"center",justifyContent:"center"},sectionCopy:{flex:1},sectionTitle:{color:c.accent,fontSize:11,fontWeight:"900",letterSpacing:1.1,textTransform:"uppercase"},sectionSub:{color:c.muted,fontSize:10,marginTop:2},choiceRow:{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12},choiceChip:{minWidth:47,paddingHorizontal:12,paddingVertical:10,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,alignItems:"center"},choiceChipActive:{backgroundColor:c.accentSoft,borderColor:c.accent},choiceText:{color:c.muted,fontSize:12,fontWeight:"800"},choiceTextActive:{color:c.accent},preferenceDivider:{height:1,backgroundColor:c.border,marginVertical:16},
+  container:{paddingHorizontal:22,paddingTop:22,paddingBottom:34,width:"100%",maxWidth:720,alignSelf:"center"},
   center:{flex:1,alignItems:"center",justifyContent:"center"},
   back:{color:c.muted,fontSize:13,fontWeight:"700",marginBottom:25},
   eyebrow:{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:2},
@@ -202,7 +202,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   sub:{color:c.muted,fontSize:13,marginTop:6,marginBottom:22},
   avatarWrap:{alignItems:"flex-start",marginBottom:18},avatar:{width:86,height:86,borderRadius:28,backgroundColor:c.accent,alignItems:"center",justifyContent:"center",marginBottom:7,overflow:"hidden"},avatarImage:{width:"100%",height:"100%"},avatarEdit:{color:c.accent,fontSize:12,fontWeight:"900"},
   avatarText:{color:c.onAccent,fontSize:27,fontWeight:"900"},
-  card:{backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:20,padding:17,marginBottom:12},
+  card:{backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:17,padding:16,marginBottom:8},
   label:{color:c.text,fontSize:11,fontWeight:"800",marginBottom:6,marginTop:2},
   input:{height:48,borderRadius:13,borderWidth:1,borderColor:c.border,backgroundColor:c.input,paddingHorizontal:14,color:c.text,fontSize:13,marginBottom:12},
   disabled:{opacity:.55},
