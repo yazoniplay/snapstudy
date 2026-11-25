@@ -1,5 +1,6 @@
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text as NativeText, View, ActivityIndicator } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
