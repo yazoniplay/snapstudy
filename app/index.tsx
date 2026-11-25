@@ -113,42 +113,85 @@ export default function Home() {
     setCamera(true);
   }
 
-  if (booting) return <SafeAreaView style={{flex:1,backgroundColor:c.bg,alignItems:"center",justifyContent:"center",padding:28,overflow:"hidden"}}>
-    <View style={{position:"absolute",width:280,height:280,borderRadius:140,backgroundColor:c.accentSoft,top:-85,right:-95,opacity:0.9}}/>
-    <View style={{position:"absolute",width:220,height:220,borderRadius:110,backgroundColor:c.accentSoft,bottom:-60,left:-65,opacity:0.8}}/>
-    <Animated.View style={{transform:[{scale:splashPulse.interpolate({inputRange:[0,1],outputRange:[0.94,1.06]})}],marginBottom:22}}>
-      <SnapStudyMark size={94}/>
-    </Animated.View>
-    <Text style={{color:c.text,fontSize:27,fontWeight:"900",letterSpacing:2}}>SNAPSTUDY</Text>
-    <Text style={{color:c.muted,fontSize:14,fontWeight:"600",marginTop:10}}>Loading your study space…</Text>
-    <View style={{height:4,width:142,backgroundColor:c.border,borderRadius:5,overflow:"hidden",marginTop:26}}>
-      <Animated.View style={{height:"100%",width:"48%",backgroundColor:c.accent,borderRadius:5,transform:[{translateX:splashPulse.interpolate({inputRange:[0,1],outputRange:[-18,64]})}]}}/>
+  if (booting) return <SafeAreaView style={{flex:1,backgroundColor:c.bg,alignItems:"center",justifyContent:"center",paddingHorizontal:26,overflow:"hidden"}}>
+    <View style={{position:"absolute",width:340,height:340,borderRadius:170,backgroundColor:c.accentSoft,top:-150,right:-135,opacity:0.8}}/>
+    <View style={{position:"absolute",width:270,height:270,borderRadius:135,backgroundColor:c.accentSoft,bottom:-120,left:-120,opacity:0.65}}/>
+    <View style={{width:"100%",maxWidth:350,alignItems:"center"}}>
+      <Animated.View style={{transform:[{scale:splashPulse.interpolate({inputRange:[0,1],outputRange:[0.96,1.04]})}],marginBottom:22}}>
+        <View style={{padding:10,borderRadius:32,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,shadowColor:c.accent,shadowOpacity:0.22,shadowRadius:28,shadowOffset:{width:0,height:10},elevation:8}}>
+          <SnapStudyMark size={76}/>
+        </View>
+      </Animated.View>
+      <Text style={{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-0.7}}>SnapStudy</Text>
+      <Text style={{color:c.muted,fontSize:13,fontWeight:"600",marginTop:7,textAlign:"center"}}>Making space for your next breakthrough.</Text>
+      <View style={{width:"100%",marginTop:34,padding:15,borderRadius:22,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:13}}>
+        <View style={{flexDirection:"row",alignItems:"center",gap:11}}>
+          <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color={c.accent}/></View>
+          <View style={{flex:1,gap:7}}><View style={{height:9,width:"54%",borderRadius:6,backgroundColor:c.border}}/><View style={{height:7,width:"78%",borderRadius:6,backgroundColor:c.input}}/></View>
+        </View>
+        <View style={{height:1,backgroundColor:c.border}}/>
+        <View style={{flexDirection:"row",gap:9}}>
+          {[0,1,2].map(i=><View key={i} style={{flex:1,height:47,borderRadius:12,backgroundColor:c.input,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"}}><View style={{width:22,height:5,borderRadius:5,backgroundColor:c.border}}/><View style={{width:34,height:5,borderRadius:5,backgroundColor:c.border,marginTop:6}}/></View>)}
+        </View>
+      </View>
+      <View style={{flexDirection:"row",alignItems:"center",gap:9,marginTop:25}}>
+        <Animated.View style={{width:7,height:7,borderRadius:4,backgroundColor:c.accent,opacity:splashPulse.interpolate({inputRange:[0,1],outputRange:[0.45,1]})}}/>
+        <Text style={{color:c.muted,fontSize:11,fontWeight:"800",letterSpacing:0.5}}>Preparing your study space</Text>
+      </View>
     </View>
   </SafeAreaView>;
 
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
   return <SafeAreaView style={s.safe}>
-    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:20,paddingTop:20,paddingBottom:28,gap:15}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[12,0]})}]}}>
+    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:20,paddingTop:18,paddingBottom:30,gap:17}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
-        <View style={{flex:1}}><View style={{flexDirection:"row",alignItems:"center",gap:8}}><SnapStudyMark size={27}/><Text style={{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:2}}>SNAPSTUDY</Text></View><Text style={{color:c.text,fontSize:27,fontWeight:"900",letterSpacing:-.8,marginTop:11}}>{language==="sv"?"Hej, "+firstName+" 👋":"Good to see you, "+firstName+" 👋"}</Text><Text style={{color:c.muted,fontSize:13,marginTop:4}}>{welcomeLine}</Text></View>
-        <Pressable onPress={()=>router.push("/account")} style={{width:44,height:44,borderRadius:16,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
+        <View style={{flex:1}}>
+          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><SnapStudyMark size={25}/><Text style={{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.8}}>SNAPSTUDY</Text></View>
+          <Text style={{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-0.8,marginTop:12}}>{language==="sv"?"Hej, "+firstName+" 👋":"Hey, "+firstName+" 👋"}</Text>
+          <Text style={{color:c.muted,fontSize:13,marginTop:4}}>{welcomeLine}</Text>
+        </View>
+        <Pressable onPress={()=>router.push("/account")} style={{width:46,height:46,borderRadius:16,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
       </View>
-      <LinearGradient colors={[c.accent,c.accent+"E8",c.accent]} start={{x:0,y:0}} end={{x:1,y:1}} style={{borderRadius:24,padding:18,overflow:"hidden",borderWidth:1,borderColor:"rgba(255,255,255,0.24)"}}>
-        <View style={{flexDirection:"row",alignItems:"center",gap:7,marginBottom:10}}><Text style={{color:"#F4ECFF",fontSize:9,fontWeight:"900",letterSpacing:1.5}}>{language==="sv"?"DIN STUDIESTUDIO":"YOUR STUDY SPACE"}</Text><Ionicons name="sparkles" size={14} color="#F9E9FF"/></View>
-        <Text style={{color:"#FFFFFF",fontSize:23,fontWeight:"900",letterSpacing:-.5,lineHeight:28}}>{language==="sv"?"Förvandla anteckningar till framsteg":"Turn your notes into progress"}</Text>
-        <Text style={{color:"#F2EBFF",fontSize:12,lineHeight:18,marginTop:7,marginBottom:15}}>{language==="sv"?"Skapa kort, quiz och sammanfattningar från dina sidor.":"Create flashcards, quizzes and summaries from your notes."}</Text>
-        <View style={{flexDirection:"row",gap:9}}><Pressable onPress={cameraOpen} disabled={busy} style={{flex:1,minHeight:44,borderRadius:13,backgroundColor:"#FFFFFF",flexDirection:"row",alignItems:"center",justifyContent:"center",gap:7}}><Ionicons name="camera-outline" size={18} color="#6A4BD6"/><Text style={{color:c.accent,fontSize:12,fontWeight:"900"}}>{busy?"Preparing…":t("scanNotes")}</Text></Pressable><Pressable onPress={library} disabled={busy} style={{width:48,borderRadius:13,backgroundColor:"rgba(255,255,255,0.16)",borderWidth:1,borderColor:"rgba(255,255,255,0.34)",alignItems:"center",justifyContent:"center"}}><Ionicons name="images-outline" size={20} color="#FFFFFF"/></Pressable></View>
-      </LinearGradient>
-      <View style={{flexDirection:"row",gap:10}}>
-        <Pressable onPress={()=>router.push("/focus")} style={{flex:1,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:18,padding:13,minHeight:112}}><View style={{width:35,height:35,borderRadius:12,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="timer-outline" size={20} color="#7657E8"/></View><Text style={{color:c.text,fontSize:14,fontWeight:"900",marginTop:10}}>{language==="sv"?"Fokusläge":"Focus room"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:4}}>25 min · Pomodoro</Text></Pressable>
-        <Pressable onPress={()=>router.push("/history")} style={{flex:1,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:18,padding:13,minHeight:112}}><View style={{width:35,height:35,borderRadius:12,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="library-outline" size={20} color="#D8834C"/></View><Text style={{color:c.text,fontSize:14,fontWeight:"900",marginTop:10}}>{language==="sv"?"Mina studier":"My study sets"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:4}}>{language==="sv"?"Fortsätt repetera":"Keep learning"}</Text></Pressable>
+      <View style={{backgroundColor:c.surface,borderRadius:24,borderWidth:1,borderColor:c.border,padding:17,overflow:"hidden"}}>
+        <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:13}}>
+          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><View style={{width:7,height:7,borderRadius:4,backgroundColor:c.accent}}/><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.5}}>{language==="sv"?"DAGS ATT PLUGGA":"READY TO STUDY"}</Text></View>
+          <Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>25 min · 1 goal</Text>
+        </View>
+        <Text style={{color:c.text,fontSize:22,fontWeight:"900",letterSpacing:-0.6,lineHeight:28}}>{language==="sv"?"Små steg. Stora framsteg.":"Small steps. Big progress."}</Text>
+        <Text style={{color:c.muted,fontSize:12,lineHeight:18,marginTop:6,marginBottom:16}}>{language==="sv"?"Skanna dina anteckningar och gör dem till aktiv repetition.":"Turn your notes into flashcards, quizzes and focused practice."}</Text>
+        <View style={{flexDirection:"row",gap:9}}>
+          <Pressable onPress={cameraOpen} disabled={busy} style={{flex:1,minHeight:47,borderRadius:14,backgroundColor:c.accent,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:8}}><Ionicons name="camera-outline" size={18} color={c.onAccent}/><Text style={{color:c.onAccent,fontSize:12,fontWeight:"900"}}>{busy?"Preparing…":t("scanNotes")}</Text></Pressable>
+          <Pressable onPress={library} disabled={busy} style={{width:48,minHeight:47,borderRadius:14,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"}}><Ionicons name="images-outline" size={20} color={c.accent}/></Pressable>
+        </View>
       </View>
-      <Pressable onPress={()=>router.push("/progress")} style={{borderRadius:19,overflow:"hidden",borderWidth:1,borderColor:"rgba(255,255,255,0.2)"}}><LinearGradient colors={[c.accent,c.accent]} style={{padding:15}}><View style={{flexDirection:"row",alignItems:"center",gap:11}}><View style={{width:45,height:45,borderRadius:15,backgroundColor:"rgba(255,255,255,0.16)",borderWidth:1,borderColor:"rgba(255,255,255,0.34)",alignItems:"center",justifyContent:"center"}}><Text style={{color:"#FFFFFF",fontSize:18,fontWeight:"900"}}>{level.level}</Text></View><View style={{flex:1}}><View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}><Text style={{color:"#FFFFFF",fontSize:13,fontWeight:"900"}}>{language==="sv"?"Din studienivå":"Your study level"}</Text><Text style={{color:"#D6C8FF",fontSize:10,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()} XP</Text></View><View style={{height:7,borderRadius:8,backgroundColor:"#FFFFFF24",overflow:"hidden",marginTop:8}}><View style={{height:"100%",width:(level.progress*100)+"%",backgroundColor:"#F6C96B",borderRadius:8}}/></View><Text style={{color:"#D6C8FF",fontSize:10,fontWeight:"700",marginTop:6}}>{Math.max(0,level.nextXp-(gameState?.totalXp||0))} XP to next level · {language==="sv"?"Uppdrag":"Quests"} →</Text></View></View></LinearGradient></Pressable>
+      <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:10}}>
+        <Pressable onPress={()=>router.push("/focus")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:c.surface,borderWidth:1,borderColor:c.border}}>
+          <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="timer-outline" size={20} color={c.accent}/></View>
+          <View style={{flex:1}}><Text style={{color:c.text,fontSize:12,fontWeight:"900"}}>{language==="sv"?"Fokus":"Focus room"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3}}>Pomodoro · 25 min</Text></View><Ionicons name="chevron-forward" size={15} color={c.muted}/>
+        </Pressable>
+        <Pressable onPress={()=>router.push("/history")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:c.surface,borderWidth:1,borderColor:c.border}}>
+          <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="albums-outline" size={20} color={c.accent}/></View>
+          <View style={{flex:1}}><Text style={{color:c.text,fontSize:12,fontWeight:"900"}}>{language==="sv"?"Studie-set":"Study sets"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3}}>{language==="sv"?"Repetera":"Keep learning"}</Text></View><Ionicons name="chevron-forward" size={15} color={c.muted}/>
+        </Pressable>
+      </View>
+      <Pressable onPress={()=>router.push("/progress")} style={{borderRadius:20,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,padding:15}}>
+        <View style={{flexDirection:"row",alignItems:"center",gap:12}}>
+          <View style={{width:44,height:44,borderRadius:15,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"}}><Text style={{color:c.onAccent,fontSize:17,fontWeight:"900"}}>{level.level}</Text></View>
+          <View style={{flex:1}}>
+            <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}><Text style={{color:c.text,fontSize:13,fontWeight:"900"}}>{language==="sv"?"Din nivå":"Your level"}</Text><Text style={{color:c.accent,fontSize:11,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()} XP</Text></View>
+            <View style={{height:7,borderRadius:8,backgroundColor:c.border,overflow:"hidden",marginTop:9}}><View style={{height:"100%",width:(level.progress*100)+"%",backgroundColor:c.accent,borderRadius:8}}/></View>
+            <Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:6}}>{Math.max(0,level.nextXp-(gameState?.totalXp||0))} XP to level {level.level+1} · {language==="sv"?"Visa uppdrag":"View quests"} →</Text>
+          </View>
+        </View>
+      </Pressable>
       <StudyDashboard />
-      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:17,borderWidth:1,borderColor:c.accent,backgroundColor:c.surface,flexDirection:"row",alignItems:"center",gap:11,padding:12}}><LinearGradient colors={[c.accent,c.accent+"B8"]} style={{width:38,height:38,borderRadius:12,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color="#FFFFFF"/></LinearGradient><View style={{flex:1}}><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.2}}>SNAPSTUDY PLUS</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Få mer ut av varje pass":"Make every study session count"}</Text></View><Ionicons name="chevron-forward" size={17} color="#9B7BEA"/></Pressable>
+      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:18,borderWidth:1,borderColor:c.border,backgroundColor:c.surface,flexDirection:"row",alignItems:"center",gap:11,padding:13}}>
+        <LinearGradient colors={[c.accent,c.accent+"B8"]} style={{width:39,height:39,borderRadius:13,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color="#FFFFFF"/></LinearGradient>
+        <View style={{flex:1}}><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.3}}>SNAPSTUDY PLUS</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Mer fokus. Mer framsteg.":"Make every study session count."}</Text></View><Ionicons name="chevron-forward" size={17} color={c.accent}/>
+      </Pressable>
       <AdBanner />
-    </Animated.ScrollView><BottomNav/>
+    </Animated.ScrollView><BottomNav/></Animated.ScrollView><BottomNav/>
   </SafeAreaView>;
 }
 
