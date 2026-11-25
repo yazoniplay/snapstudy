@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Animated, ImageBackground, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,11 +8,12 @@ import { awardXP, loadGamification } from "../lib/gamification";
 import { useTheme } from "../lib/theme";
 
 type FocusMode="focus"|"short"|"long";
-const DURATIONS:Record<FocusMode,number>={focus:25*60,short:5*60,long:15*60};
+const DEFAULT_DURATIONS:Record<FocusMode,number>={focus:25*60,short:5*60,long:15*60};
 export default function FocusRoom(){
  const { colors:c } = useTheme();
  const [mode,setMode]=useState<FocusMode>("focus");
- const [seconds,setSeconds]=useState(DURATIONS.focus);
+ const [durations,setDurations]=useState(DEFAULT_DURATIONS);
+ const [seconds,setSeconds]=useState(DEFAULT_DURATIONS.focus);
  const [running,setRunning]=useState(false);
  const [finished,setFinished]=useState(false);
  const [xp,setXp]=useState(0);
@@ -20,6 +22,7 @@ export default function FocusRoom(){
  const styles=makeStyles(c);
  const appear=useRef(new Animated.Value(0)).current;
  const breathe=useRef(new Animated.Value(0)).current;
+ useEffect(()=>{AsyncStorage.multiGet(["snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values=>{const focus=Number(values[0]?.[1]);const rest=Number(values[1]?.[1]);const next={...DEFAULT_DURATIONS,focus:[15,20,25,30,45].includes(focus)?focus*60:DEFAULT_DURATIONS.focus,short:[5,10,15].includes(rest)?rest*60:DEFAULT_DURATIONS.short};setDurations(next);setSeconds(next.focus);}).catch(()=>{});},[]);
  useEffect(()=>{Animated.spring(appear,{toValue:1,useNativeDriver:true,friction:8,tension:48}).start();},[appear]);
  useEffect(()=>{const loop=Animated.loop(Animated.sequence([Animated.timing(breathe,{toValue:1,duration:1900,useNativeDriver:true}),Animated.timing(breathe,{toValue:0,duration:1900,useNativeDriver:true})]));loop.start();return()=>loop.stop();},[breathe]);
  useEffect(()=>{let active=true;loadGamification().then(v=>{if(active)setXp(v.totalXp)}).catch(()=>{});return()=>{active=false}},[]);
@@ -27,10 +30,10 @@ export default function FocusRoom(){
  useEffect(()=>{
   if(seconds!==0||!running)return;
   setRunning(false);setFinished(true);
-  if(mode==="focus"&&!completed.current){completed.current=true;awardXP(runId.current,40,"focus","25-minute focus session",{focusSessions:1,focusMinutes:25}).then(v=>setXp(v.totalXp)).catch(e=>console.warn("Focus XP award failed",e));}
- },[seconds,running,mode]);
- function choose(next:FocusMode){setRunning(false);setMode(next);setSeconds(DURATIONS[next]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
- function reset(){setRunning(false);setSeconds(DURATIONS[mode]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
+  if(mode==="focus"&&!completed.current){completed.current=true;awardXP(runId.current,40,"focus",`${durations.focus/60}-minute focus session`,{focusSessions:1,focusMinutes:durations.focus/60}).then(v=>setXp(v.totalXp)).catch(e=>console.warn("Focus XP award failed",e));}
+ },[seconds,running,mode,durations.focus]);
+ function choose(next:FocusMode){setRunning(false);setMode(next);setSeconds(durations[next]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
+ function reset(){setRunning(false);setSeconds(durations[mode]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
  const clock=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
  return <SafeAreaView style={styles.safe}>
   <StatusBar barStyle="light-content"/>
@@ -43,7 +46,7 @@ export default function FocusRoom(){
     </View>
     <Animated.View style={[styles.center,{opacity:appear,transform:[{translateY:appear.interpolate({inputRange:[0,1],outputRange:[20,0]})}]}]}>
      <View style={styles.modeTabs}>
-      {(["focus","short","long"] as FocusMode[]).map(item=><Pressable key={item} onPress={()=>choose(item)} style={[styles.modeTab,mode===item&&styles.modeActive]}><Text style={[styles.modeText,mode===item&&styles.modeTextActive]}>{item==="focus"?"Pomodoro":item==="short"?"Short break":"Long break"}</Text></Pressable>)}
+      {(["focus","short","long"] as FocusMode[]).map(item=><Pressable key={item} onPress={()=>choose(item)} style={[styles.modeTab,mode===item&&styles.modeActive]}><Text style={[styles.modeText,mode===item&&styles.modeTextActive]}>{item==="focus"?`${durations.focus/60} min focus`:item==="short"?`${durations.short/60} min break":"Long break"}</Text></Pressable>)}
      </View>
      <Text style={styles.headline}>{mode==="focus"?"Find your flow.":mode==="short"?"Take a breath.":"Step away a little."}</Text>
      <Text style={styles.subtitle}>{mode==="focus"?"One thing at a time. You’ve got this.":"Rest is part of learning, too."}</Text>
@@ -54,7 +57,7 @@ export default function FocusRoom(){
       </View></Animated.View>
      </View>
      <View style={styles.controls}>
-      <Pressable onPress={()=>{if(finished){setSeconds(DURATIONS[mode]);completed.current=false;runId.current="focus-room-"+Date.now();}setFinished(false);setRunning(finished?true:!running)}} style={styles.startButton}><Text style={styles.startText}>{running?"Pause":finished?"Start again":"Start session"}</Text><Ionicons name={running?"pause":"play"} size={17} color="#5D459C"/></Pressable>
+      <Pressable onPress={()=>{if(finished){setSeconds(durations[mode]);completed.current=false;runId.current="focus-room-"+Date.now();}setFinished(false);setRunning(finished?true:!running)}} style={styles.startButton}><Text style={styles.startText}>{running?"Pause":finished?"Start again":"Start session"}</Text><Ionicons name={running?"pause":"play"} size={17} color="#5D459C"/></Pressable>
       <Pressable onPress={reset} style={styles.resetButton}><Ionicons name="refresh" size={20} color="#FFFFFF"/></Pressable>
      </View>
      {finished&&mode==="focus"?<Text style={styles.completeText}>Beautiful work. You added 40 XP to your study journey.</Text>:null}
