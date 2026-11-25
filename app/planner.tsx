@@ -1,6 +1,6 @@
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import {useEffect,useMemo,useState} from "react";
-import {Alert,Pressable,SafeAreaView,ScrollView,StyleSheet,Text as NativeText,TextInput as NativeTextInput,View} from "react-native";
+import {Alert,Pressable,SafeAreaView,ScrollView,StyleSheet,,View} from "react-native";
 import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
 import {router} from "expo-router";
 import {useTheme,type ThemeColors} from "../lib/theme";
