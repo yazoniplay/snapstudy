@@ -1,4 +1,5 @@
-import { Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
+import { Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text as NativeText, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import BottomNav from "../components/BottomNav";
