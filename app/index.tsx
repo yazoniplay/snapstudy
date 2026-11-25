@@ -137,10 +137,10 @@ export default function Home() {
       </View>
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
         {([
-          {title:language==="sv"?"Skanna anteckningar":"Scan notes",sub:language==="sv"?"Foto → studiepaket":"Photo to study set",icon:"camera-outline" as const,colors:["#8B5CF6","#6D28D9"] as [string,string],onPress:cameraOpen},
-          {title:language==="sv"?"Skapa med text":"Create from text",sub:language==="sv"?"Klistra in anteckningar":"Paste your notes",icon:"document-text-outline" as const,colors:["#F97365","#EA580C"] as [string,string],onPress:()=>setNotesModal(true)},
-          {title:language==="sv"?"Fokusrum":"Focus room",sub:"Pomodoro · 25 min",icon:"timer-outline" as const,colors:["#F59E0B","#EA580C"] as [string,string],onPress:()=>router.push("/focus")},
-          {title:language==="sv"?"Studie-set":"Study sets",sub:language==="sv"?"Repetera och fortsätt":"Review and continue",icon:"albums-outline" as const,colors:["#0EA5E9","#2563EB"] as [string,string],onPress:()=>router.push("/history")}
+          {title:t("dashboardScan"),sub:t("dashboardScanSub"),icon:"camera-outline" as const,colors:["#8B5CF6","#6D28D9"] as [string,string],onPress:cameraOpen},
+          {title:t("dashboardText"),sub:t("dashboardTextSub"),icon:"document-text-outline" as const,colors:["#F97365","#EA580C"] as [string,string],onPress:()=>setNotesModal(true)},
+          {title:t("dashboardFocus"),sub:t("dashboardFocusSub"),icon:"timer-outline" as const,colors:["#F59E0B","#EA580C"] as [string,string],onPress:()=>router.push("/focus")},
+          {title:t("dashboardSets"),sub:t("dashboardSetsSub"),icon:"albums-outline" as const,colors:["#0EA5E9","#2563EB"] as [string,string],onPress:()=>router.push("/history")}
         ]).map((item,index)=><Pressable key={item.title} onPress={item.onPress} disabled={busy&&index===0} style={{width:"48.5%",flexGrow:1,minWidth:145,borderRadius:19,overflow:"hidden",minHeight:112}}>
           <LinearGradient colors={item.colors} start={{x:0,y:0}} end={{x:1,y:1}} style={{flex:1,minHeight:cardDensity==="compact"?88:112,padding:cardDensity==="compact"?11:15,justifyContent:"space-between"}}>
             <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}><View style={{width:34,height:34,borderRadius:11,backgroundColor:"rgba(255,255,255,0.22)",alignItems:"center",justifyContent:"center"}}><Ionicons name={item.icon} size={19} color="#FFFFFF"/></View><Ionicons name="arrow-up-right" size={17} color="rgba(255,255,255,0.9)"/></View>
@@ -150,16 +150,16 @@ export default function Home() {
       </View>
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
         <Pressable onPress={()=>router.push("/progress")} style={{flex:1,minWidth:155,padding:16,borderRadius:18,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:8}}>
-          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="trophy-outline" size={17} color={c.accent}/><Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>{language==="sv"?"DIN NIVÅ":"YOUR LEVEL"}</Text></View>
-          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{level.level}</Text><Text style={{color:c.muted,fontSize:11}}>{language==="sv"?"Fortsätt samla XP":"Keep earning XP"} →</Text>
+          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="trophy-outline" size={17} color={c.accent}/><Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>{t("dashboardLevel").toUpperCase()}</Text></View>
+          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{level.level}</Text><Text style={{color:c.muted,fontSize:11}}>{t("dashboardProgress")} →</Text>
         </Pressable>
         <Pressable onPress={()=>router.push("/progress")} style={{flex:1,minWidth:155,padding:16,borderRadius:18,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:8}}>
           <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="flash-outline" size={17} color="#F59E0B"/><Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>TOTAL XP</Text></View>
-          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()}</Text><Text style={{color:c.muted,fontSize:11}}>{language==="sv"?"Se dina framsteg":"View your progress"} →</Text>
+          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()}</Text><Text style={{color:c.muted,fontSize:11}}>{t("dashboardViewProgress")} →</Text>
         </Pressable>
         <View style={{flex:1,minWidth:210,padding:16,borderRadius:18,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.accent+"55",gap:8}}>
-          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="bulb-outline" size={17} color={c.accent}/><Text style={{color:c.accent,fontSize:10,fontWeight:"900"}}>{language==="sv"?"STUDIETIPS":"STUDY TIP"}</Text></View>
-          <Text style={{color:c.text,fontSize:13,fontWeight:"900"}}>{language==="sv"?"Testa dig själv":"Test yourself"}</Text><Text style={{color:c.muted,fontSize:11,lineHeight:16}}>{language==="sv"?"Försök svara innan du vänder på kortet. Att plocka fram svaret stärker minnet.":"Try recalling the answer before flipping a flashcard. Retrieval practice helps make it stick."}</Text>
+          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="bulb-outline" size={17} color={c.accent}/><Text style={{color:c.accent,fontSize:10,fontWeight:"900"}}>{t("dashboardTip").toUpperCase()}</Text></View>
+          <Text style={{color:c.text,fontSize:13,fontWeight:"900"}}>{t("dashboardRecall")}</Text><Text style={{color:c.muted,fontSize:11,lineHeight:16}}>{t("dashboardRecallSub")}</Text>
         </View>
       </View>
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:10}}>
