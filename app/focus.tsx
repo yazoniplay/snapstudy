@@ -1,7 +1,7 @@
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Animated, ImageBackground, Pressable, SafeAreaView, StatusBar, StyleSheet, Text as NativeText, View } from "react-native";
+import { Animated, ImageBackground, Pressable, SafeAreaView, StatusBar, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
