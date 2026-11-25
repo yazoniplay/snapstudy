@@ -107,7 +107,8 @@ export default function Account() {
         <Text style={s.title}>{t("profile")}</Text>
         <Text style={s.sub}>{t("manageAccount")}</Text>
 
-        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-outline" size={18} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Profile</Text><Text style={s.sectionSub}>Your name, username and photo</Text></View></View>\n        <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
+        <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-outline" size={18} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Profile</Text><Text style={s.sectionSub}>Your name, username and photo</Text></View></View>
+        <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
 
         <View style={s.card}>
           <Text style={s.label}>{t("name")}</Text>
