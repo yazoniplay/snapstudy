@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Animated, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import SnapStudyMark from "../components/SnapStudyMark";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
