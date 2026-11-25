@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -12,6 +12,9 @@ import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage, type AppLanguage } from "../lib/language";
 export default function Account() {
   const { colors:c, mode, setMode, accentColor, setAccentColor } = useTheme();
+  const { width: viewportWidth } = useWindowDimensions();
+  const wideSettings = viewportWidth >= 1000;
+  const [selectedSettings, setSelectedSettings] = useState("Profile");
   const { language, setLanguage, t } = useLanguage();
   const s = makeStyles(c);
   const [email, setEmail] = useState("");
@@ -99,14 +102,37 @@ export default function Account() {
 
   if (loading) return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.muted}>{t("loadingAccount")}</Text></View></SafeAreaView>;
 
+  const settingsCategories = [
+    { title: "Profile", subtitle: "Name, username and photo", icon: "person-outline" as const },
+    { title: "Study activity", subtitle: "Streaks and leaderboard", icon: "trophy-outline" as const },
+    { title: "Study preferences", subtitle: "Goals and focus timing", icon: "options-outline" as const },
+    { title: "Language", subtitle: "App and learning language", icon: "globe-outline" as const },
+    { title: "Appearance", subtitle: "Theme, motion and colors", icon: "color-palette-outline" as const },
+    { title: "Account", subtitle: "Security and sign out", icon: "shield-checkmark-outline" as const },
+  ];
+
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.container}>
-        <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>
-        <Text style={s.eyebrow}>{t("accountEyebrow")}</Text>
-        <Text style={s.title}>Settings</Text>
-        <Text style={s.sub}>Personalize your study space and account.</Text>
+      <View style={{ flex: 1, flexDirection: wideSettings ? "row" : "column" }}>
+        {wideSettings && <View style={s.sidebar}>
+          <View style={s.sidebarHeader}><Text style={s.sidebarTitle}>Settings</Text><Text style={s.sidebarSubtitle}>SnapStudy</Text></View>
+          {settingsCategories.map(category => {
+            const active = selectedSettings === category.title;
+            return <Pressable key={category.title} onPress={() => setSelectedSettings(category.title)} style={[s.sidebarItem, active && s.sidebarItemActive]}>
+              <View style={[s.sidebarIcon, active && s.sidebarIconActive]}><Ionicons name={category.icon} size={19} color={active ? c.accent : c.muted} /></View>
+              <View style={{ flex: 1 }}><Text style={[s.sidebarItemTitle, active && s.sidebarItemTitleActive]}>{category.title}</Text><Text style={s.sidebarItemSubtitle}>{category.subtitle}</Text></View>
+              <Ionicons name="chevron-forward" size={15} color={active ? c.accent : c.subtle} />
+            </Pressable>;
+          })}
+          <Pressable onPress={() => router.replace("/")} style={s.sidebarBack}><Ionicons name="arrow-back-outline" size={17} color={c.muted}/><Text style={s.sidebarBackText}>{t("back")}</Text></Pressable>
+        </View>}
+        <ScrollView contentContainerStyle={[s.container, wideSettings && s.desktopContent]}>
+          {!wideSettings && <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>}
+          <Text style={s.eyebrow}>{t("accountEyebrow")}</Text>
+          <Text style={s.title}>{wideSettings ? selectedSettings : "Settings"}</Text>
+          <Text style={s.sub}>{wideSettings ? settingsCategories.find(item => item.title === selectedSettings)?.subtitle : "Personalize your study space and account."}</Text>
 
+        {(!wideSettings || selectedSettings === "Profile") && (<>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-outline" size={18} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Profile</Text><Text style={s.sectionSub}>Your name, username and photo</Text></View></View>
         <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
 
@@ -120,6 +146,9 @@ export default function Account() {
           </Pressable>
         </View>
 
+
+        </>)}
+        {(!wideSettings || selectedSettings === "Study activity") && (<>
         <View style={s.card}><View style={{flexDirection:"row",alignItems:"center",gap:8}}><Ionicons name="trophy-outline" size={18} color={c.accent}/><Text style={s.cardTitle}>Streak leaderboard</Text></View><Text style={s.cardText}>You’re automatically included in the SnapStudy community leaderboard. Keep studying daily to climb the rankings.</Text><Pressable style={s.secondary} onPress={()=>router.push("/leaderboard")}><Text style={s.secondaryText}>{t("viewLeaderboard")}</Text></Pressable></View>
 
         <View style={s.card}>
@@ -128,6 +157,9 @@ export default function Account() {
           <Text style={s.cardText}>{t("streakHelp")}</Text>
         </View>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="person-circle-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Study activity</Text><Text style={s.sectionSub}>Your streaks and community progress</Text></View></View>
+
+        </>)}
+        {(!wideSettings || selectedSettings === "Study preferences") && (<>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="options-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Study preferences</Text><Text style={s.sectionSub}>Set the pace that works for you</Text></View></View>
         <View style={s.card}>
           <Text style={s.cardTitle}>Daily study goal</Text><Text style={s.cardText}>Choose how many minutes you want to study each day.</Text>
@@ -137,6 +169,9 @@ export default function Account() {
           <View style={s.preferenceDivider}/><Text style={s.cardTitle}>Short break</Text><Text style={s.cardText}>Take a breather between focus sessions.</Text>
           <View style={s.choiceRow}>{[5,10,15].map(value=><Pressable key={value} style={[s.choiceChip,breakMinutes===value&&s.choiceChipActive]} onPress={()=>savePreference("snapstudy:break-minutes",value,setBreakMinutes)}><Text style={[s.choiceText,breakMinutes===value&&s.choiceTextActive]}>{value}m</Text></Pressable>)}</View>
         </View>
+
+        </>)}
+        {(!wideSettings || selectedSettings === "Language") && (<>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="globe-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Language</Text><Text style={s.sectionSub}>App interface and learning language</Text></View></View>
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("language")}</Text>
@@ -146,6 +181,9 @@ export default function Account() {
           </View>
         </View>
 
+
+        </>)}
+        {(!wideSettings || selectedSettings === "Appearance") && (<>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="color-palette-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Appearance & personalization</Text><Text style={s.sectionSub}>Make SnapStudy feel like yours</Text></View></View>
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("appearance")}</Text>
@@ -175,6 +213,9 @@ export default function Account() {
           </Pressable>
         </View>
 
+
+        </>)}
+        {(!wideSettings || selectedSettings === "Account") && (<>
         <View style={s.sectionHeading}><View style={s.sectionIcon}><Ionicons name="shield-checkmark-outline" size={19} color={c.accent}/></View><View style={s.sectionCopy}><Text style={s.sectionTitle}>Account & security</Text><Text style={s.sectionSub}>Your sign-in and account controls</Text></View></View>
         <AdBanner />
 
@@ -185,7 +226,10 @@ export default function Account() {
             <Text style={s.dangerText}>{t("signOut")}</Text>
           </Pressable>
         </View>
+
+        </>)}
       </ScrollView>
+      </View>
       <BottomNav />
     </SafeAreaView>
   );
@@ -193,6 +237,21 @@ export default function Account() {
 
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
   safe:{flex:1,backgroundColor:c.bg},
+  sidebar:{width:286,backgroundColor:c.surfaceAlt,borderRightWidth:1,borderRightColor:c.border,paddingHorizontal:14,paddingTop:24,paddingBottom:16},
+  sidebarHeader:{paddingHorizontal:13,paddingBottom:20,borderBottomWidth:1,borderBottomColor:c.border,marginBottom:12},
+  sidebarTitle:{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-.7},
+  sidebarSubtitle:{color:c.muted,fontSize:11,fontWeight:"700",marginTop:4},
+  sidebarItem:{flexDirection:"row",alignItems:"center",gap:10,paddingHorizontal:10,paddingVertical:11,borderRadius:12,marginBottom:4},
+  sidebarItemActive:{backgroundColor:c.accentSoft},
+  sidebarIcon:{width:30,height:30,borderRadius:9,backgroundColor:c.input,alignItems:"center",justifyContent:"center"},
+  sidebarIconActive:{backgroundColor:c.surface},
+  sidebarItemTitle:{color:c.text,fontSize:12,fontWeight:"800"},
+  sidebarItemTitleActive:{color:c.accent},
+  sidebarItemSubtitle:{color:c.muted,fontSize:10,marginTop:2},
+  sidebarBack:{flexDirection:"row",alignItems:"center",gap:8,marginTop:"auto",padding:12,borderTopWidth:1,borderTopColor:c.border},
+  sidebarBackText:{color:c.muted,fontSize:12,fontWeight:"800"},
+  desktopContent:{paddingHorizontal:34,paddingTop:30,paddingBottom:44,maxWidth:1050,flexGrow:1},
+
   motionRow:{flexDirection:"row",alignItems:"center",gap:12,paddingVertical:12,marginTop:6},motionCopy:{flex:1},motionSwitch:{width:46,height:27,borderRadius:99,backgroundColor:c.border,padding:3,justifyContent:"center"},motionSwitchOn:{backgroundColor:c.accent},motionKnob:{width:21,height:21,borderRadius:11,backgroundColor:"#FFFFFF",alignSelf:"flex-start"},motionKnobOn:{alignSelf:"flex-end"},
   sectionHeading:{flexDirection:"row",alignItems:"center",gap:10,marginTop:25,marginBottom:9,paddingHorizontal:3},sectionIcon:{width:29,height:29,borderRadius:9,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"},sectionCopy:{flex:1},sectionTitle:{color:c.text,fontSize:14,fontWeight:"800",letterSpacing:-.2},sectionSub:{color:c.muted,fontSize:11,marginTop:2},choiceRow:{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12},choiceChip:{minWidth:47,paddingHorizontal:12,paddingVertical:10,borderRadius:10,borderWidth:1,borderColor:c.border,backgroundColor:c.surfaceAlt,alignItems:"center"},choiceChipActive:{backgroundColor:c.accentSoft,borderColor:c.accent},choiceText:{color:c.muted,fontSize:12,fontWeight:"800"},choiceTextActive:{color:c.accent},preferenceDivider:{height:1,backgroundColor:c.border,marginVertical:16},
   container:{paddingHorizontal:22,paddingTop:22,paddingBottom:34,width:"100%",maxWidth:760,alignSelf:"center"},
