@@ -1,6 +1,6 @@
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import {useEffect,useMemo,useRef,useState} from "react";
-import {Animated,Easing,Pressable,SafeAreaView,ScrollView,Share,StyleSheet,Text as NativeText,TextInput as NativeTextInput,View} from "react-native";
+import {Animated,Easing,Pressable,SafeAreaView,ScrollView,Share,StyleSheet,,View} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
