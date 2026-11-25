@@ -60,7 +60,7 @@ async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<
 async function run(p:P,images:any[],lang:string,notesText="") {
  const providerTimeout=p.id==="gemini"?18000:p.id==="groq"?15000:p.id==="cloudflare"?15000:p.id==="tokenharbor"?25000:15000;
  const instruction=lang==="sv"?"Write every field in natural Swedish.":lang==="ar"?"اكتب باللغة العربية الفصحى.":"Write every field in natural English.";
- const sourceText=notesText? "\\n\\nSOURCE NOTES (use only these facts):\\n"+notesText : "";
+ const sourceText=notesText? "\n\nSOURCE NOTES (use only these facts):\n"+notesText : "";
  if(p.url==="gemini") {
   const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(p.model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},providerTimeout);
   const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Gemini failed");
