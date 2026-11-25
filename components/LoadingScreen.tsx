@@ -28,7 +28,7 @@ export default function LoadingScreen() {
   const rotation=spin.interpolate({inputRange:[0,1],outputRange:["0deg","360deg"]});
   const scale=breathe.interpolate({inputRange:[0,1],outputRange:[0.96,1.045]});
   const slide=appear.interpolate({inputRange:[0,1],outputRange:[22,0]});
-  const barX=progress.interpolate({inputRange:[0,1],outputRange:["-45%","115%"]});
+  const barX=progress.interpolate({inputRange:[0,1],outputRange:[-86,218]});
   const muted=mode==="dark"?"rgba(255,255,255,0.56)":c.muted;
   return <SafeAreaView style={[s.safe,{backgroundColor:c.bg}]}>
     <View pointerEvents="none" style={[s.glow,{backgroundColor:c.accentSoft,top:-155,left:-145}]}/>
