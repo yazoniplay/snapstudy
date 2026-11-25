@@ -88,7 +88,7 @@ async function fetchTimed(url:string, init:RequestInit, timeoutMs=5000):Promise<
 }
 async function availableHordeChatModels(p:P):Promise<string[]>{
  try{
-  const response=await fetchTimed(p.url.replace(/\\/$/,"")+"/models",{method:"GET",headers:{...(p.key?{"Authorization":"Bearer "+p.key}:{})}},5000);
+  const response=await fetchTimed(p.url.replace(/\/$/,"")+"/models",{method:"GET",headers:{...(p.key?{"Authorization":"Bearer "+p.key}:{})}},5000);
   if(!response.ok)return [];
   const body=await response.json();
   return (Array.isArray(body.data)?body.data:[]).map((item:any)=>String(item?.id||"")).filter(Boolean);
