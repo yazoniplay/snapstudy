@@ -29,6 +29,8 @@ export default function Home() {
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [pastedNotes,setPastedNotes]=useState("");
+  const [cardDensity,setCardDensity]=useState<"comfortable"|"compact">("comfortable");
+  const [fontScale,setFontScale]=useState(1);
   const [notesModal,setNotesModal]=useState(false);
   const [booting, setBooting] = useState(true);
   const [camera, setCamera] = useState(false);
@@ -43,6 +45,7 @@ export default function Home() {
   }, [entrance]);
   const [permission, requestPermission] = useCameraPermissions();
   useEffect(() => { let active=true; loadGamification().then(value=>{if(active)setGameState(value);}).catch(()=>{}); return ()=>{active=false}; }, []);
+  useEffect(()=>{let active=true;import("@react-native-async-storage/async-storage").then(({default:storage})=>storage.multiGet(["snapstudy:card-density","snapstudy:font-scale"])).then(values=>{if(!active)return;if(values[0]?.[1]==="compact")setCardDensity("compact");const scale=values[1]?.[1];if(scale==="small")setFontScale(0.92);else if(scale==="large")setFontScale(1.12);}).catch(()=>{});return()=>{active=false};},[]);
   const level = getLevel(gameState?.totalXp || 0);
   useFocusEffect(useCallback(()=>{const lines=language==="sv"?["Redo att göra framsteg?","Lite plugg idag gör skillnad.","Dags att nå nästa nivå?","Vad vill du lära dig idag?"]:language==="ar"?["هل أنت مستعد للتقدم؟","القليل من الدراسة يصنع فرقًا.","هل نصل إلى المستوى التالي؟"]:["Ready to make progress?","A little study goes a long way.","One step closer to your next level.","What would you like to learn today?"];setWelcomeLine(lines[Math.floor(Math.random()*lines.length)]);},[language]));
 
@@ -139,9 +142,9 @@ export default function Home() {
           {title:language==="sv"?"Fokusrum":"Focus room",sub:"Pomodoro · 25 min",icon:"timer-outline" as const,colors:["#F59E0B","#EA580C"] as [string,string],onPress:()=>router.push("/focus")},
           {title:language==="sv"?"Studie-set":"Study sets",sub:language==="sv"?"Repetera och fortsätt":"Review and continue",icon:"albums-outline" as const,colors:["#0EA5E9","#2563EB"] as [string,string],onPress:()=>router.push("/history")}
         ]).map((item,index)=><Pressable key={item.title} onPress={item.onPress} disabled={busy&&index===0} style={{width:"48.5%",flexGrow:1,minWidth:145,borderRadius:19,overflow:"hidden",minHeight:112}}>
-          <LinearGradient colors={item.colors} start={{x:0,y:0}} end={{x:1,y:1}} style={{flex:1,minHeight:112,padding:15,justifyContent:"space-between"}}>
+          <LinearGradient colors={item.colors} start={{x:0,y:0}} end={{x:1,y:1}} style={{flex:1,minHeight:cardDensity==="compact"?88:112,padding:cardDensity==="compact"?11:15,justifyContent:"space-between"}}>
             <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}><View style={{width:34,height:34,borderRadius:11,backgroundColor:"rgba(255,255,255,0.22)",alignItems:"center",justifyContent:"center"}}><Ionicons name={item.icon} size={19} color="#FFFFFF"/></View><Ionicons name="arrow-up-right" size={17} color="rgba(255,255,255,0.9)"/></View>
-            <View><Text style={{color:"#FFFFFF",fontSize:14,fontWeight:"900",letterSpacing:-0.2}}>{item.title}</Text><Text style={{color:"rgba(255,255,255,0.82)",fontSize:10,fontWeight:"700",marginTop:4}}>{item.sub}</Text></View>
+            <View><Text style={{color:"#FFFFFF",fontSize:14*fontScale,fontWeight:"900",letterSpacing:-0.2}}>{item.title}</Text><Text style={{color:"rgba(255,255,255,0.82)",fontSize:10*fontScale,fontWeight:"700",marginTop:4}}>{item.sub}</Text></View>
           </LinearGradient>
         </Pressable>)}
       </View>
