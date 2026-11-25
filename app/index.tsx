@@ -124,7 +124,7 @@ export default function Home() {
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
         <View style={{flex:1}}>
           <View style={{flexDirection:"row",alignItems:"center",gap:7}}><SnapStudyMark size={25}/><Text style={{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.8}}>SNAPSTUDY</Text></View>
-          <Text style={{color:c.text,fontSize:27,fontWeight:"900",letterSpacing:-0.9,marginTop:12}}>{language==="sv"?"Hej, "+firstName+" 👋":"Hey, "+firstName+" 👋"}</Text>
+          <Text style={{color:c.text,fontSize:27,fontWeight:"900",letterSpacing:-0.9,marginTop:12}}>{language==="sv"?"Hej, "+firstName+" ":"Hey, "+firstName+" 👋"}</Text>
           <Text style={{color:c.muted,fontSize:13,marginTop:4}}>{welcomeLine}</Text>
         </View>
         <Pressable onPress={()=>router.push("/account")} style={{width:46,height:46,borderRadius:16,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
