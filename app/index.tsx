@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Alert, Animated, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -21,6 +22,8 @@ import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 export default function Home() {
   const { colors:c, mode } = useTheme();
+  const { width: viewportWidth } = useWindowDimensions();
+  const desktopLayout = viewportWidth >= 1100;
   const glass = mode === "dark" ? "rgba(255,255,255,0.075)" : "rgba(255,255,255,0.78)";
   const glassEdge = mode === "dark" ? "rgba(255,255,255,0.19)" : "rgba(255,255,255,0.92)";
   const cardScale = useRef(new Animated.Value(1)).current; const {t,language}=useLanguage();
@@ -120,7 +123,7 @@ export default function Home() {
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
   return <SafeAreaView style={s.safe}>
-    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:24,paddingTop:24,paddingBottom:34,gap:18,width:"100%",maxWidth:940,alignSelf:"center"}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
+    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:desktopLayout?36:24,paddingTop:24,paddingBottom:34,gap:18,width:"100%",maxWidth:desktopLayout?1280:940,alignSelf:"center"}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
         <View style={{flex:1}}>
           <View style={{flexDirection:"row",alignItems:"center",gap:7}}><SnapStudyMark size={25}/><Text style={{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.8}}>SNAPSTUDY</Text></View>
