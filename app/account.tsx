@@ -131,6 +131,9 @@ export default function Account() {
     { title: "Account", subtitle: "Security and sign out", icon: "shield-checkmark-outline" as const },
   ];
 
+  const categoryLabel=(value:string)=>language==="sv"?({"Profile":"Profil","Study activity":"Studieaktivitet","Study preferences":"Studieinställningar","Language":"Språk","Appearance":"Utseende","Customization":"Anpassning","Account":"Konto"}[value]||value):language==="ar"?({"Profile":"الملف الشخصي","Study activity":"نشاط الدراسة","Study preferences":"تفضيلات الدراسة","Language":"اللغة","Appearance":"المظهر","Customization":"التخصيص","Account":"الحساب"}[value]||value):value;
+  const categorySubtitle=(value:string)=>language==="sv"?({"Name, username and photo":"Namn, användarnamn och foto","Streaks and leaderboard":"Studievanor och ranking","Goals and focus timing":"Mål och fokustid","App and learning language":"Appens språk och studiespråk","Theme, motion and colors":"Tema, animationer och färger","Layout, text size and study language":"Layout, textstorlek och studiespråk","Security and sign out":"Säkerhet och utloggning"}[value]||value):language==="ar"?({"Name, username and photo":"الاسم واسم المستخدم والصورة","Streaks and leaderboard":"سلسلة الدراسة والترتيب","Goals and focus timing":"الأهداف ومدة التركيز","App and learning language":"لغة التطبيق والتعلم","Theme, motion and colors":"السمة والحركة والألوان","Layout, text size and study language":"التخطيط وحجم النص ولغة الدراسة","Security and sign out":"الأمان وتسجيل الخروج"}[value]||value):value;
+
   return (
     <SafeAreaView style={s.safe}>
       <View style={{ flex: 1, flexDirection: wideSettings ? "row" : "column" }}>
@@ -140,7 +143,7 @@ export default function Account() {
             const active = selectedSettings === category.title;
             return <Pressable key={category.title} onPress={() => setSelectedSettings(category.title)} style={[s.sidebarItem, active && s.sidebarItemActive]}>
               <View style={[s.sidebarIcon, active && s.sidebarIconActive]}><Ionicons name={category.icon} size={19} color={active ? c.accent : c.muted} /></View>
-              <View style={{ flex: 1 }}><Text style={[s.sidebarItemTitle, active && s.sidebarItemTitleActive]}>{category.title}</Text><Text style={s.sidebarItemSubtitle}>{category.subtitle}</Text></View>
+              <View style={{ flex: 1 }}><Text style={[s.sidebarItemTitle, active && s.sidebarItemTitleActive]}>{categoryLabel(category.title)}</Text><Text style={s.sidebarItemSubtitle}>{categorySubtitle(category.subtitle)}</Text></View>
               <Ionicons name="chevron-forward" size={15} color={active ? c.accent : c.subtle} />
             </Pressable>;
           })}
@@ -149,7 +152,7 @@ export default function Account() {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={[s.container, wideSettings && s.desktopContent]}>
           {!wideSettings && <Pressable onPress={() => router.replace("/")}><Text style={s.back}>{t("back")}</Text></Pressable>}
           <Text style={s.eyebrow}>{t("accountEyebrow")}</Text>
-          <Text style={s.title}>{wideSettings ? selectedSettings : "Settings"}</Text>
+          <Text style={s.title}>{wideSettings ? categoryLabel(selectedSettings) : (language==="sv"?"Inställningar":language==="ar"?"الإعدادات":"Settings")}</Text>
           <Text style={s.sub}>{wideSettings ? settingsCategories.find(item => item.title === selectedSettings)?.subtitle : "Personalize your study space and account."}</Text>
 
         {(!wideSettings || selectedSettings === "Profile") && (<>
