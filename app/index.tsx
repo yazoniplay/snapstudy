@@ -10,6 +10,7 @@ import { imageToBase64, setPendingImages } from "../lib/image";
 import BottomNav from "../components/BottomNav";
 import StudyDashboard from "../components/StudyDashboard";
 import SnapStudyMark from "../components/SnapStudyMark";
+import LoadingScreen from "../components/LoadingScreen";
 import AdBanner from "../components/AdBanner";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
