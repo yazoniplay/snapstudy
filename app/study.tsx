@@ -115,7 +115,7 @@ export default function Study(){
     if(images.some(item=>item.base64)||notesParam==="1"){
       let x:StudyResult;
       const savedContentLanguage=await AsyncStorage.getItem("snapstudy:content-language");
-      const generationLanguage=(savedContentLanguage==="en"||savedContentLanguage==="sv"||savedContentLanguage==="ar")?savedContentLanguage:language;
+      const generationLanguage=(savedContentLanguage&&["en","sv","ar","es","fr","de","pt","hi","zh","ja","tr"].includes(savedContentLanguage))?savedContentLanguage:language;
       if(notesParam==="1"){
         const pasted=await AsyncStorage.getItem("snapstudy:pending-notes");
         if(!pasted?.trim())throw new Error("Your pasted notes were empty. Go back and paste them again.");
