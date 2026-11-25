@@ -16,7 +16,6 @@ export default function Account() {
   const wideSettings = viewportWidth >= 1000;
   const [selectedSettings, setSelectedSettings] = useState("Profile");
   const { language, setLanguage, t } = useLanguage();
-  const s = makeStyles(c,fontScale==="small"?0.92:fontScale==="large"?1.12:1);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -34,6 +33,7 @@ export default function Account() {
   const [cardDensity,setCardDensity]=useState<"comfortable"|"compact">("comfortable");
   const [fontScale,setFontScale]=useState<"small"|"normal"|"large">("normal");
   const [contentLanguage,setContentLanguage]=useState<"auto"|"en"|"sv"|"ar">("auto");
+  const s = makeStyles(c,fontScale==="small"?0.92:fontScale==="large"?1.12:1);
   useEffect(() => { AsyncStorage.getItem("snapstudy:motion").then(value=>{if(value==="off")setMotionEnabled(false);}).catch(()=>{}); AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes","snapstudy:card-density","snapstudy:font-scale","snapstudy:content-language"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); if(values[3]?.[1]==="compact")setCardDensity("compact"); if(["small","normal","large"].includes(values[4]?.[1]||""))setFontScale(values[4]?.[1] as "small"|"normal"|"large"); if(["auto","en","sv","ar"].includes(values[5]?.[1]||""))setContentLanguage(values[5]?.[1] as "auto"|"en"|"sv"|"ar"); }).catch(()=>{}); }, []);
   function savePreference(key: string, value: number, setter: (value:number)=>void) { setter(value); AsyncStorage.setItem(key,String(value)).catch(()=>{}); supabase.auth.updateUser({data:{[key.replace("snapstudy:","").replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase())]:value}}).then(()=>{}).catch(()=>{}); }
   const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#6366F1","#A855F7","#F43F5E","#84CC16","#0F766E","#F8FAFC","#111827"];
