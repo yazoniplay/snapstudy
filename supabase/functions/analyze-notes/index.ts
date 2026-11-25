@@ -75,8 +75,8 @@ serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return new Response("Method not allowed",{status:405,headers:cors});
  try{
-  const body=await req.json(),src=Array.isArray(body.images)&&body.images.length?body.images:body.imageBase64?[{imageBase64:body.imageBase64,mimeType:body.mimeType}]:[];
-  const images=src.filter((x:any)=>x?.imageBase64).slice(0,6);if(!images.length)throw new Error("Choose notes images.");
+  const body=await req.json(),notesText=typeof body.notesText==="string"?body.notesText.trim():"",src=Array.isArray(body.images)&&body.images.length?body.images:body.imageBase64?[{imageBase64:body.imageBase64,mimeType:body.mimeType}]:[];
+  const images=src.filter((x:any)=>x?.imageBase64).slice(0,6);if(!images.length&&!notesText)throw new Error("Paste your notes or choose notes images.");if(notesText.length>40000)throw new Error("Notes are too long. Paste up to 40,000 characters.");
   const ps=providers();if(!ps.length)throw new Error("Configure at least one AI provider secret in Supabase.");
   const failures=[];
   for(const p of ps){try{const result=await run(p,images,body.language||"en",notesText);console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}}
