@@ -2,7 +2,7 @@ import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../compo
 import { useEffect, useRef, useState } from "react";
 import { useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Alert, Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useFocusEffect } from "expo-router";
