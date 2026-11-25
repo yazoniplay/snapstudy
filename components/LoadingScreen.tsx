@@ -1,5 +1,6 @@
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "./LocalizedText";
 import { useEffect, useRef } from "react";
-import { Animated, Easing, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, SafeAreaView, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import SnapStudyMark from "./SnapStudyMark";
