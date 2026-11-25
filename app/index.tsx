@@ -120,34 +120,34 @@ export default function Home() {
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
   return <SafeAreaView style={s.safe}>
-    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:20,paddingTop:18,paddingBottom:30,gap:17}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
+    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:24,paddingTop:24,paddingBottom:34,gap:18,width:"100%",maxWidth:940,alignSelf:"center"}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
         <View style={{flex:1}}>
           <View style={{flexDirection:"row",alignItems:"center",gap:7}}><SnapStudyMark size={25}/><Text style={{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.8}}>SNAPSTUDY</Text></View>
-          <Text style={{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-0.8,marginTop:12}}>{language==="sv"?"Hej, "+firstName+" 👋":"Hey, "+firstName+" 👋"}</Text>
+          <Text style={{color:c.text,fontSize:27,fontWeight:"900",letterSpacing:-0.9,marginTop:12}}>{language==="sv"?"Hej, "+firstName+" 👋":"Hey, "+firstName+" 👋"}</Text>
           <Text style={{color:c.muted,fontSize:13,marginTop:4}}>{welcomeLine}</Text>
         </View>
         <Pressable onPress={()=>router.push("/account")} style={{width:46,height:46,borderRadius:16,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
       </View>
-      <Animated.View style={{transform:[{scale:cardScale}]}}><Pressable onPressIn={()=>Animated.spring(cardScale,{toValue:0.985,useNativeDriver:true,speed:28,bounciness:4}).start()} onPressOut={()=>Animated.spring(cardScale,{toValue:1,useNativeDriver:true,speed:22,bounciness:6}).start()}><View style={{backgroundColor:glass,borderRadius:24,borderWidth:1,borderColor:glassEdge,padding:17,overflow:"hidden",shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:mode==="dark"?0.24:0.12,shadowRadius:24,shadowOffset:{width:0,height:12},elevation:7}}>
+      <Animated.View style={{transform:[{scale:cardScale}]}}><Pressable onPressIn={()=>Animated.spring(cardScale,{toValue:0.985,useNativeDriver:true,speed:28,bounciness:4}).start()} onPressOut={()=>Animated.spring(cardScale,{toValue:1,useNativeDriver:true,speed:22,bounciness:6}).start()}><View style={{backgroundColor:glass,borderRadius:26,borderWidth:1,borderColor:glassEdge,padding:22,overflow:"hidden",shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:mode==="dark"?0.24:0.12,shadowRadius:24,shadowOffset:{width:0,height:12},elevation:7}}>
         <BlurView intensity={mode==="dark"?38:52} tint={mode==="dark"?"dark":"light"} style={StyleSheet.absoluteFill}/>
         <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:13}}>
           <View style={{flexDirection:"row",alignItems:"center",gap:7}}><View style={{width:7,height:7,borderRadius:4,backgroundColor:c.accent}}/><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.5}}>{language==="sv"?"DAGS ATT PLUGGA":"READY TO STUDY"}</Text></View>
           <Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>25 min · 1 goal</Text>
         </View>
-        <Text style={{color:c.text,fontSize:22,fontWeight:"900",letterSpacing:-0.6,lineHeight:28}}>{language==="sv"?"Små steg. Stora framsteg.":"Small steps. Big progress."}</Text>
-        <Text style={{color:c.muted,fontSize:12,lineHeight:18,marginTop:6,marginBottom:16}}>{language==="sv"?"Skanna dina anteckningar och gör dem till aktiv repetition.":"Turn your notes into flashcards, quizzes and focused practice."}</Text>
+        <Text style={{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-0.7,lineHeight:31}}>{language==="sv"?"Små steg. Stora framsteg.":"Small steps. Big progress."}</Text>
+        <Text style={{color:c.muted,fontSize:13,lineHeight:20,marginTop:7,marginBottom:18}}>{language==="sv"?"Skanna dina anteckningar och gör dem till aktiv repetition.":"Turn your notes into flashcards, quizzes and focused practice."}</Text>
         <View style={{flexDirection:"row",gap:9}}>
           <Pressable onPress={cameraOpen} disabled={busy} style={{flex:1,minHeight:47,borderRadius:14,backgroundColor:c.accent,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:8}}><Ionicons name="camera-outline" size={18} color={c.onAccent}/><Text style={{color:c.onAccent,fontSize:12,fontWeight:"900"}}>{busy?"Preparing…":t("scanNotes")}</Text></Pressable>
           <Pressable onPress={library} disabled={busy} style={{width:48,minHeight:47,borderRadius:14,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"}}><Ionicons name="images-outline" size={20} color={c.accent}/></Pressable>
         </View>
       </View></Pressable></Animated.View>
-      <View style={{padding:16,borderRadius:21,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:10}}>
+      <View style={{padding:20,borderRadius:23,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:10}}>
         <View style={{flexDirection:"row",alignItems:"center",gap:9}}>
           <View style={{width:36,height:36,borderRadius:12,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="clipboard-outline" size={19} color={c.accent}/></View>
           <View style={{flex:1}}><Text style={{color:c.text,fontSize:14,fontWeight:"900"}}>{language==="sv"?"Klistra in anteckningar":"Paste your notes"}</Text><Text style={{color:c.muted,fontSize:11,marginTop:3}}>{language==="sv"?"Kopiera text från valfri app":"Copy text from any app or document"}</Text></View>
         </View>
-        <TextInput value={pastedNotes} onChangeText={setPastedNotes} multiline textAlignVertical="top" placeholder={language==="sv"?"Klistra in dina anteckningar här…":"Paste your notes here…"} placeholderTextColor={c.subtle} style={{minHeight:120,maxHeight:240,padding:13,borderRadius:14,borderWidth:1,borderColor:c.border,backgroundColor:c.input,color:c.text,fontSize:13,lineHeight:20}}/>
+        <TextInput value={pastedNotes} onChangeText={setPastedNotes} multiline textAlignVertical="top" placeholder={language==="sv"?"Klistra in dina anteckningar här…":"Paste your notes here…"} placeholderTextColor={c.subtle} style={{minHeight:130,maxHeight:260,padding:13,borderRadius:14,borderWidth:1,borderColor:c.border,backgroundColor:c.input,color:c.text,fontSize:13,lineHeight:20}}/>
         <Pressable onPress={makeStudyFromText} disabled={busy||pastedNotes.trim().length<20} style={{minHeight:46,borderRadius:13,backgroundColor:pastedNotes.trim().length>=20?c.accent:c.border,alignItems:"center",justifyContent:"center",flexDirection:"row",gap:8}}><Ionicons name="sparkles" size={17} color={pastedNotes.trim().length>=20?c.onAccent:c.muted}/><Text style={{color:pastedNotes.trim().length>=20?c.onAccent:c.muted,fontSize:12,fontWeight:"900"}}>{busy?(language==="sv"?"Förbereder…":"Preparing…"):(language==="sv"?"Skapa studiepaket":"Create study set from text")}</Text></Pressable>
         <Text style={{color:c.subtle,fontSize:10,lineHeight:15}}>{language==="sv"?"Skapar sammanfattning, kort, quiz och övningsfrågor.":"Generates a summary, flashcards, quiz and practice questions."}</Text>
       </View>
