@@ -45,7 +45,7 @@ export default function Auth() {
     } finally { setBusy(false); }
   }
 
-  return <SafeAreaView style={s.safe}><View style={s.wrap}>
+  return <SafeAreaView style={s.safe}><Animated.View style={[s.wrap,{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}]}>
     <View style={s.logo}><Text style={s.logoText}>✦</Text></View>
     <Text style={s.eyebrow}>SNAPSTUDY</Text>
     <Text style={s.title}>{mode==="signup" ? "Your study era starts here." : "Welcome back."}</Text>
