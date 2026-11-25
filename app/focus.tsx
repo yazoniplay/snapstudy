@@ -46,7 +46,7 @@ export default function FocusRoom(){
     </View>
     <Animated.View style={[styles.center,{opacity:appear,transform:[{translateY:appear.interpolate({inputRange:[0,1],outputRange:[20,0]})}]}]}>
      <View style={styles.modeTabs}>
-      {(["focus","short","long"] as FocusMode[]).map(item=><Pressable key={item} onPress={()=>choose(item)} style={[styles.modeTab,mode===item&&styles.modeActive]}><Text style={[styles.modeText,mode===item&&styles.modeTextActive]}>{item==="focus"?`${durations.focus/60} min focus`:item==="short"?`${durations.short/60} min break":"Long break"}</Text></Pressable>)}
+      {(["focus","short","long"] as FocusMode[]).map(item=><Pressable key={item} onPress={()=>choose(item)} style={[styles.modeTab,mode===item&&styles.modeActive]}><Text style={[styles.modeText,mode===item&&styles.modeTextActive]}>{item==="focus"?`${durations.focus/60} min focus`:item==="short"?`${durations.short/60} min break`:"Long break"}</Text></Pressable>)}
      </View>
      <Text style={styles.headline}>{mode==="focus"?"Find your flow.":mode==="short"?"Take a breath.":"Step away a little."}</Text>
      <Text style={styles.subtitle}>{mode==="focus"?"One thing at a time. You’ve got this.":"Rest is part of learning, too."}</Text>
