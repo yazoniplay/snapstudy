@@ -123,33 +123,7 @@ export default function Home() {
     setCamera(true);
   }
 
-  if (booting) return <SafeAreaView style={{flex:1,backgroundColor:c.bg,alignItems:"center",justifyContent:"center",paddingHorizontal:26,overflow:"hidden"}}>
-    <View style={{position:"absolute",width:340,height:340,borderRadius:170,backgroundColor:c.accentSoft,top:-150,right:-135,opacity:0.8}}/>
-    <View style={{position:"absolute",width:270,height:270,borderRadius:135,backgroundColor:c.accentSoft,bottom:-120,left:-120,opacity:0.65}}/>
-    <View style={{width:"100%",maxWidth:350,alignItems:"center"}}>
-      <Animated.View style={{transform:[{scale:splashPulse.interpolate({inputRange:[0,1],outputRange:[0.96,1.04]})}],marginBottom:22}}>
-        <View style={{padding:10,borderRadius:32,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,shadowColor:c.accent,shadowOpacity:0.22,shadowRadius:28,shadowOffset:{width:0,height:10},elevation:8}}>
-          <SnapStudyMark size={76}/>
-        </View>
-      </Animated.View>
-      <Text style={{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-0.7}}>SnapStudy</Text>
-      <Text style={{color:c.muted,fontSize:13,fontWeight:"600",marginTop:7,textAlign:"center"}}>Making space for your next breakthrough.</Text>
-      <View style={{width:"100%",marginTop:34,padding:15,borderRadius:22,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:13}}>
-        <View style={{flexDirection:"row",alignItems:"center",gap:11}}>
-          <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color={c.accent}/></View>
-          <View style={{flex:1,gap:7}}><View style={{height:9,width:"54%",borderRadius:6,backgroundColor:c.border}}/><View style={{height:7,width:"78%",borderRadius:6,backgroundColor:c.input}}/></View>
-        </View>
-        <View style={{height:1,backgroundColor:c.border}}/>
-        <View style={{flexDirection:"row",gap:9}}>
-          {[0,1,2].map(i=><View key={i} style={{flex:1,height:47,borderRadius:12,backgroundColor:c.input,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"}}><View style={{width:22,height:5,borderRadius:5,backgroundColor:c.border}}/><View style={{width:34,height:5,borderRadius:5,backgroundColor:c.border,marginTop:6}}/></View>)}
-        </View>
-      </View>
-      <View style={{flexDirection:"row",alignItems:"center",gap:9,marginTop:25}}>
-        <Animated.View style={{width:7,height:7,borderRadius:4,backgroundColor:c.accent,opacity:splashPulse.interpolate({inputRange:[0,1],outputRange:[0.45,1]})}}/>
-        <Text style={{color:c.muted,fontSize:11,fontWeight:"800",letterSpacing:0.5}}>Preparing your study space</Text>
-      </View>
-    </View>
-  </SafeAreaView>;
+  if (booting) return <LoadingScreen />;
 
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
