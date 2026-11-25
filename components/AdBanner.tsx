@@ -1,5 +1,6 @@
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "./LocalizedText";
 import { useCallback, useEffect, useState } from "react";
-import { AppState, Image, Linking, Platform, Pressable, Text, View } from "react-native";
+import { AppState, Image, Linking, Platform, Pressable, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
 import { supabase } from "../lib/supabase";
