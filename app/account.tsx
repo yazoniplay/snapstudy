@@ -27,9 +27,10 @@ export default function Account() {
   const [dailyGoal, setDailyGoal] = useState(30);
   const [focusMinutes, setFocusMinutes] = useState(25);
   const [breakMinutes, setBreakMinutes] = useState(5);
-  useEffect(() => { AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); }).catch(()=>{}); }, []);
+  const [motionEnabled, setMotionEnabled] = useState(true);
+  useEffect(() => { AsyncStorage.getItem("snapstudy:motion").then(value=>{if(value==="off")setMotionEnabled(false);}).catch(()=>{}); AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); }).catch(()=>{}); }, []);
   function savePreference(key: string, value: number, setter: (value:number)=>void) { setter(value); AsyncStorage.setItem(key,String(value)).catch(()=>{}); supabase.auth.updateUser({data:{[key.replace("snapstudy:","").replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase())]:value}}).then(()=>{}).catch(()=>{}); }
-  const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#F8FAFC"];
+  const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#6366F1","#A855F7","#F43F5E","#84CC16","#0F766E","#F8FAFC","#111827"];
   useEffect(() => { setColorDraft(accentColor); }, [accentColor]);
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -148,6 +149,7 @@ export default function Account() {
         <View style={s.card}>
           <Text style={s.cardTitle}>{t("appearance")}</Text>
           <Text style={s.cardText}>{t("appearanceSub")}</Text>
+          <Pressable style={s.motionRow} onPress={()=>{const next=!motionEnabled;setMotionEnabled(next);AsyncStorage.setItem("snapstudy:motion",next?"on":"off").catch(()=>{});supabase.auth.updateUser({data:{reduceMotion:!next}}).catch(()=>{});}}><View style={s.motionCopy}><Text style={s.cardTitle}>Animations</Text><Text style={s.cardText}>{motionEnabled?"Subtle motion and breathing effects are on.":"Motion effects are reduced."}</Text></View><View style={[s.motionSwitch,motionEnabled&&s.motionSwitchOn]}><View style={[s.motionKnob,motionEnabled&&s.motionKnobOn]}/></View></Pressable>
           <View style={s.themeRow}>
             <Pressable style={[s.themeButton,mode==="light"&&s.themeButtonActive]} onPress={()=>{setMode("light");supabase.auth.updateUser({data:{theme:"light"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="light"&&s.themeButtonTextActive]}>{t("light")}</Text></Pressable>
             <Pressable style={[s.themeButton,mode==="dark"&&s.themeButtonActive]} onPress={()=>{setMode("dark");supabase.auth.updateUser({data:{theme:"dark"}}).catch(()=>{});}}><Text style={[s.themeButtonText,mode==="dark"&&s.themeButtonTextActive]}>{t("dark")}</Text></Pressable>
@@ -190,6 +192,7 @@ export default function Account() {
 
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
   safe:{flex:1,backgroundColor:c.bg},
+  motionRow:{flexDirection:"row",alignItems:"center",gap:12,paddingVertical:12,marginTop:6},motionCopy:{flex:1},motionSwitch:{width:46,height:27,borderRadius:99,backgroundColor:c.border,padding:3,justifyContent:"center"},motionSwitchOn:{backgroundColor:c.accent},motionKnob:{width:21,height:21,borderRadius:11,backgroundColor:"#FFFFFF",alignSelf:"flex-start"},motionKnobOn:{alignSelf:"flex-end"},
   sectionHeading:{flexDirection:"row",alignItems:"center",gap:12,marginTop:18,marginBottom:10},sectionIcon:{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"},sectionCopy:{flex:1},sectionTitle:{color:c.text,fontSize:15,fontWeight:"900"},sectionSub:{color:c.muted,fontSize:11,marginTop:3},choiceRow:{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12},choiceChip:{minWidth:47,paddingHorizontal:12,paddingVertical:10,borderRadius:12,borderWidth:1,borderColor:c.border,backgroundColor:c.input,alignItems:"center"},choiceChipActive:{backgroundColor:c.accentSoft,borderColor:c.accent},choiceText:{color:c.muted,fontSize:12,fontWeight:"800"},choiceTextActive:{color:c.accent},preferenceDivider:{height:1,backgroundColor:c.border,marginVertical:16},
   container:{padding:20,paddingTop:22,paddingBottom:25},
   center:{flex:1,alignItems:"center",justifyContent:"center"},
