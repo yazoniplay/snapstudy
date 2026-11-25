@@ -1,4 +1,5 @@
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
+import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../components/LocalizedText";
 import { useEffect, useRef, useState } from "react";
 import { useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
