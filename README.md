@@ -5,11 +5,13 @@ SnapStudy is an Expo app that turns photos of handwritten notes into study mater
 ## Features
 - Scan notes
 - AI extraction into summaries, flashcards, quizzes, and practice tests
+- Organized Study hub with separate sections for learning, planning, focus, progress, and study buddies
+- Private friend chat with images and gifts, plus message replies, reactions, editing, and soft deletion
 - XP, levels, daily quests, and achievements
 
 ## AI provider fallback
 
-The `analyze-notes` Supabase Edge Function tries each configured provider in order. A provider failure, timeout, or invalid study JSON causes it to continue to the next provider. Requests are time-bounded (Gemini 14s, Groq 10s, Cloudflare 8s, other providers 5s) so the fallback chain stays within the Edge Function runtime.
+The `analyze-notes` Supabase Edge Function tries configured providers in order. It extracts JSON from responses with surrounding prose or Markdown, repairs common trailing-comma errors, validates the lesson and practice arrays, and uses JSON mode for compatible providers. Provider errors and timeouts continue to the next configured provider.
 
 Supported provider IDs: `gemini`, `groq`, `nvidia`, `tokenharbor`, `huggingface`, `openrouter`, `vercel`, `zai`, `siliconflow`, `orcarouter`, `bazaarlink`, `cloudflare`, and `sambanova`, remote/cloud `ollama`, `agentrouter`, `routeway`, `requesty`, `fastrouter`, `opencodezen`, `llm7`, and `aihorde`.
 
