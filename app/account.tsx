@@ -27,8 +27,7 @@ export default function Account() {
   const [dailyGoal, setDailyGoal] = useState(30);
   const [focusMinutes, setFocusMinutes] = useState(25);
   const [breakMinutes, setBreakMinutes] = useState(5);
-  const [settingsReady, setSettingsReady] = useState(false);
-  useEffect(() => { AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); setSettingsReady(true); }).catch(()=>setSettingsReady(true)); }, []);
+  useEffect(() => { AsyncStorage.multiGet(["snapstudy:daily-goal","snapstudy:focus-minutes","snapstudy:break-minutes"]).then(values => { const goal=Number(values[0]?.[1]); const focus=Number(values[1]?.[1]); const rest=Number(values[2]?.[1]); if([15,30,45,60,90].includes(goal))setDailyGoal(goal); if([15,20,25,30,45].includes(focus))setFocusMinutes(focus); if([5,10,15].includes(rest))setBreakMinutes(rest); }).catch(()=>{}); }, []);
   function savePreference(key: string, value: number, setter: (value:number)=>void) { setter(value); AsyncStorage.setItem(key,String(value)).catch(()=>{}); supabase.auth.updateUser({data:{[key.replace("snapstudy:","").replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase())]:value}}).then(()=>{}).catch(()=>{}); }
   const colorPresets = ["#8B5CF6","#EC4899","#EF4444","#F97316","#EAB308","#22C55E","#14B8A6","#06B6D4","#3B82F6","#F8FAFC"];
   useEffect(() => { setColorDraft(accentColor); }, [accentColor]);
