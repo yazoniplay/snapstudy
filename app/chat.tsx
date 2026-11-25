@@ -160,7 +160,7 @@ export default function Chat() {
       <View style={s.composerWrap}>
         <Pressable style={s.toolButton} onPress={sendImage} disabled={sending||!userId} accessibilityLabel="Send image"><Ionicons name="image-outline" size={21} color={c.accent}/></Pressable>
         <Pressable style={[s.toolButton,giftPicker&&s.toolButtonActive]} onPress={()=>setGiftPicker(v=>!v)} accessibilityLabel="Send a gift"><Ionicons name="gift-outline" size={21} color={c.accent}/></Pressable>
-        <TextInput value={draft} onChangeText={setDraft} placeholder="Message your study buddy…" placeholderTextColor={c.subtle} multiline maxLength={2000} style={s.input} returnKeyType="default"/>
+        <TextInput value={draft} onChangeText={setDraft} placeholder={editingMessageId ? "Edit message…" : "Message your study buddy…"} placeholderTextColor={c.subtle} multiline maxLength={2000} style={s.input} returnKeyType="default"/>
         <Pressable style={[s.sendButton,(!draft.trim()||sending)&&{opacity:0.55}]} onPress={sendText} disabled={!draft.trim()||sending||!userId} accessibilityLabel="Send message">{sending?<ActivityIndicator size="small" color={c.onAccent}/>:<Ionicons name="arrow-up" size={21} color={c.onAccent}/>}</Pressable>
       </View>
     </KeyboardAvoidingView>
