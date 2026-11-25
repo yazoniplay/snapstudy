@@ -129,19 +129,19 @@ export default function Home() {
         </View>
         <Pressable onPress={()=>router.push("/account")} style={{width:46,height:46,borderRadius:16,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
       </View>
-      <Animated.View style={{transform:[{scale:cardScale}]}}><Pressable onPressIn={()=>Animated.spring(cardScale,{toValue:0.985,useNativeDriver:true,speed:28,bounciness:4}).start()} onPressOut={()=>Animated.spring(cardScale,{toValue:1,useNativeDriver:true,speed:22,bounciness:6}).start()}><View style={{backgroundColor:glass,borderRadius:26,borderWidth:1,borderColor:glassEdge,padding:22,overflow:"hidden",shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:mode==="dark"?0.24:0.12,shadowRadius:24,shadowOffset:{width:0,height:12},elevation:7}}>
-        <BlurView intensity={mode==="dark"?38:52} tint={mode==="dark"?"dark":"light"} style={StyleSheet.absoluteFill}/>
-        <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:13}}>
-          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><View style={{width:7,height:7,borderRadius:4,backgroundColor:c.accent}}/><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.5}}>{language==="sv"?"DAGS ATT PLUGGA":"READY TO STUDY"}</Text></View>
-          <Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>25 min · 1 goal</Text>
-        </View>
-        <Text style={{color:c.text,fontSize:25,fontWeight:"900",letterSpacing:-0.7,lineHeight:31}}>{language==="sv"?"Små steg. Stora framsteg.":"Small steps. Big progress."}</Text>
-        <Text style={{color:c.muted,fontSize:13,lineHeight:20,marginTop:7,marginBottom:18}}>{language==="sv"?"Skanna dina anteckningar och gör dem till aktiv repetition.":"Turn your notes into flashcards, quizzes and focused practice."}</Text>
-        <View style={{flexDirection:"row",gap:9}}>
-          <Pressable onPress={cameraOpen} disabled={busy} style={{flex:1,minHeight:47,borderRadius:14,backgroundColor:c.accent,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:8}}><Ionicons name="camera-outline" size={18} color={c.onAccent}/><Text style={{color:c.onAccent,fontSize:12,fontWeight:"900"}}>{busy?"Preparing…":t("scanNotes")}</Text></Pressable>
-          <Pressable onPress={library} disabled={busy} style={{width:48,minHeight:47,borderRadius:14,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"}}><Ionicons name="images-outline" size={20} color={c.accent}/></Pressable>
-        </View>
-      </View></Pressable></Animated.View>
+      <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
+        {([
+          {title:language==="sv"?"Skanna anteckningar":"Scan notes",sub:language==="sv"?"Foto → studiepaket":"Photo to study set",icon:"camera-outline" as const,colors:["#8B5CF6","#6D28D9"] as [string,string],onPress:cameraOpen},
+          {title:language==="sv"?"Skapa med text":"Create from text",sub:language==="sv"?"Klistra in anteckningar":"Paste your notes",icon:"document-text-outline" as const,colors:["#F97365","#EA580C"] as [string,string],onPress:()=>{ if(pastedNotes.trim().length>=20) makeStudyFromText(); else Alert.alert(language==="sv"?"Klistra in anteckningar":"Paste your notes","Add your notes in the text box below, then create your study set."); }},
+          {title:language==="sv"?"Fokusrum":"Focus room",sub:"Pomodoro · 25 min",icon:"timer-outline" as const,colors:["#F59E0B","#EA580C"] as [string,string],onPress:()=>router.push("/focus")},
+          {title:language==="sv"?"Studie-set":"Study sets",sub:language==="sv"?"Repetera och fortsätt":"Review and continue",icon:"albums-outline" as const,colors:["#0EA5E9","#2563EB"] as [string,string],onPress:()=>router.push("/history")}
+        ]).map((item,index)=><Pressable key={item.title} onPress={item.onPress} disabled={busy&&index===0} style={{width:"48.5%",flexGrow:1,minWidth:145,borderRadius:19,overflow:"hidden",minHeight:112}}>
+          <LinearGradient colors={item.colors} start={{x:0,y:0}} end={{x:1,y:1}} style={{flex:1,minHeight:112,padding:15,justifyContent:"space-between"}}>
+            <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}><View style={{width:34,height:34,borderRadius:11,backgroundColor:"rgba(255,255,255,0.22)",alignItems:"center",justifyContent:"center"}}><Ionicons name={item.icon} size={19} color="#FFFFFF"/></View><Ionicons name="arrow-up-right" size={17} color="rgba(255,255,255,0.9)"/></View>
+            <View><Text style={{color:"#FFFFFF",fontSize:14,fontWeight:"900",letterSpacing:-0.2}}>{item.title}</Text><Text style={{color:"rgba(255,255,255,0.82)",fontSize:10,fontWeight:"700",marginTop:4}}>{item.sub}</Text></View>
+          </LinearGradient>
+        </Pressable>)}
+      </View>
       <View style={{padding:20,borderRadius:23,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:10}}>
         <View style={{flexDirection:"row",alignItems:"center",gap:9}}>
           <View style={{width:36,height:36,borderRadius:12,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="clipboard-outline" size={19} color={c.accent}/></View>
