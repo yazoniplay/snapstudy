@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import BottomNav from "../components/BottomNav";
 import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { ACHIEVEMENTS, getDailyQuestProgress, getLevel, loadGamification, type GamificationState } from "../lib/gamification";
@@ -14,7 +13,7 @@ export default function Progress() {
   const [name,setName] = useState("Student"); const [avatar,setAvatar] = useState<string|null>(null); const [streak,setStreak] = useState(0); const [loading,setLoading] = useState(true);
   useEffect(() => { let active=true; (async()=>{try{const [{data:{user}},next]=await Promise.all([supabase.auth.getUser(),loadGamification()]);if(!user){router.replace("/auth");return;}const {data}=await supabase.from("profiles").select("display_name,avatar_url,current_streak").eq("id",user.id).maybeSingle();if(active){setName(data?.display_name||user.user_metadata?.full_name||"Student");setAvatar(data?.avatar_url||null);setStreak(data?.current_streak||0);setState(next);}}catch(e){console.warn("Progress load failed",e);}finally{if(active)setLoading(false);}})();return()=>{active=false};},[]);
   const level = getLevel(state?.totalXp||0); const quests = state ? getDailyQuestProgress(state) : [];
-  if(loading||!state)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator color={c.accent}/><Text style={s.muted}>Loading your adventure…</Text></View><BottomNav/></SafeAreaView>;
+  if(loading||!state)return <SafeAreaView style={s.safe}><View style={s.center}><ActivityIndicator color={c.accent}/><Text style={s.muted}>Loading your adventure…</Text></View></SafeAreaView>;
   return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
     <Pressable onPress={()=>router.back()} style={s.backButton}><Ionicons name="arrow-back" size={17} color={c.text}/><Text style={s.back}>Back</Text></Pressable>
     <View style={s.gameHero}>
@@ -37,7 +36,7 @@ export default function Progress() {
     <View style={s.streakCard}><Text style={s.streakEmoji}>🔥</Text><View style={{flex:1}}><Text style={s.streakNum}>{streak} day{streak===1?"":"s"} in a row</Text><Text style={s.muted}>Show up tomorrow to keep your streak alive.</Text></View><Ionicons name="chevron-forward" size={18} color={c.muted}/></View>
     <View style={s.sectionHead}><Text style={s.sectionTitle}>Earn XP</Text></View><View style={s.rules}><Text style={s.rule}>🎴 Review a flashcard <Text style={s.ruleXp}>+5 XP</Text></Text><Text style={s.rule}>🎯 Complete a quiz <Text style={s.ruleXp}>+25 XP</Text></Text><Text style={s.rule}>⏱ Finish a 25-minute focus <Text style={s.ruleXp}>+40 XP</Text></Text><Text style={s.rule}>🏅 Unlock achievements <Text style={s.ruleXp}>bonus XP</Text></Text></View>
     <Pressable style={s.primary} onPress={()=>router.push("/")}><Ionicons name="flash" size={18} color="#FFFFFF"/><Text style={s.primaryText}>Start a study run</Text><Ionicons name="arrow-forward" size={17} color="#FFFFFF"/></Pressable>
-  </ScrollView><BottomNav/></SafeAreaView>;
+  </ScrollView></SafeAreaView>;
 }
 const styles=(c:ThemeColors)=>StyleSheet.create({
  safe:{flex:1,backgroundColor:c.bg},container:{padding:18,paddingTop:12,paddingBottom:30},center:{flex:1,alignItems:"center",justifyContent:"center",gap:10},backButton:{flexDirection:"row",alignItems:"center",gap:7,alignSelf:"flex-start",paddingVertical:8,paddingRight:14,marginBottom:12},back:{color:c.text,fontSize:13,fontWeight:"800"},
