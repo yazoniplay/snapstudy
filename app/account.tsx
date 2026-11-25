@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert, Image, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
@@ -23,6 +24,10 @@ export default function Account() {
   const [colorDraft, setColorDraft] = useState(accentColor);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [profileAbout,setProfileAbout]=useState("");
+  const [profileStatus,setProfileStatus]=useState("Ready to study");
+  const [profileBanner,setProfileBanner]=useState("violet");
+  const [avatarEffect,setAvatarEffect]=useState("glow");
   const [handle, setHandle] = useState("");
   const [currentStreak, setCurrentStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
@@ -47,6 +52,10 @@ export default function Account() {
       }
       setEmail(user.email ?? "");
       setName((user.user_metadata?.full_name as string) ?? "");
+      setProfileAbout(typeof user.user_metadata?.profile_about==="string"?user.user_metadata.profile_about:"");
+      setProfileStatus(typeof user.user_metadata?.profile_status==="string"?user.user_metadata.profile_status:"Ready to study");
+      setProfileBanner(typeof user.user_metadata?.profile_banner==="string"?user.user_metadata.profile_banner:"violet");
+      setAvatarEffect(typeof user.user_metadata?.avatar_effect==="string"?user.user_metadata.avatar_effect:"glow");
       const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,current_streak,longest_streak").eq("id", user.id).maybeSingle();
       if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setCurrentStreak(profileResult.data.current_streak || 0); setLongestStreak(profileResult.data.longest_streak || 0); }
       supabase.from("profiles").update({ leaderboard_opt_in: true }).eq("id", user.id).then(() => {});
@@ -62,7 +71,7 @@ export default function Account() {
     if (!user) { setSaving(false); return; }
     const cleanName = name.trim().slice(0, 60) || "Student";
     const cleanHandle = handle.trim().toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24);
-    const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanName } });
+    const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanName, profile_about:profileAbout.slice(0,160), profile_status:profileStatus, profile_banner:profileBanner, avatar_effect:avatarEffect } });
     const { error: profileError } = await supabase.from("profiles").update({ display_name: cleanName, ...(cleanHandle.length >= 3 ? { username: cleanHandle } : {}) }).eq("id", user.id);
     setSaving(false);
     if (authError || profileError) Alert.alert(t("couldntSave"), authError?.message || profileError?.message || "Couldn't update profile.");
@@ -160,6 +169,24 @@ export default function Account() {
         <Pressable style={s.avatarWrap} onPress={chooseAvatar} disabled={avatarBusy}><View style={s.avatar}>{avatarUrl ? <Image source={{uri:avatarUrl}} style={s.avatarImage}/> : <Text style={s.avatarText}>{(name || email)[0]?.toUpperCase() ?? "S"}</Text>}</View><Text style={s.avatarEdit}>{avatarBusy ? "Uploading…" : "Change photo ↗"}</Text></Pressable>
 
         <View style={s.card}>
+          <Text style={s.cardTitle}>{language==="sv"?"Profilförhandsvisning":language==="ar"?"معاينة الملف الشخصي":"Profile preview"}</Text>
+          <LinearGradient colors={(profileBanner==="ocean"?["#0EA5E9","#2563EB"]:profileBanner==="sunset"?["#F97316","#DB2777"]:profileBanner==="forest"?["#10B981","#047857"]:["#8B5CF6","#4F46E5"]) as [string,string]} style={{borderRadius:18,padding:16,minHeight:150,justifyContent:"flex-end",overflow:"hidden"}}>
+            <View style={{flexDirection:"row",alignItems:"center",gap:12}}>
+              <View style={{padding:avatarEffect==="glow"?4:2,borderRadius:40,borderWidth:avatarEffect==="none"?0:2,borderColor:avatarEffect==="glow"?"#FFFFFFCC":avatarEffect==="aura"?"#FDE68A":"transparent",backgroundColor:avatarEffect==="glow"?"#FFFFFF33":"transparent"}}>
+                <View style={{width:54,height:54,borderRadius:30,overflow:"hidden",backgroundColor:"#FFFFFF33",alignItems:"center",justifyContent:"center"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:54,height:54}}/>:<Text style={{fontSize:22,fontWeight:"900",color:"#FFFFFF"}}>{(name||email)[0]?.toUpperCase()||"S"}</Text>}</View>
+              </View>
+              <View style={{flex:1}}><Text style={{fontSize:19,fontWeight:"900",color:"#FFFFFF"}}>{name||"Student"}</Text><Text style={{fontSize:12,color:"#FFFFFFDD"}}>@{handle||"your_handle"}</Text><View style={{alignSelf:"flex-start",marginTop:5,backgroundColor:"#00000030",paddingHorizontal:9,paddingVertical:4,borderRadius:12}}><Text style={{fontSize:11,color:"#FFFFFF"}}>{profileStatus}</Text></View></View>
+            </View>
+            {!!profileAbout.trim()&&<Text numberOfLines={2} style={{color:"#FFFFFF",fontSize:12,marginTop:10}}>{profileAbout}</Text>}
+          </LinearGradient>
+          <Text style={s.cardText}>{language==="sv"?"Profilbanner":"Profile banner"}</Text>
+          <View style={s.choiceRow}>{(["violet","ocean","sunset","forest"] as const).map(value=><Pressable key={value} onPress={()=>{setProfileBanner(value);supabase.auth.updateUser({data:{profile_banner:value}}).catch(()=>{});}} style={[s.choiceChip,profileBanner===value&&s.choiceChipActive]}><Text style={[s.choiceText,profileBanner===value&&s.choiceTextActive]}>{value==="violet"?"Violet":value==="ocean"?"Ocean":value==="sunset"?"Sunset":"Forest"}</Text></Pressable>)}</View>
+          <Text style={s.cardText}>{language==="sv"?"Avatar-effekt":"Avatar effect"}</Text>
+          <View style={s.choiceRow}>{(["none","glow","aura"] as const).map(value=><Pressable key={value} onPress={()=>{setAvatarEffect(value);supabase.auth.updateUser({data:{avatar_effect:value}}).catch(()=>{});}} style={[s.choiceChip,avatarEffect===value&&s.choiceChipActive]}><Text style={[s.choiceText,avatarEffect===value&&s.choiceTextActive]}>{value==="none"?(language==="sv"?"Ingen":"None"):value==="glow"?(language==="sv"?"Glöd":"Glow"):(language==="sv"?"Aura":"Aura")}</Text></Pressable>)}</View>
+        </View>
+        <View style={s.card}>
+          <Text style={s.label}>{language==="sv"?"Status":"Status"}</Text><TextInput value={profileStatus} onChangeText={setProfileStatus} maxLength={48} placeholder={language==="sv"?"Redo att plugga":"Ready to study"} placeholderTextColor={c.subtle} style={s.input}/>
+          <Text style={s.label}>{language==="sv"?"Om mig":"About me"}</Text><TextInput value={profileAbout} onChangeText={setProfileAbout} maxLength={160} multiline placeholder={language==="sv"?"Skriv något om dig…":"A little about you…"} placeholderTextColor={c.subtle} style={[s.input,{minHeight:78,textAlignVertical:"top"}]}/>
           <Text style={s.label}>{t("name")}</Text>
           <TextInput value={name} onChangeText={setName} placeholder={t("yourName")} placeholderTextColor={c.subtle} style={s.input} />
           <Text style={s.label}>{t("usernameLabel")}</Text><TextInput value={handle} onChangeText={setHandle} placeholder="your_handle" autoCapitalize="none" autoCorrect={false} maxLength={24} placeholderTextColor={c.subtle} style={s.input} /><Text style={s.label}>{t("email")}</Text>
