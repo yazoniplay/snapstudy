@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type AppLanguage = "en" | "sv" | "ar" | "es" | "fr" | "de" | "pt" | "hi" | "zh" | "ja" | "tr";
@@ -81,6 +82,9 @@ type LanguageContextValue = { language: AppLanguage; setLanguage: (language: App
 const Context = createContext<LanguageContextValue>({language:"en",setLanguage:()=>{},t:(key)=>dictionaries.en[key]});
 export function LanguageProvider({children}:{children:React.ReactNode}) {
  const [language,setLanguageState]=useState<AppLanguage>("en");
+ const languageRef=useRef<AppLanguage>(language);languageRef.current=language;
+ useEffect(()=>{const alertAny=Alert as any;const original=alertAny.alert;alertAny.alert=(title:string,message?:string,buttons?:any[],options?:any)=>original(translateUiText(title,languageRef.current),message?translateUiText(message,languageRef.current):message,buttons?.map(button=>({...button,text:button.text?translateUiText(button.text,languageRef.current):button.text})),options);return()=>{alertAny.alert=original;};},[]);
+
  useEffect(()=>{AsyncStorage.getItem("snapstudy:language").then(value=>{if(["en","sv","ar","es","fr","de","pt","hi","zh","ja","tr"].includes(value||""))setLanguageState(value as AppLanguage)}).catch(()=>{});},[]);
  const setLanguage=(next:AppLanguage)=>{setLanguageState(next);AsyncStorage.setItem("snapstudy:language",next).catch(()=>{});};
  const value=useMemo(()=>({language,setLanguage,t:(key:TranslationKey)=>((dictionaries as any)[language]?.[key]||(extraDictionaries[language] as any)?.[key]||dictionaries.en[key])}),[language]);
