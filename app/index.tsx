@@ -24,7 +24,7 @@ export default function Home() {
   const glassEdge = mode === "dark" ? "rgba(255,255,255,0.19)" : "rgba(255,255,255,0.92)";
   const cardScale = useRef(new Animated.Value(1)).current; const {t,language}=useLanguage();
   const s = makeStyles(c);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n  const [pastedNotes,setPastedNotes]=useState("");
   const [booting, setBooting] = useState(true);
   const [camera, setCamera] = useState(false);
   const [firstName, setFirstName] = useState("there");
@@ -86,7 +86,7 @@ export default function Home() {
     return () => { active = false; };
   }, []);
 
-  async function openImages(uris: string[]) {
+  async function makeStudyFromText(){\n    const notes=pastedNotes.trim();\n    if(notes.length<20){Alert.alert("Add your notes","Paste at least a few lines of notes first.");return;}\n    try{setBusy(true);await AsyncStorage.setItem("snapstudy:pending-notes",notes);router.push("/study?notes=1");}\n    catch{Alert.alert("Couldn’t save notes","Please try again.");}\n    finally{setBusy(false);}\n  }\n\n  async function openImages(uris: string[]) {
     if (!uris.length) return;
     try {
       setBusy(true);
@@ -167,6 +167,15 @@ export default function Home() {
           <Pressable onPress={library} disabled={busy} style={{width:48,minHeight:47,borderRadius:14,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center"}}><Ionicons name="images-outline" size={20} color={c.accent}/></Pressable>
         </View>
       </View></Pressable></Animated.View>
+      <View style={{padding:16,borderRadius:21,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:10}}>
+        <View style={{flexDirection:"row",alignItems:"center",gap:9}}>
+          <View style={{width:36,height:36,borderRadius:12,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="clipboard-outline" size={19} color={c.accent}/></View>
+          <View style={{flex:1}}><Text style={{color:c.text,fontSize:14,fontWeight:"900"}}>{language==="sv"?"Klistra in anteckningar":"Paste your notes"}</Text><Text style={{color:c.muted,fontSize:11,marginTop:3}}>{language==="sv"?"Kopiera text från valfri app":"Copy text from any app or document"}</Text></View>
+        </View>
+        <TextInput value={pastedNotes} onChangeText={setPastedNotes} multiline textAlignVertical="top" placeholder={language==="sv"?"Klistra in dina anteckningar här…":"Paste your notes here…"} placeholderTextColor={c.subtle} style={{minHeight:120,maxHeight:240,padding:13,borderRadius:14,borderWidth:1,borderColor:c.border,backgroundColor:c.input,color:c.text,fontSize:13,lineHeight:20}}/>
+        <Pressable onPress={makeStudyFromText} disabled={busy||pastedNotes.trim().length<20} style={{minHeight:46,borderRadius:13,backgroundColor:pastedNotes.trim().length>=20?c.accent:c.border,alignItems:"center",justifyContent:"center",flexDirection:"row",gap:8}}><Ionicons name="sparkles" size={17} color={pastedNotes.trim().length>=20?c.onAccent:c.muted}/><Text style={{color:pastedNotes.trim().length>=20?c.onAccent:c.muted,fontSize:12,fontWeight:"900"}}>{busy?(language==="sv"?"Förbereder…":"Preparing…"):(language==="sv"?"Skapa studiepaket":"Create study set from text")}</Text></Pressable>
+        <Text style={{color:c.subtle,fontSize:10,lineHeight:15}}>{language==="sv"?"Skapar sammanfattning, kort, quiz och övningsfrågor.":"Generates a summary, flashcards, quiz and practice questions."}</Text>
+      </View>
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:10}}>
         <Pressable onPress={()=>router.push("/focus")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:glass,borderWidth:1,borderColor:glassEdge,shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:0.12,shadowRadius:14,shadowOffset:{width:0,height:6},elevation:3}}>
           <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="timer-outline" size={20} color={c.accent}/></View>
