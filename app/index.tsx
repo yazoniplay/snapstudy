@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useWindowDimensions } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Alert, Animated, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useFocusEffect } from "expo-router";
@@ -30,6 +29,7 @@ export default function Home() {
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [pastedNotes,setPastedNotes]=useState("");
+  const [notesModal,setNotesModal]=useState(false);
   const [booting, setBooting] = useState(true);
   const [camera, setCamera] = useState(false);
   const [firstName, setFirstName] = useState("there");
@@ -84,8 +84,8 @@ export default function Home() {
 
   async function makeStudyFromText(){
     const notes=pastedNotes.trim();
-    if(notes.length<20){Alert.alert("Add your notes","Paste at least a few lines of notes first.");return;}
-    try{setBusy(true);await AsyncStorage.setItem("snapstudy:pending-notes",notes);router.push("/study?notes=1");}
+    if(notes.length<20){Alert.alert(language==="sv"?"Lägg till anteckningar":"Add your notes",language==="sv"?"Klistra in några rader först.":"Paste at least a few lines first.");return;}
+    try{setBusy(true);const storage=await import("@react-native-async-storage/async-storage");await storage.default.setItem("snapstudy:pending-notes",notes);setNotesModal(false);router.push("/study?notes=1");}
     catch{Alert.alert("Couldn’t save notes","Please try again.");}
     finally{setBusy(false);}
   }
@@ -135,6 +135,7 @@ export default function Home() {
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
         {([
           {title:language==="sv"?"Skanna anteckningar":"Scan notes",sub:language==="sv"?"Foto → studiepaket":"Photo to study set",icon:"camera-outline" as const,colors:["#8B5CF6","#6D28D9"] as [string,string],onPress:cameraOpen},
+          {title:language==="sv"?"Skapa med text":"Create from text",sub:language==="sv"?"Klistra in anteckningar":"Paste your notes",icon:"document-text-outline" as const,colors:["#F97365","#EA580C"] as [string,string],onPress:()=>setNotesModal(true)},
           {title:language==="sv"?"Fokusrum":"Focus room",sub:"Pomodoro · 25 min",icon:"timer-outline" as const,colors:["#F59E0B","#EA580C"] as [string,string],onPress:()=>router.push("/focus")},
           {title:language==="sv"?"Studie-set":"Study sets",sub:language==="sv"?"Repetera och fortsätt":"Review and continue",icon:"albums-outline" as const,colors:["#0EA5E9","#2563EB"] as [string,string],onPress:()=>router.push("/history")}
         ]).map((item,index)=><Pressable key={item.title} onPress={item.onPress} disabled={busy&&index===0} style={{width:"48.5%",flexGrow:1,minWidth:145,borderRadius:19,overflow:"hidden",minHeight:112}}>
@@ -144,14 +145,19 @@ export default function Home() {
           </LinearGradient>
         </Pressable>)}
       </View>
-      <View style={{padding:20,borderRadius:23,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:10}}>
-        <View style={{flexDirection:"row",alignItems:"center",gap:9}}>
-          <View style={{width:36,height:36,borderRadius:12,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="clipboard-outline" size={19} color={c.accent}/></View>
-          <View style={{flex:1}}><Text style={{color:c.text,fontSize:14,fontWeight:"900"}}>{language==="sv"?"Klistra in anteckningar":"Paste your notes"}</Text><Text style={{color:c.muted,fontSize:11,marginTop:3}}>{language==="sv"?"Kopiera text från valfri app":"Copy text from any app or document"}</Text></View>
+      <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
+        <Pressable onPress={()=>router.push("/progress")} style={{flex:1,minWidth:155,padding:16,borderRadius:18,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:8}}>
+          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="trophy-outline" size={17} color={c.accent}/><Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>{language==="sv"?"DIN NIVÅ":"YOUR LEVEL"}</Text></View>
+          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{level.level}</Text><Text style={{color:c.muted,fontSize:11}}>{language==="sv"?"Fortsätt samla XP":"Keep earning XP"} →</Text>
+        </Pressable>
+        <Pressable onPress={()=>router.push("/progress")} style={{flex:1,minWidth:155,padding:16,borderRadius:18,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:8}}>
+          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="flash-outline" size={17} color="#F59E0B"/><Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>TOTAL XP</Text></View>
+          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()}</Text><Text style={{color:c.muted,fontSize:11}}>{language==="sv"?"Se dina framsteg":"View your progress"} →</Text>
+        </Pressable>
+        <View style={{flex:1,minWidth:210,padding:16,borderRadius:18,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.accent+"55",gap:8}}>
+          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="bulb-outline" size={17} color={c.accent}/><Text style={{color:c.accent,fontSize:10,fontWeight:"900"}}>{language==="sv"?"STUDIETIPS":"STUDY TIP"}</Text></View>
+          <Text style={{color:c.text,fontSize:13,fontWeight:"900"}}>{language==="sv"?"Testa dig själv":"Test yourself"}</Text><Text style={{color:c.muted,fontSize:11,lineHeight:16}}>{language==="sv"?"Försök svara innan du vänder på kortet. Att plocka fram svaret stärker minnet.":"Try recalling the answer before flipping a flashcard. Retrieval practice helps make it stick."}</Text>
         </View>
-        <TextInput value={pastedNotes} onChangeText={setPastedNotes} multiline textAlignVertical="top" placeholder={language==="sv"?"Klistra in dina anteckningar här…":"Paste your notes here…"} placeholderTextColor={c.subtle} style={{minHeight:130,maxHeight:260,padding:13,borderRadius:14,borderWidth:1,borderColor:c.border,backgroundColor:c.input,color:c.text,fontSize:13,lineHeight:20}}/>
-        <Pressable onPress={makeStudyFromText} disabled={busy||pastedNotes.trim().length<20} style={{minHeight:46,borderRadius:13,backgroundColor:pastedNotes.trim().length>=20?c.accent:c.border,alignItems:"center",justifyContent:"center",flexDirection:"row",gap:8}}><Ionicons name="sparkles" size={17} color={pastedNotes.trim().length>=20?c.onAccent:c.muted}/><Text style={{color:pastedNotes.trim().length>=20?c.onAccent:c.muted,fontSize:12,fontWeight:"900"}}>{busy?(language==="sv"?"Förbereder…":"Preparing…"):(language==="sv"?"Skapa studiepaket":"Create study set from text")}</Text></Pressable>
-        <Text style={{color:c.subtle,fontSize:10,lineHeight:15}}>{language==="sv"?"Skapar sammanfattning, kort, quiz och övningsfrågor.":"Generates a summary, flashcards, quiz and practice questions."}</Text>
       </View>
       <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:10}}>
         <Pressable onPress={()=>router.push("/focus")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:glass,borderWidth:1,borderColor:glassEdge,shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:0.12,shadowRadius:14,shadowOffset:{width:0,height:6},elevation:3}}>
@@ -179,7 +185,17 @@ export default function Home() {
         <View style={{flex:1}}><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.3}}>SNAPSTUDY PLUS</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Mer fokus. Mer framsteg.":"Make every study session count."}</Text></View><Ionicons name="chevron-forward" size={17} color={c.accent}/>
       </Pressable>
       <AdBanner />
-    </Animated.ScrollView><BottomNav/>
+    </Animated.ScrollView>    <Modal visible={notesModal} transparent animationType="fade" onRequestClose={()=>setNotesModal(false)}>
+      <View style={{flex:1,backgroundColor:"rgba(5,8,18,0.72)",justifyContent:"center",padding:22}}>
+        <View style={{backgroundColor:c.surface,borderColor:c.border,borderWidth:1,borderRadius:24,padding:20,gap:13}}>
+          <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}><Text style={{color:c.text,fontSize:19,fontWeight:"900"}}>{language==="sv"?"Skapa med text":"Create from text"}</Text><Pressable onPress={()=>setNotesModal(false)}><Ionicons name="close" size={24} color={c.muted}/></Pressable></View>
+          <Text style={{color:c.muted,fontSize:12}}>{language==="sv"?"Klistra in dina anteckningar så skapar SnapStudy ett studiepaket.":"Paste your notes and SnapStudy will turn them into a study set."}</Text>
+          <TextInput value={pastedNotes} onChangeText={setPastedNotes} multiline textAlignVertical="top" placeholder={language==="sv"?"Klistra in anteckningar här…":"Paste notes here…"} placeholderTextColor={c.subtle} style={{minHeight:150,maxHeight:260,padding:14,borderRadius:15,borderWidth:1,borderColor:c.border,backgroundColor:c.input,color:c.text,fontSize:13,lineHeight:20}}/>
+          <Pressable onPress={makeStudyFromText} disabled={busy||pastedNotes.trim().length<20} style={{minHeight:48,borderRadius:14,backgroundColor:pastedNotes.trim().length>=20?c.accent:c.border,alignItems:"center",justifyContent:"center",flexDirection:"row",gap:8}}><Ionicons name="sparkles" size={17} color={pastedNotes.trim().length>=20?c.onAccent:c.muted}/><Text style={{color:pastedNotes.trim().length>=20?c.onAccent:c.muted,fontSize:12,fontWeight:"900"}}>{busy?(language==="sv"?"Förbereder…":"Preparing…"):(language==="sv"?"Skapa studiepaket":"Create study set")}</Text></Pressable>
+        </View>
+      </View>
+    </Modal>
+<BottomNav/>
   </SafeAreaView>;
 }
 
