@@ -193,7 +193,7 @@ serve(async(req)=>{
   const failures=[],deadline=Date.now()+112000;
   for(const p of ps){
    const remaining=deadline-Date.now();if(remaining<4000){failures.push("remaining providers skipped: request time budget reached");break;}
-   try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText,Math.min(remaining,30000));console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}
+   try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText,Math.min(remaining,45000));console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}
    catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}
   }
   throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
