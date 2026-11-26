@@ -43,7 +43,7 @@ export const ACHIEVEMENTS = [
 
 export async function loadGamification(): Promise<GamificationState> {
   const value = await loadStudyData<GamificationState>(KEY, EMPTY_GAMIFICATION);
-  return { ...EMPTY_GAMIFICATION, ...value, stats: { ...EMPTY_GAMIFICATION.stats, ...(value?.stats || {}) }, events: Array.isArray(value?.events) ? value.events : [], achievements: Array.isArray(value?.achievements) ? value.achievements : [], streakFreezes: Math.max(0, Number(value?.streakFreezes)||0), streakFreezeDates: Array.isArray(value?.streakFreezeDates) ? value.streakFreezeDates : [] };
+  return { ...EMPTY_GAMIFICATION, ...value, stats: { ...EMPTY_GAMIFICATION.stats, ...(value?.stats || {}) }, events: Array.isArray(value?.events) ? value.events : [], achievements: Array.isArray(value?.achievements) ? value.achievements : [], streakFreezes: value?.streakFreezes===undefined?(Array.isArray(value?.achievements)&&value.achievements.includes("streak-7")?1:0):Math.max(0,Number(value.streakFreezes)||0), streakFreezeDates: Array.isArray(value?.streakFreezeDates) ? value.streakFreezeDates : [] };
 }
 export function getLevel(totalXp: number) {
   const xp = Math.max(0, Math.floor(totalXp || 0));
