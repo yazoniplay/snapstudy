@@ -23,7 +23,7 @@ function AppStack() {
         await supabase.removeChannel(previous);
       }
       if (!userId || disposed) return;
-      const channel = supabase.channel("snapstudy-presence", { config: { presence: { key: userId } } });
+      const channel = supabase.channel("snapstudy-presence:" + userId, { config: { presence: { key: userId } } });
       presenceRef.current = channel;
       channel.subscribe(async status => {
         if (status === "SUBSCRIBED" && !disposed && presenceRef.current === channel) {
