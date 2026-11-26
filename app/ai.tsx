@@ -162,6 +162,8 @@ export default function SnapStudyAI() {
             const activity = await saveAIStudyActivity("quiz", { title: parsed.title, questions: parsed.questions });
             await saveStudyData("snapstudy:ai-quiz-active", { title: parsed.title, questions: parsed.questions, activityId: activity.id });
             generatedRoute = "/ai-quiz";
+          } else {
+            answer = sv ? "Quizet kunde inte skapas med exakt rätt antal frågor. Försök igen." : "I could not create a quiz with exactly the requested number of questions. Please try again."; 
           }
         } else if (flashAt >= 0) {
           const parsed = JSON.parse(answer.slice(flashAt + flashcardMarker.length).trim());
@@ -178,7 +180,7 @@ export default function SnapStudyAI() {
             generatedRoute = "/ai-guide";
           }
         }
-      } catch { generatedRoute = null; }
+      } catch { generatedRoute = null; if (answer.includes(quizMarker)) answer = sv ? "Quizet kunde inte skapas korrekt. Försök igen." : "The quiz could not be generated correctly. Please try again."; }
       if (generatedRoute) answer = sv ? "Din interaktiva studieaktivitet är klar. Nu öppnar vi den!" : "Your interactive study activity is ready. Opening it now!";
       const completed = { ...updated, updatedAt: Date.now(), messages: [...updated.messages, { id: Date.now() + "-a", role: "assistant" as const, content: answer, createdAt: Date.now() }].slice(-80) };
       await persist([completed, ...first.filter(x => x.id !== target!.id)]);
