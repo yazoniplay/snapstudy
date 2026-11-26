@@ -79,7 +79,7 @@ function researchContext(sources:ResearchSource[]){
 }
 function json(data:any,status=200){return new Response(JSON.stringify(data),{status,headers:{...cors,"Content-Type":"application/json"}});}
 async function timedFetch(url:string,init:RequestInit,ms=22000){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),ms);try{return await fetch(url,{...init,signal:controller.signal});}finally{clearTimeout(timer);}}
-async function callGemini(key:string,model:string,messages:Msg[],context:string,prompt=systemPrompt){
+async function callGemini(key:string,model:string,messages:Msg[],context:string,prompt=systemPrompt,maxTokens=2048){
  const geminiStarted=Date.now();
  const candidates=[model,"gemini-3.1-flash-lite","gemini-3.8-flash","gemini-3.5-flash"].filter((x,i,a)=>x&&!/^gemini-2\.5-/i.test(x)&&a.indexOf(x)===i);
  const errors:string[]=[];
@@ -87,7 +87,7 @@ async function callGemini(key:string,model:string,messages:Msg[],context:string,
   const geminiRemaining=45000-(Date.now()-geminiStarted);if(geminiRemaining<4000)break;
   try{
    const contents=messages.map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:m.content},...(m.imageBase64?[{inlineData:{mimeType:m.imageMimeType||"image/jpeg",data:m.imageBase64}}]:[])]}));
-   const response=await timedFetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(candidate)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:prompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context}]},contents,generationConfig:{temperature:0.45,maxOutputTokens:8192}})},Math.min(24000,geminiRemaining));
+   const response=await timedFetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(candidate)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:prompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context}]},contents,generationConfig:{temperature:0.45,maxOutputTokens:maxTokens}})},Math.min(24000,geminiRemaining));
    const raw=await response.text();let data:any;try{data=JSON.parse(raw);}catch{throw new Error("Gemini returned malformed JSON: "+raw.slice(0,160));}
    if(!response.ok)throw new Error(data.error?.message||"Gemini HTTP "+response.status);
    const answer=data.candidates?.[0]?.content?.parts?.map((p:any)=>p.text||"").join("\n").trim();if(!answer)throw new Error("Gemini returned an empty answer");
@@ -96,8 +96,8 @@ async function callGemini(key:string,model:string,messages:Msg[],context:string,
  }
  throw new Error("Gemini models exhausted: "+errors.join(" | "));
 }
-async function callCompatible(base:string,key:string,model:string,messages:Msg[],context:string,prompt=systemPrompt,timeoutMs=28000){
- const response=await timedFetch(base.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key,"Accept":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:prompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context},...messages.map(m=>({role:m.role,content:m.imageBase64?[{type:"text",text:m.content},{type:"image_url",image_url:{url:"data:"+(m.imageMimeType||"image/jpeg")+";base64,"+m.imageBase64}}]:m.content}))],temperature:0.45,max_tokens:8192,stream:false})},timeoutMs);
+async function callCompatible(base:string,key:string,model:string,messages:Msg[],context:string,prompt=systemPrompt,timeoutMs=28000,maxTokens=2048){
+ const response=await timedFetch(base.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key,"Accept":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:prompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context},...messages.map(m=>({role:m.role,content:m.imageBase64?[{type:"text",text:m.content},{type:"image_url",image_url:{url:"data:"+(m.imageMimeType||"image/jpeg")+";base64,"+m.imageBase64}}]:m.content}))],temperature:0.45,max_tokens:maxTokens,stream:false})},timeoutMs);
  const raw=await response.text();
  if(!response.ok){let detail=raw;try{const e=JSON.parse(raw);detail=e.error?.message||e.message||raw;}catch{}throw new Error(String(detail).slice(0,500)||"Provider HTTP "+response.status);}
  let data:any;try{data=JSON.parse(raw);}catch{
@@ -109,8 +109,8 @@ async function callCompatible(base:string,key:string,model:string,messages:Msg[]
  const answer=data.choices?.[0]?.message?.content;if(typeof answer!=="string"||!answer.trim())throw new Error("Provider returned an empty answer");return answer.trim();
 }
 function normalizeMessages(input:any[]):Msg[]{
- let budget=140000;
- const selected=input.filter((m:any)=>["user","assistant"].includes(m?.role)&&typeof m?.content==="string").slice(-16);
+ let budget=60000;
+ const selected=input.filter((m:any)=>["user","assistant"].includes(m?.role)&&typeof m?.content==="string").slice(-12);
  const result:Msg[]=[];
  for(let i=selected.length-1;i>=0;i--){
   const m=selected[i];if(budget<=0)break;
@@ -148,7 +148,7 @@ Deno.serve(async(req:Request)=>{
   const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());providers.sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return(x<0?999:x)-(y<0?999:y);});
   const errors:string[]=[];
   const chatDeadline=Date.now()+105000;
-  if(geminiKey){try{const message=await callGemini(geminiKey,geminiModel,messages,contextWithResearch,researchPrompt);return json({message,usage:await readUsage(quotaClient.client)});}catch(e){errors.push("Gemini: "+String(e).slice(0,160));console.warn(errors[errors.length-1]);}}
+  if(geminiKey){try{const message=await callGemini(geminiKey,geminiModel,messages,contextWithResearch,researchPrompt,chatQuota.plan==="plus"?4096:2048);return json({message,usage:await readUsage(quotaClient.client)});}catch(e){errors.push("Gemini: "+String(e).slice(0,160));console.warn(errors[errors.length-1]);}}
   for(const p of providers){
    const hasImages=messages.some(m=>!!m.imageBase64);
    let models=[p.model];
@@ -158,7 +158,7 @@ Deno.serve(async(req:Request)=>{
    models=models.filter((m,i,a)=>m&&a.indexOf(m)===i);
    for(const model of models){
     const remaining=chatDeadline-Date.now();if(remaining<4000)break;
-    try{const message=await callCompatible(p.base,p.key,model,messages,contextWithResearch,researchPrompt,Math.min(28000,remaining));return json({message,usage:await readUsage(quotaClient.client)});}
+    try{const message=await callCompatible(p.base,p.key,model,messages,contextWithResearch,researchPrompt,Math.min(28000,remaining),chatQuota.plan==="plus"?4096:2048);return json({message,usage:await readUsage(quotaClient.client)});}
     catch(e){const detail=p.id+": "+model+": "+String(e).slice(0,120);errors.push(detail);console.warn(detail);}
    }
   }
