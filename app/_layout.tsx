@@ -9,7 +9,7 @@ import { LanguageProvider } from "../lib/language";
 function AppStack() {
   const { mode, colors } = useTheme();
   const pathname = usePathname();
-  const showBottomNav = pathname !== "/" && pathname !== "/auth" && pathname !== "/onboarding";
+  const showBottomNav = pathname !== "/" && pathname !== "/auth" && pathname !== "/onboarding" && pathname !== "/study";
 
   return (
     <View style={{ flex:  1, backgroundColor: colors.bg }}>
