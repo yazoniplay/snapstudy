@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import AdBanner from "../components/AdBanner";
 import { useTheme, type ThemeColors } from "../lib/theme";
+import { useLanguage } from "../lib/language";
 
 type Profile = { id: string; username: string | null; display_name: string | null; avatar_url: string | null };
 type Friendship = { id: string; user_a: string; user_b: string; requested_by: string; status: "pending" | "accepted" | "declined"; created_at: string };
@@ -13,6 +14,7 @@ type FriendRow = Friendship & { profile: Profile };
 
 export default function Friends() {
   const { colors: c } = useTheme();
+  const { language } = useLanguage();
   const s = styles(c);
   const [userId, setUserId] = useState("");
   const [tab, setTab] = useState<"friends" | "requests" | "find">("friends");
