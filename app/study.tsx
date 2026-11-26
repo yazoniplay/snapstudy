@@ -148,6 +148,7 @@ export default function Study(){
        await AsyncStorage.setItem("snapstudy:session:"+sessionId,JSON.stringify(x));
        await saveStudyData("session:"+sessionId,{...x,_language:language});
        await AsyncStorage.setItem("snapstudy:session-language:"+sessionId,language);
+       await awardXP("study-set:"+sessionId,35,"study","Study set created",{studySetsCreated:1}).then(value=>setGameXP(value.totalXp)).catch(e=>console.warn("Study set XP award failed",e));
       }catch{}
     }else{
       throw new Error("No scan was found. Go back and scan your notes again.");
@@ -345,7 +346,7 @@ export default function Study(){
                 <Animated.View style={{ opacity: feedbackMotion, transform: [{ translateY: feedbackMotion.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
                   <Text style={s.feedback}>{selected === currentQuiz?.answer ? t("correct") : t("notQuite")}</Text>
                   <MarkdownText style={s.explain}>{currentQuiz?.explanation || ""}</MarkdownText>
-                  <Pressable style={s.primaryBtn} onPress={async () => { if(quizIndex===data.quiz.length-1){const today=new Date().toISOString().slice(0,10);await awardXP("quiz:"+today+":"+data.topic,25,"quiz","Quiz completed",{quizzesCompleted:1,tasksCompleted:1}).then(value=>setGameXP(value.totalXp)).catch(e=>console.warn("Could not award quiz XP",e));} setQuizIndex(value => value + 1); setSelected(null); }}>
+                  <Pressable style={s.primaryBtn} onPress={async () => { if(quizIndex===data.quiz.length-1){const today=new Date().toISOString().slice(0,10);await awardXP("quiz:"+today+":"+data.topic,25,"quiz","Quiz completed",{quizzesCompleted:1,tasksCompleted:1,perfectQuizzes:(score+(selected===currentQuiz.answer?1:0)===data.quiz.length?1:0)}).then(value=>setGameXP(value.totalXp)).catch(e=>console.warn("Could not award quiz XP",e));} setQuizIndex(value => value + 1); setSelected(null); }}>
                     <Text style={s.primaryText}>{quizIndex === data.quiz.length - 1 ? t("finish") : t("next")}</Text>
                   </Pressable>
                 </Animated.View>
