@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import AdBanner from "../components/AdBanner";
 import { useTheme, type ThemeColors } from "../lib/theme";
+import ConfirmActionModal from "../components/ConfirmActionModal";
 import { useLanguage } from "../lib/language";
 
 type Profile = { id: string; username: string | null; display_name: string | null; avatar_url: string | null };
@@ -26,6 +27,8 @@ export default function Friends() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [workingId, setWorkingId] = useState("");
+  const [friendToRemove,setFriendToRemove]=useState<FriendRow|null>(null);
+  const [removingFriend,setRemovingFriend]=useState(false);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -90,12 +93,8 @@ export default function Friends() {
     setWorkingId("");
   }
 
-  function removeFriend(row: FriendRow) {
-    Alert.alert("Remove friend?", `Remove ${row.profile.display_name || row.profile.username || "this student"} from your friends?`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Remove", style: "destructive", onPress: async () => { const { error } = await supabase.from("friendships").delete().eq("id", row.id); if (error) Alert.alert("Couldn't remove friend", error.message); else await load(); } }
-    ]);
-  }
+  function removeFriend(row: FriendRow) { setFriendToRemove(row); }
+  async function confirmRemoveFriend(){if(!friendToRemove||removingFriend)return;setRemovingFriend(true);const {error}=await supabase.from("friendships").delete().eq("id",friendToRemove.id);setRemovingFriend(false);if(error)Alert.alert("Couldn’t remove friend",error.message);else{setFriendToRemove(null);await load();}}
 
   const accepted = links.filter(row => row.status === "accepted");
   const incoming = links.filter(row => row.status === "pending" && row.requested_by !== userId);
@@ -137,6 +136,7 @@ export default function Friends() {
       <AdBanner/>
     </ScrollView>
     
+  <ConfirmActionModal visible={!!friendToRemove} title="Remove friend?" message={"Remove "+(friendToRemove?.profile.display_name || friendToRemove?.profile.username || "this student")+" from your friends? You can send another request later."} confirmLabel="Remove friend" cancelLabel="Keep friend" busy={removingFriend} onCancel={()=>setFriendToRemove(null)} onConfirm={confirmRemoveFriend}/>
   </SafeAreaView>;
 }
 
