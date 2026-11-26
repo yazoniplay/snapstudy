@@ -24,7 +24,7 @@ begin
   select exists(select 1 from public.user_subscriptions s where s.user_id=v_user_id and s.status='active' and (s.current_period_end is null or s.current_period_end>now())) into v_plus;
   insert into public.ai_daily_usage(user_id,usage_date) values(v_user_id,v_day) on conflict do nothing;
   select u.chat_requests,u.study_generations into v_chat,v_study from public.ai_daily_usage u where u.user_id=v_user_id and u.usage_date=v_day for update;
-  v_limit := case when v_plus then (case when p_kind='chat' then 100 else 30 end) else (case when p_kind='chat' then 10 else 5 end) end;
+  v_limit := case when v_plus then (case when p_kind='chat' then 100 else 30 end) else (case when p_kind='chat' then 50 else 5 end) end;
   v_used := case when p_kind='chat' then v_chat else v_study end;
   if v_used>=v_limit then return jsonb_build_object('allowed',false,'kind',p_kind,'used',v_used,'limit',v_limit,'plan',case when v_plus then 'plus' else 'free' end,'resetsAt',v_reset); end if;
   if p_kind='chat' then update public.ai_daily_usage set chat_requests=chat_requests+1,updated_at=now() where user_id=v_user_id and usage_date=v_day;
@@ -56,7 +56,7 @@ begin
   if v_user_id is null then raise exception 'Sign in required'; end if;
   select exists(select 1 from public.user_subscriptions s where s.user_id=v_user_id and s.status='active' and (s.current_period_end is null or s.current_period_end>now())) into v_plus;
   select u.chat_requests,u.study_generations into v_chat,v_study from public.ai_daily_usage u where u.user_id=v_user_id and u.usage_date=v_day;
-  return jsonb_build_object('plan',case when v_plus then 'plus' else 'free' end,'chatUsed',coalesce(v_chat,0),'chatLimit',case when v_plus then 100 else 10 end,'studyUsed',coalesce(v_study,0),'studyLimit',case when v_plus then 30 else 5 end,'resetsAt',v_reset);
+  return jsonb_build_object('plan',case when v_plus then 'plus' else 'free' end,'chatUsed',coalesce(v_chat,0),'chatLimit',case when v_plus then 100 else 50 end,'studyUsed',coalesce(v_study,0),'studyLimit',case when v_plus then 30 else 5 end,'resetsAt',v_reset);
 end;
 $$;
 revoke all on function public.consume_ai_quota(text) from public, anon;
