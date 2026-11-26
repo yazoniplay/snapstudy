@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Easing, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
@@ -174,7 +174,7 @@ export default function SnapStudyAI() {
     {wide ? <Animated.View pointerEvents={sidebarCollapsed ? "none" : "auto"} style={[s.desktopSidebar, { width: desktopSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [0, 265] }), opacity: desktopSidebarProgress, transform: [{ translateX: desktopSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }] }]}><View style={s.desktopSidebarInner}>{sidebar}</View></Animated.View> : null}
     <View style={s.main}>
       <View style={s.topbar}>
-        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}>{wide ? <Feather name="sidebar" size={20} color={c.text}/> : <Ionicons name="menu" size={21} color={c.text}/>}</Pressable>
+        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}>{wide ? <MaterialCommunityIcons name="view-sidebar-outline" size={21} color={c.text}/> : <Ionicons name="menu" size={21} color={c.text}/>}</Pressable>
         <Text style={s.topTitle}>SnapStudy AI</Text>
         <View style={{ flex: 1 }}/>
         <Pressable onPress={createChat} style={s.iconButton}><Ionicons name="create-outline" size={21} color={c.text}/></Pressable>
