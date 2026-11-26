@@ -8,12 +8,8 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { imageToBase64, setPendingImages } from "../lib/image";
-import StudyDashboard from "../components/StudyDashboard";
-import SnapStudyMark from "../components/SnapStudyMark";
+import SnapStudyHomeDashboard from "../components/SnapStudyHomeDashboard";
 import LoadingScreen from "../components/LoadingScreen";
-import AdBanner from "../components/AdBanner";
-import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 import { getLevel, loadGamification, type GamificationState } from "../lib/gamification";
 import { supabase } from "../lib/supabase";
 
@@ -23,14 +19,10 @@ export default function Home() {
   const { colors:c, mode } = useTheme();
   const { width: viewportWidth } = useWindowDimensions();
   const desktopLayout = viewportWidth >= 1100;
-  const glass = mode === "dark" ? "rgba(255,255,255,0.075)" : "rgba(255,255,255,0.78)";
-  const glassEdge = mode === "dark" ? "rgba(255,255,255,0.19)" : "rgba(255,255,255,0.92)";
-  const cardScale = useRef(new Animated.Value(1)).current; const {t,language}=useLanguage();
+  const {t,language}=useLanguage();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
   const [pastedNotes,setPastedNotes]=useState("");
-  const [cardDensity,setCardDensity]=useState<"comfortable"|"compact">("comfortable");
-  const [fontScale,setFontScale]=useState(1);
   const [notesModal,setNotesModal]=useState(false);
   const [booting, setBooting] = useState(true);
   const [camera, setCamera] = useState(false);
@@ -45,7 +37,6 @@ export default function Home() {
   }, [entrance]);
   const [permission, requestPermission] = useCameraPermissions();
   useEffect(() => { let active=true; loadGamification().then(value=>{if(active)setGameState(value);}).catch(()=>{}); return ()=>{active=false}; }, []);
-  useEffect(()=>{let active=true;import("@react-native-async-storage/async-storage").then(({default:storage})=>storage.multiGet(["snapstudy:card-density","snapstudy:font-scale"])).then(values=>{if(!active)return;if(values[0]?.[1]==="compact")setCardDensity("compact");const scale=values[1]?.[1];if(scale==="small")setFontScale(0.92);else if(scale==="large")setFontScale(1.12);}).catch(()=>{});return()=>{active=false};},[]);
   const level = getLevel(gameState?.totalXp || 0);
   useFocusEffect(useCallback(()=>{const lines=language==="sv"?["Redo att göra framsteg?","Lite plugg idag gör skillnad.","Dags att nå nästa nivå?","Vad vill du lära dig idag?"]:language==="ar"?["هل أنت مستعد للتقدم؟","القليل من الدراسة يصنع فرقًا.","هل نصل إلى المستوى التالي؟"]:["Ready to make progress?","A little study goes a long way.","One step closer to your next level.","What would you like to learn today?"];setWelcomeLine(lines[Math.floor(Math.random()*lines.length)]);},[language]));
 
@@ -127,67 +118,8 @@ export default function Home() {
 
   return <SafeAreaView style={s.safe}>
     <Animated.ScrollView contentContainerStyle={{paddingHorizontal:desktopLayout?36:24,paddingTop:24,paddingBottom:34,gap:18,width:"100%",maxWidth:desktopLayout?1280:940,alignSelf:"center"}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
-      <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
-        <View style={{flex:1}}>
-          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><SnapStudyMark size={25}/><Text style={{color:c.muted,fontSize:10,fontWeight:"900",letterSpacing:1.8}}>SNAPSTUDY</Text></View>
-          <Text style={{color:c.text,fontSize:27,fontWeight:"900",letterSpacing:-0.9,marginTop:12}}>{language==="sv"?"Hej, "+firstName+" ":"Hey, "+firstName+" 👋"}</Text>
-          <Text style={{color:c.muted,fontSize:13,marginTop:4}}>{welcomeLine}</Text>
-        </View>
-        <Pressable onPress={()=>router.push("/account")} style={{width:46,height:46,borderRadius:16,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.border,alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{avatarUrl?<Image source={{uri:avatarUrl}} style={{width:"100%",height:"100%"}}/>:<Text style={{color:c.accent,fontSize:17,fontWeight:"900"}}>{firstName[0]?.toUpperCase()??"S"}</Text>}</Pressable>
-      </View>
-      <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
-        {([
-          {title:t("dashboardScan"),sub:t("dashboardScanSub"),icon:"camera-outline" as const,colors:["#8B5CF6","#6D28D9"] as [string,string],onPress:cameraOpen},
-          {title:t("dashboardText"),sub:t("dashboardTextSub"),icon:"document-text-outline" as const,colors:["#F97365","#EA580C"] as [string,string],onPress:()=>setNotesModal(true)},
-          {title:t("dashboardFocus"),sub:t("dashboardFocusSub"),icon:"timer-outline" as const,colors:["#F59E0B","#EA580C"] as [string,string],onPress:()=>router.push("/focus")},
-          {title:t("dashboardSets"),sub:t("dashboardSetsSub"),icon:"albums-outline" as const,colors:["#0EA5E9","#2563EB"] as [string,string],onPress:()=>router.push("/history")}
-        ]).map((item,index)=><Pressable key={item.title} onPress={item.onPress} disabled={busy&&index===0} style={{width:"48.5%",flexGrow:1,minWidth:145,borderRadius:19,overflow:"hidden",minHeight:cardDensity==="compact"?88:112}}>
-          <LinearGradient colors={item.colors} start={{x:0,y:0}} end={{x:1,y:1}} style={{flex:1,minHeight:cardDensity==="compact"?88:112,padding:cardDensity==="compact"?11:15,justifyContent:"space-between"}}>
-            <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}><View style={{width:34,height:34,borderRadius:11,backgroundColor:"rgba(255,255,255,0.22)",alignItems:"center",justifyContent:"center"}}><Ionicons name={item.icon} size={19} color="#FFFFFF"/></View><Ionicons name="arrow-up-right" size={17} color="rgba(255,255,255,0.9)"/></View>
-            <View><Text style={{color:"#FFFFFF",fontSize:14*fontScale,fontWeight:"900",letterSpacing:-0.2}}>{item.title}</Text><Text style={{color:"rgba(255,255,255,0.82)",fontSize:10*fontScale,fontWeight:"700",marginTop:4}}>{item.sub}</Text></View>
-          </LinearGradient>
-        </Pressable>)}
-      </View>
-      <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>
-        <Pressable onPress={()=>router.push("/progress")} style={{flex:1,minWidth:155,padding:16,borderRadius:18,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:8}}>
-          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="trophy-outline" size={17} color={c.accent}/><Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>{t("dashboardLevel").toUpperCase()}</Text></View>
-          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{level.level}</Text><Text style={{color:c.muted,fontSize:11}}>{t("dashboardProgress")} →</Text>
-        </Pressable>
-        <Pressable onPress={()=>router.push("/progress")} style={{flex:1,minWidth:155,padding:16,borderRadius:18,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,gap:8}}>
-          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="flash-outline" size={17} color="#F59E0B"/><Text style={{color:c.muted,fontSize:10,fontWeight:"800"}}>TOTAL XP</Text></View>
-          <Text style={{color:c.text,fontSize:23,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()}</Text><Text style={{color:c.muted,fontSize:11}}>{t("dashboardViewProgress")} →</Text>
-        </Pressable>
-        <View style={{flex:1,minWidth:210,padding:16,borderRadius:18,backgroundColor:c.accentSoft,borderWidth:1,borderColor:c.accent+"55",gap:8}}>
-          <View style={{flexDirection:"row",alignItems:"center",gap:7}}><Ionicons name="bulb-outline" size={17} color={c.accent}/><Text style={{color:c.accent,fontSize:10,fontWeight:"900"}}>{t("dashboardTip").toUpperCase()}</Text></View>
-          <Text style={{color:c.text,fontSize:13,fontWeight:"900"}}>{t("dashboardRecall")}</Text><Text style={{color:c.muted,fontSize:11,lineHeight:16}}>{t("dashboardRecallSub")}</Text>
-        </View>
-      </View>
-      <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:10}}>
-        <Pressable onPress={()=>router.push("/focus")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:glass,borderWidth:1,borderColor:glassEdge,shadowColor:mode==="dark"?"#000000":c.accent,shadowOpacity:0.12,shadowRadius:14,shadowOffset:{width:0,height:6},elevation:3}}>
-          <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="timer-outline" size={20} color={c.accent}/></View>
-          <View style={{flex:1}}><Text style={{color:c.text,fontSize:12,fontWeight:"900"}}>{language==="sv"?"Fokus":"Focus room"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3}}>Pomodoro · 25 min</Text></View><Ionicons name="chevron-forward" size={15} color={c.muted}/>
-        </Pressable>
-        <Pressable onPress={()=>router.push("/history")} style={{flex:1,flexDirection:"row",alignItems:"center",gap:10,padding:13,borderRadius:17,backgroundColor:c.surface,borderWidth:1,borderColor:c.border}}>
-          <View style={{width:38,height:38,borderRadius:13,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center"}}><Ionicons name="albums-outline" size={20} color={c.accent}/></View>
-          <View style={{flex:1}}><Text style={{color:c.text,fontSize:12,fontWeight:"900"}}>{language==="sv"?"Studie-set":"Study sets"}</Text><Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:3}}>{language==="sv"?"Repetera":"Keep learning"}</Text></View><Ionicons name="chevron-forward" size={15} color={c.muted}/>
-        </Pressable>
-      </View>
-      <Pressable onPress={()=>router.push("/progress")} style={{borderRadius:20,backgroundColor:glass,borderWidth:1,borderColor:glassEdge,padding:15,shadowColor:c.accent,shadowOpacity:0.12,shadowRadius:18,shadowOffset:{width:0,height:7},elevation:4}}>
-        <View style={{flexDirection:"row",alignItems:"center",gap:12}}>
-          <View style={{width:44,height:44,borderRadius:15,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"}}><Text style={{color:c.onAccent,fontSize:17,fontWeight:"900"}}>{level.level}</Text></View>
-          <View style={{flex:1}}>
-            <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}><Text style={{color:c.text,fontSize:13,fontWeight:"900"}}>{language==="sv"?"Din nivå":"Your level"}</Text><Text style={{color:c.accent,fontSize:11,fontWeight:"900"}}>{(gameState?.totalXp||0).toLocaleString()} XP</Text></View>
-            <View style={{height:7,borderRadius:8,backgroundColor:c.border,overflow:"hidden",marginTop:9}}><View style={{height:"100%",width:(level.progress*100)+"%",backgroundColor:c.accent,borderRadius:8}}/></View>
-            <Text style={{color:c.muted,fontSize:10,fontWeight:"700",marginTop:6}}>{Math.max(0,level.nextXp-(gameState?.totalXp||0))} XP to level {level.level+1} · {language==="sv"?"Visa uppdrag":"View quests"} →</Text>
-          </View>
-        </View>
-      </Pressable>
-      <StudyDashboard />
-      <Pressable onPress={()=>router.push("/plus")} style={{borderRadius:18,borderWidth:1,borderColor:c.border,backgroundColor:glass,flexDirection:"row",alignItems:"center",gap:11,padding:13,shadowColor:c.accent,shadowOpacity:0.1,shadowRadius:15,shadowOffset:{width:0,height:6},elevation:3}}>
-        <LinearGradient colors={[c.accent,c.accent+"B8"]} style={{width:39,height:39,borderRadius:13,alignItems:"center",justifyContent:"center"}}><Ionicons name="sparkles" size={19} color="#FFFFFF"/></LinearGradient>
-        <View style={{flex:1}}><Text style={{color:c.accent,fontSize:9,fontWeight:"900",letterSpacing:1.3}}>SNAPSTUDY PLUS</Text><Text style={{color:c.text,fontSize:12,fontWeight:"900",marginTop:3}}>{language==="sv"?"Mer fokus. Mer framsteg.":"Make every study session count."}</Text></View><Ionicons name="chevron-forward" size={17} color={c.accent}/>
-      </Pressable>
-      <AdBanner />
+      <SnapStudyHomeDashboard name={firstName} avatarUrl={avatarUrl} welcomeLine={welcomeLine} gameState={gameState} onScan={cameraOpen} onNotes={()=>setNotesModal(true)} busy={busy} />
+
     </Animated.ScrollView>    <Modal visible={notesModal} transparent animationType="fade" onRequestClose={()=>setNotesModal(false)}>
       <View style={{flex:1,backgroundColor:"rgba(5,8,18,0.72)",justifyContent:"center",padding:22}}>
         <View style={{backgroundColor:c.surface,borderColor:c.border,borderWidth:1,borderRadius:24,padding:20,gap:13}}>
