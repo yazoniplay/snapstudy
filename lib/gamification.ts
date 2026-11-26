@@ -84,7 +84,7 @@ export async function awardXP(id: string, amount: number, kind: XPKind, title: s
   }
   const monday = new Date(date+"T12:00:00"); monday.setDate(monday.getDate()-((monday.getDay()+6)%7)); const weekStart=localDate(monday);
   const weekEvents=state.events.filter(e=>e.date>=weekStart&&e.date<=date&&e.xp>0&&!e.id.startsWith("quest:"));
-  const weekly=[{id:"weekly-cards",title:"Review 50 flashcards",progress:weekEvents.filter(e=>e.kind==="card").length,goal:50,xp:120},{id:"weekly-quiz",title:"Complete 5 quizzes",progress:weekEvents.filter(e=>e.kind==="quiz").length,goal:5,xp:150},{id:"weekly-focus",title:"Complete 120 focus minutes",progress:weekEvents.filter(e=>e.kind==="focus").reduce((n,e)=>n+(Number(e.title.match(/(\\d+)-minute/)?.[1])||25),0),goal:120,xp:180},{id:"weekly-days",title:"Study on 5 different days",progress:new Set(weekEvents.map(e=>e.date)).size,goal:5,xp:200}];
+  const weekly=[{id:"weekly-cards",title:"Review 50 flashcards",progress:weekEvents.filter(e=>e.kind==="card").length,goal:50,xp:120},{id:"weekly-quiz",title:"Complete 5 quizzes",progress:weekEvents.filter(e=>e.kind==="quiz").length,goal:5,xp:150},{id:"weekly-focus",title:"Complete 120 focus minutes",progress:weekEvents.filter(e=>e.kind==="focus").reduce((n,e)=>n+(Number(e.title.match(/(\d+)-minute/)?.[1])||25),0),goal:120,xp:180},{id:"weekly-days",title:"Study on 5 different days",progress:new Set(weekEvents.map(e=>e.date)).size,goal:5,xp:200}];
   for(const q of weekly){const qid="quest:"+weekStart+":"+q.id;if(q.progress>=q.goal&&!state.events.some(e=>e.id===qid)){state.totalXp+=q.xp;state.events.unshift({id:qid,xp:q.xp,kind:"achievement",title:"Weekly quest: "+q.title,date});}}
   await saveStudyData(KEY, state);
   return state;
@@ -106,7 +106,7 @@ export function getWeeklyQuestProgress(state:GamificationState){
  return [
   {id:"weekly-cards",title:"Review 50 flashcards",progress:events.filter(e=>e.kind==="card").length,goal:50,xp:120},
   {id:"weekly-quiz",title:"Complete 5 quizzes",progress:events.filter(e=>e.kind==="quiz").length,goal:5,xp:150},
-  {id:"weekly-focus",title:"Complete 120 focus minutes",progress:events.filter(e=>e.kind==="focus").reduce((n,e)=>n+(Number(e.title.match(/(\\d+)-minute/)?.[1])||25),0),goal:120,xp:180},
+  {id:"weekly-focus",title:"Complete 120 focus minutes",progress:events.filter(e=>e.kind==="focus").reduce((n,e)=>n+(Number(e.title.match(/(\d+)-minute/)?.[1])||25),0),goal:120,xp:180},
   {id:"weekly-days",title:"Study on 5 different days",progress:new Set(events.map(e=>e.date)).size,goal:5,xp:200},
  ].map(q=>({...q,progress:Math.min(q.goal,q.progress),completed:q.progress>=q.goal}));
 }
