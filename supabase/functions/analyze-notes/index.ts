@@ -187,14 +187,16 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
 serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return new Response("Method not allowed",{status:405,headers:cors});
- let quotaClient:any=null,studyReserved=false;
+ let quotaClient:any=null,adminClient:any=null,quotaUserId:string|null=null,studyReserved=false;
  try{
   const authHeader=req.headers.get("Authorization")||"",token=authHeader.startsWith("Bearer ")?authHeader.slice(7):"";
-  const url=Deno.env.get("SUPABASE_URL")||"",key=Deno.env.get("SUPABASE_ANON_KEY")||Deno.env.get("SUPABASE_PUBLISHABLE_KEY")||"";
-  if(!token||!url||!key)throw new Error("Sign in to create study materials.");
+  const url=Deno.env.get("SUPABASE_URL")||"",key=Deno.env.get("SUPABASE_ANON_KEY")||Deno.env.get("SUPABASE_PUBLISHABLE_KEY")||"",serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+  if(!token||!url||!key||!serviceKey)throw new Error("Sign in to create study materials.");
   quotaClient=createClient(url,key,{global:{headers:{Authorization:authHeader}},auth:{persistSession:false,autoRefreshToken:false}});
   const {data:authData,error:authError}=await quotaClient.auth.getUser(token);
   if(authError||!authData.user)throw new Error("Your session is invalid. Please sign in again.");
+  quotaUserId=authData.user.id;
+  adminClient=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
   const body=await req.json();
   if(typeof body.action==="undefined"||body.action==="analyze"){
    const {data:quota,error:quotaError}=await quotaClient.rpc("consume_ai_quota",{p_kind:"study"});
@@ -212,5 +214,5 @@ serve(async(req)=>{
    catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}
   }
   throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
- }catch(e){if(quotaClient&&studyReserved){try{await quotaClient.rpc("release_ai_quota",{p_kind:"study"});}catch(releaseError){console.warn("Could not release study quota",String(releaseError));}}return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
+ }catch(e){if(adminClient&&quotaUserId&&studyReserved){try{await adminClient.rpc("release_ai_quota",{p_user_id:quotaUserId,p_kind:"study"});}catch(releaseError){console.warn("Could not release study quota",String(releaseError));}}return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
 });
