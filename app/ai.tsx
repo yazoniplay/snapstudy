@@ -137,8 +137,10 @@ export default function SnapStudyAI() {
       let generatedRoute: string | null = null;
       const quizMarker = "[[SNAPSTUDY_QUIZ]]";
       const flashcardMarker = "[[SNAPSTUDY_FLASHCARDS]]";
+      const guideMarker = "[[SNAPSTUDY_GUIDE]]";
       const markerAt = answer.indexOf(quizMarker);
       const flashAt = answer.indexOf(flashcardMarker);
+      const guideAt = answer.indexOf(guideMarker);
       try {
         if (markerAt >= 0) {
           const parsed = JSON.parse(answer.slice(markerAt + quizMarker.length).trim());
@@ -153,6 +155,13 @@ export default function SnapStudyAI() {
             const activity = await saveAIStudyActivity("flashcards", { title: parsed.title, cards: parsed.cards });
             await saveStudyData("snapstudy:ai-flashcards-active", { title: parsed.title, cards: parsed.cards, activityId: activity.id });
             generatedRoute = "/ai-flashcards";
+          }
+        } else if (guideAt >= 0) {
+          const parsed = JSON.parse(answer.slice(guideAt + guideMarker.length).trim());
+          if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.sections) && parsed.sections.length >= 1 && parsed.sections.every((section: any) => typeof section.heading === "string" && typeof section.body === "string" && section.heading.trim() && section.body.trim())) {
+            const activity = await saveAIStudyActivity("guide", { title: parsed.title, sections: parsed.sections });
+            await saveStudyData("snapstudy:ai-guide-active", { title: parsed.title, sections: parsed.sections, activityId: activity.id });
+            generatedRoute = "/ai-guide";
           }
         }
       } catch { generatedRoute = null; }
