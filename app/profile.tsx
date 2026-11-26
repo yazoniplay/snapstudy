@@ -50,14 +50,18 @@ export default function StudentProfile() {
   useEffect(()=>{void load();},[load]);
   useEffect(()=>{
     if(!targetId)return;
-    const channel=supabase.channel("snapstudy-presence",{config:{presence:{key:"profile-viewer-"+targetId}}})
-      .on("presence",{event:"sync"},()=>{
-        const state=channel.presenceState() as Record<string,Array<{user_id?:string}>>;
-        const ids=Object.entries(state).flatMap(([key,metas])=>metas.map(meta=>meta.user_id||key));
-        setOnline(ids.includes(targetId));
-      })
-      .subscribe();
-    return()=>{void supabase.removeChannel(channel);};
+    let active=true;
+    // Use a per-student topic so this route never attaches presence handlers
+    // to the already-subscribed app-wide channel.
+    const channel=supabase.channel("snapstudy-presence:"+targetId,{config:{presence:{key:"profile-viewer-"+targetId}}});
+    channel.on("presence",{event:"sync"},()=>{
+      if(!active)return;
+      const state=channel.presenceState() as Record<string,Array<{user_id?:string}>>;
+      const ids=Object.entries(state).flatMap(([key,metas])=>metas.map(meta=>meta.user_id||key));
+      setOnline(ids.includes(targetId));
+    });
+    channel.subscribe();
+    return()=>{active=false;void supabase.removeChannel(channel);};
   },[targetId]);
 
   const name=person?.display_name||person?.username||"Student";
@@ -70,7 +74,7 @@ export default function StudentProfile() {
   function openChat(){if(friendship&&accepted)router.push({pathname:"/chat",params:{friendshipId:friendship.id,friendId:targetId,name}});}
 
   return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container}>
-    <Pressable style={s.back} onPress={()=>router.back()}><Ionicons name="arrow-back" size={21} color={c.text}/><Text style={s.backText}>Back to people</Text></Pressable>
+    <Pressable style={s.back} onPress={()=>router.replace("/friends")}><Ionicons name="arrow-back" size={21} color={c.text}/><Text style={s.backText}>Back to people</Text></Pressable>
     {loading?<View style={s.loading}><ActivityIndicator color={c.accent} size="large"/><Text style={s.sub}>Loading student profile…</Text></View>:error&&!person?<View style={s.errorCard}><Ionicons name="alert-circle-outline" size={30} color={c.danger}/><Text style={s.title}>Profile couldn’t open</Text><Text style={s.sub}>{error}</Text><Pressable style={s.primary} onPress={()=>void load()}><Text style={s.primaryText}>Try again</Text></Pressable></View>:person&&<>
       {error?<Text style={s.inlineError}>{error}</Text>:null}
       <View style={s.hero}>
