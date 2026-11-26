@@ -38,7 +38,7 @@ export default function XPRewardSplash() {
   if (!notice) return null;
   const levelUp = notice.leveledUp;
   return (
-    <View pointerEvents="none" style={styles.host}>
+    <View pointerEvents="none" style={[styles.host, levelUp && styles.levelHost]}>
       <Animated.View style={[styles.card, levelUp && styles.levelCard, {
         opacity: motion,
         transform: [{ translateY: motion.interpolate({ inputRange: [0, 1], outputRange: [-28, 0] }) }, { scale: motion.interpolate({ inputRange: [0, 1], outputRange: [0.88, 1] }) }],
@@ -51,6 +51,7 @@ export default function XPRewardSplash() {
             <>
               <Text style={styles.eyebrow}>{sv ? "NY NIVÅ UPPLÅST!" : "LEVEL UP UNLOCKED!"}</Text>
               <Text style={styles.level}>{sv ? "Nivå" : "Level"} {notice.level}</Text>
+              <Text style={styles.levelXp}>+{notice.xp} XP</Text>
               <Text style={styles.sub}>{sv ? "Du klättrar uppåt. Fortsätt så!" : "You're moving up. Keep it going!"}</Text>
             </>
           ) : (
@@ -70,14 +71,16 @@ export default function XPRewardSplash() {
 function makeStyles(c: any) {
   return StyleSheet.create({
     host: { position: "absolute", top: 54, left: 16, right: 16, zIndex: 9999, alignItems: "center" },
+    levelHost: { top: 0, bottom: 0, left: 0, right: 0, paddingHorizontal: 22, backgroundColor: "#080817CC", justifyContent: "center" },
     card: { width: "100%", maxWidth: 430, minHeight: 76, borderRadius: 20, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, paddingHorizontal: 15, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 12 },
-    levelCard: { minHeight: 112, borderColor: "#D6A83D", backgroundColor: "#202033", paddingVertical: 16 },
+    levelCard: { minHeight: 170, maxWidth: 360, borderColor: "#D6A83D", backgroundColor: "#202033", paddingHorizontal: 20, paddingVertical: 24, borderWidth: 2, borderRadius: 26, shadowOpacity: 0.4, shadowRadius: 28, elevation: 18 },
     icon: { width: 46, height: 46, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: c.accent + "20" },
     levelIcon: { width: 54, height: 54, borderRadius: 18, backgroundColor: "#D6A83D22" },
     copy: { flex: 1, minWidth: 0 },
     eyebrow: { color: "#D6A83D", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 },
     amount: { color: c.text, fontSize: 23, fontWeight: "900", marginTop: 1 },
-    level: { color: "#FFF4D2", fontSize: 27, fontWeight: "900", marginTop: 1 },
+    level: { color: "#FFF4D2", fontSize: 30, fontWeight: "900", marginTop: 1 },
+    levelXp: { color: "#FFD66B", fontSize: 17, fontWeight: "900", marginTop: 3 },
     sub: { color: c.muted, fontSize: 11, fontWeight: "600", marginTop: 2 },
     levelPill: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 12, backgroundColor: "#D6A83D22", borderWidth: 1, borderColor: "#D6A83D66" },
     levelPillText: { color: "#FFD66B", fontSize: 10, fontWeight: "900" },
