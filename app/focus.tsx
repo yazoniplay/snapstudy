@@ -7,6 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { awardXP, loadGamification } from "../lib/gamification";
 import { useTheme } from "../lib/theme";
+import ConfirmActionModal from "../components/ConfirmActionModal";
 
 type FocusMode="focus"|"short"|"long";
 const DEFAULT_DURATIONS:Record<FocusMode,number>={focus:25*60,short:5*60,long:15*60};
@@ -16,6 +17,7 @@ export default function FocusRoom(){
  const [durations,setDurations]=useState(DEFAULT_DURATIONS);
  const [seconds,setSeconds]=useState(DEFAULT_DURATIONS.focus);
  const [running,setRunning]=useState(false);
+ const [confirmReset,setConfirmReset]=useState(false);
  const [finished,setFinished]=useState(false);
  const [motionEnabled,setMotionEnabled]=useState(true);
  const [xp,setXp]=useState(0);
@@ -36,7 +38,8 @@ export default function FocusRoom(){
   if(mode==="focus"&&!completed.current){completed.current=true;awardXP(runId.current,40,"focus",`${durations.focus/60}-minute focus session`,{focusSessions:1,focusMinutes:durations.focus/60}).then(v=>setXp(v.totalXp)).catch(e=>console.warn("Focus XP award failed",e));}
  },[seconds,running,mode,durations.focus]);
  function choose(next:FocusMode){setRunning(false);setMode(next);setSeconds(durations[next]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
- function reset(){setRunning(false);setSeconds(durations[mode]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();}
+ function reset(){setRunning(false);setSeconds(durations[mode]);setFinished(false);completed.current=false;runId.current="focus-room-"+Date.now();setConfirmReset(false);}
+ function requestReset(){if(running||finished||seconds!==durations[mode])setConfirmReset(true);else reset();}
  const clock=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
  return <SafeAreaView style={styles.safe}>
   <StatusBar barStyle="light-content"/>
@@ -45,7 +48,7 @@ export default function FocusRoom(){
     <View style={styles.topBar}>
      <Pressable onPress={()=>router.back()} style={styles.back}><Ionicons name="chevron-back" size={20} color="#FFFFFF"/><Text style={styles.backText}>Back</Text></Pressable>
      <View style={styles.brand}><Ionicons name="sparkles" size={15} color="#E4D9FF"/><Text style={styles.brandText}>SNAPSTUDY FOCUS</Text></View>
-     <Pressable onPress={reset} style={styles.iconButton}><Ionicons name="refresh-outline" size={19} color="#FFFFFF"/></Pressable>
+     <Pressable onPress={requestReset} style={styles.iconButton}><Ionicons name="refresh-outline" size={19} color="#FFFFFF"/></Pressable>
     </View>
     <Animated.View style={[styles.center,{opacity:appear,transform:[{translateY:appear.interpolate({inputRange:[0,1],outputRange:[20,0]})}]}]}>
      <View style={styles.modeTabs}>
@@ -61,7 +64,7 @@ export default function FocusRoom(){
      </View>
      <View style={styles.controls}>
       <Pressable onPress={()=>{if(finished){setSeconds(durations[mode]);completed.current=false;runId.current="focus-room-"+Date.now();}setFinished(false);setRunning(finished?true:!running)}} style={styles.startButton}><Text style={styles.startText}>{running?"Pause":finished?"Start again":"Start session"}</Text><Ionicons name={running?"pause":"play"} size={17} color="#5D459C"/></Pressable>
-      <Pressable onPress={reset} style={styles.resetButton}><Ionicons name="refresh" size={20} color="#FFFFFF"/></Pressable>
+      <Pressable onPress={requestReset} style={styles.resetButton}><Ionicons name="refresh" size={20} color="#FFFFFF"/></Pressable>
      </View>
      {finished&&mode==="focus"?<Text style={styles.completeText}>Beautiful work. You added 40 XP to your study journey.</Text>:null}
     </Animated.View>
@@ -72,6 +75,7 @@ export default function FocusRoom(){
     </View>
    </LinearGradient>
   </ImageBackground>
+ <ConfirmActionModal visible={confirmReset} title="Reset focus timer?" message="Your current timer progress will be lost and the session will restart from the beginning." confirmLabel="Reset timer" cancelLabel="Keep session" onCancel={()=>setConfirmReset(false)} onConfirm={reset}/>
  </SafeAreaView>;
 }
 const makeStyles=(c:{bg:string;surface:string;border:string;text:string;muted:string;accent:string;accentSoft:string;onAccent:string})=>StyleSheet.create({
