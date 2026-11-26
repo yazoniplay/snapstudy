@@ -24,6 +24,7 @@ export default function Chat() {
   const { colors:c } = useTheme();
   const s = styles(c);
   const [userId,setUserId] = useState("");
+  const [friendAvatar,setFriendAvatar] = useState<string|null>(null);
   const [messages,setMessages] = useState<ChatMessage[]>([]);
   const [draft,setDraft] = useState("");
   const [loading,setLoading] = useState(true);
@@ -38,7 +39,7 @@ export default function Chat() {
   const scrollRef = useRef<ScrollView>(null);
   function broadcastTyping(typing:boolean){channelRef.current?.send({type:"broadcast",event:"typing",payload:{userId,typing}}).catch(()=>{});if(!typing&&typingTimeout.current){clearTimeout(typingTimeout.current);typingTimeout.current=null;}}
 
-  const loadMessages = useCallback(async () => {
+  useEffect(()=>{\n    if(!friendId)return;\n    let alive=true;\n    supabase.rpc("get_public_profile",{target_user_id:friendId}).then(({data})=>{if(alive)setFriendAvatar((data||[])[0]?.avatar_url||null);});\n    return()=>{alive=false;};\n  },[friendId]);\n\n  const loadMessages = useCallback(async () => {
     if (!friendshipId) { Alert.alert("Chat unavailable","Open a chat from your friends list."); router.replace("/friends"); return; }
     const {data:{user}} = await supabase.auth.getUser();
     if (!user) { router.replace("/auth"); return; }
@@ -137,7 +138,7 @@ export default function Chat() {
   return <SafeAreaView style={s.safe}>
     <LinearGradient colors={[c.surface,c.accentSoft]} start={{x:0,y:0}} end={{x:1,y:1}} style={s.header}>
       <Pressable style={s.backButton} onPress={()=>router.back()}><Ionicons name="chevron-back" size={25} color={c.text}/></Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={`View ${friendName} profile`} onPress={()=>router.push({pathname:"/profile",params:{userId:friendId}})} style={s.avatar}><Text style={s.avatarText}>{friendName.slice(0,1).toUpperCase()}</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`View ${friendName} profile`} onPress={()=>router.push({pathname:"/profile",params:{userId:friendId}})} style={s.avatar}>{friendAvatar?<Image source={{uri:friendAvatar}} style={{width:44,height:44,borderRadius:16}}/>:<Text style={s.avatarText}>{friendName.slice(0,1).toUpperCase()}</Text>}</Pressable>
       <View style={{flex:1}}><Text style={s.headerName} numberOfLines={1}>{friendName}</Text><Text style={s.headerSub}>Your private study chat</Text></View>
       <Pressable style={s.headerAction} onPress={()=>Alert.alert("Chat safety","Only chat with people you know. You can remove this friend from the Friends screen.")}><Ionicons name="shield-checkmark-outline" size={20} color={c.accent}/></Pressable>
     </LinearGradient>
