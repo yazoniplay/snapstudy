@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { LocalizedText as Text } from "./LocalizedText";
 import { loadStudyData } from "../lib/cloud-study-data";
 import { getLevel, type GamificationState } from "../lib/gamification";
@@ -16,7 +16,7 @@ type Props = { name:string; avatarUrl:string|null; welcomeLine:string; gameState
 export default function SnapStudyHomeDashboard({name,avatarUrl,welcomeLine,gameState,onScan,onNotes,busy}:Props){
  const {colors:c}=useTheme();const {language}=useLanguage();const s=styles(c);
  const [sessions,setSessions]=useState<Session[]>([]);const [streak,setStreak]=useState(0);const [dailyGoal,setDailyGoal]=useState(2);const [weakCount,setWeakCount]=useState(0);
- useEffect(()=>{let active=true;(async()=>{const [saved,goal,weak,user]=await Promise.all([loadStudyData<Session[]>("sessions",[]),loadStudyData<number>("dailyGoal",2),loadStudyData<any[]>("weakTopics",[]),supabase.auth.getUser()]);if(!active)return;setSessions(Array.isArray(saved)?saved:[]);setDailyGoal(Math.max(1,Math.min(5,Number(goal)||2)));setWeakCount(Array.isArray(weak)?weak.filter(x=>!x.mastered).length:0);if(user.data.user){const {data}=await supabase.from("profiles").select("current_streak").eq("id",user.data.user.id).maybeSingle();if(active)setStreak(data?.current_streak||0);}})().catch(()=>{});return()=>{active=false}},[]);
+ useFocusEffect(useCallback(()=>{let active=true;(async()=>{const [saved,goal,weak,user]=await Promise.all([loadStudyData<Session[]>("sessions",[]),loadStudyData<number>("dailyGoal",2),loadStudyData<any[]>("weakTopics",[]),supabase.auth.getUser()]);if(!active)return;setSessions(Array.isArray(saved)?saved:[]);setDailyGoal(Math.max(1,Math.min(5,Number(goal)||2)));setWeakCount(Array.isArray(weak)?weak.filter(x=>!x.mastered).length:0);if(user.data.user){const {data}=await supabase.from("profiles").select("current_streak").eq("id",user.data.user.id).maybeSingle();if(active)setStreak(data?.current_streak||0);}})().catch(()=>{});return()=>{active=false}},[]));
  const today=new Date().toDateString();const todaySessions=sessions.filter(x=>new Date(x.createdAt).toDateString()===today).length;
  const level=getLevel(gameState?.totalXp||0);
  const week=useMemo(()=>Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-6+i);return {date:d,label:d.toLocaleDateString(language==="sv"?"sv-SE":language==="ar"?"ar":"en-US",{weekday:"short"}).slice(0,2),count:sessions.filter(x=>new Date(x.createdAt).toDateString()===d.toDateString()).length,isToday:d.toDateString()===today};}),[sessions,language,today]);
