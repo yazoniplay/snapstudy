@@ -104,13 +104,6 @@ export function getWeeklyQuestProgress(state:GamificationState){
   {id:"weekly-days",title:"Study on 5 different days",progress:new Set(events.map(e=>e.date)).size,goal:5,xp:200},
  ].map(q=>({...q,progress:Math.min(q.goal,q.progress),completed:q.progress>=q.goal}));
 }
-export function getStreak(state:GamificationState){
- const days=new Set([...getActivityDays(state),...(state.streakFreezeDates||[])]);
- let current=0,cursor=localDate();if(!days.has(cursor))cursor=shiftDate(cursor,-1);
- while(days.has(cursor)){current++;cursor=shiftDate(cursor,-1);if(current>4000)break;}
- let best=0,run=0,previous="";for(const day of [...days].sort()){run=previous&&shiftDate(previous,1)===day?run+1:1;best=Math.max(best,run);previous=day;}
- return{current,best,activeToday:days.has(localDate()),days:[...days]};
-}
 export async function useStreakFreeze():Promise<{state:GamificationState;used:boolean;message:string}>{
  const state=await loadGamification(),today=localDate(),yesterday=shiftDate(today,-1),before=shiftDate(today,-2),active=new Set(getActivityDays(state));
  if(state.streakFreezes<1)return{state,used:false,message:"You don't have a streak freeze available yet."};
