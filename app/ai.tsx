@@ -132,10 +132,25 @@ export default function SnapStudyAI() {
         body: { messages: updated.messages.slice(-16).map(m => ({ role: m.role, content: m.content, ...(m.imageBase64 ? { imageBase64: m.imageBase64, imageMimeType: m.imageMimeType } : {}) })), context }
       });
       if (error) throw error;
-      const answer = typeof data?.message === "string" ? data.message.trim() : "";
+      let answer = typeof data?.message === "string" ? data.message.trim() : "";
       if (!answer) throw new Error(data?.error || "No response came back.");
+      let generatedQuiz: any = null;
+      const quizMarker = "[[SNAPSTUDY_QUIZ]]";
+      const markerAt = answer.indexOf(quizMarker);
+      if (markerAt >= 0) {
+        const payload = answer.slice(markerAt + quizMarker.length).trim();
+        try {
+          const parsed = JSON.parse(payload);
+          if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.questions) && parsed.questions.length >= 1 && parsed.questions.every((q: any) => typeof q.question === "string" && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every((choice: any) => typeof choice.label === "string" && typeof choice.correct === "boolean" && typeof choice.explanation === "string") && q.choices.filter((choice: any) => choice.correct).length === 1)) {
+            generatedQuiz = { title: parsed.title, questions: parsed.questions };
+            await saveStudyData("snapstudy:ai-quiz-active", generatedQuiz);
+            answer = sv ? "Jag har gjort ett interaktivt quiz åt dig. Nu öppnar vi det!" : "I made an interactive quiz for you. Opening it now!";
+          }
+        } catch { generatedQuiz = null; }
+      }
       const completed = { ...updated, updatedAt: Date.now(), messages: [...updated.messages, { id: Date.now() + "-a", role: "assistant" as const, content: answer, createdAt: Date.now() }].slice(-80) };
       await persist([completed, ...first.filter(x => x.id !== target!.id)]);
+      if (generatedQuiz) router.push("/ai-quiz");
     } catch (err: any) {
       const message = err?.message || "SnapStudy AI couldn't connect. Try again.";
       const failed = { ...updated, messages: [...updated.messages, { id: Date.now() + "-e", role: "assistant" as const, content: (sv ? "Jag kunde inte få svar: " : "I couldn't get a reply: ") + message, createdAt: Date.now() }] };
