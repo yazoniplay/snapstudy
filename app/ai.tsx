@@ -134,7 +134,7 @@ export default function SnapStudyAI() {
       if (error) throw error;
       let answer = typeof data?.message === "string" ? data.message.trim() : "";
       if (!answer) throw new Error(data?.error || "No response came back.");
-      const countMatch = value.match(/\\b(\\d{1,2})\\s*-?\\s*(?:questions?|frågor?|preguntas?|fragen|問題|문제)\\b/i) || value.match(/\\b(?:quiz|test|förhör|prov)\\b[^\\d]{0,24}(\\d{1,2})\\b/i);
+      const countMatch = value.match(/\b(\d{1,2})\s*-?\s*(?:questions?|frågor?|preguntas?|fragen|問題|문제)\b/i) || value.match(/\b(?:quiz|test|förhör|prov)\b[^\d]{0,24}(\d{1,2})\b/i);
       const requestedQuizCount = countMatch ? Math.min(50, Math.max(1, Number(countMatch[1]))) : null;
       const quizMarkerForRetry = "[[SNAPSTUDY_QUIZ]]";
       if (requestedQuizCount && answer.includes(quizMarkerForRetry)) {
