@@ -9,6 +9,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { imageToBase64, setPendingImages } from "../lib/image";
 import SnapStudyHomeDashboard from "../components/SnapStudyHomeDashboard";
+import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import { loadGamification, type GamificationState } from "../lib/gamification";
 import { supabase } from "../lib/supabase";
@@ -37,7 +38,7 @@ export default function Home() {
   }, [entrance]);
   const [permission, requestPermission] = useCameraPermissions();
   useEffect(() => { let active=true; loadGamification().then(value=>{if(active)setGameState(value);}).catch(()=>{}); return ()=>{active=false}; }, []);
-  useFocusEffect(useCallback(()=>{const lines=language==="sv"?["Redo att göra framsteg?","Lite plugg idag gör skillnad.","Dags att nå nästa nivå?","Vad vill du lära dig idag?"]:language==="ar"?["هل أنت مستعد للتقدم؟","القليل من الدراسة يصنع فرقًا.","هل نصل إلى المستوى التالي؟"]:["Ready to make progress?","A little study goes a long way.","One step closer to your next level.","What would you like to learn today?"];setWelcomeLine(lines[Math.floor(Math.random()*lines.length)]);},[language]));
+  useFocusEffect(useCallback(()=>{const greetings=language==="sv"?["Hej, "+firstName+"!","Redo att nå nästa nivå, "+firstName+"?","Nu kör vi, "+firstName+"!"]:language==="ar"?["مرحبًا، "+firstName+"!","هل أنت مستعد للتقدم، "+firstName+"؟","هيا نتعلم، "+firstName+"!"]:["Hey, "+firstName+"!","Ready to level up, "+firstName+"?","Let’s get learning, "+firstName+"!"];setWelcomeLine(greetings[Math.floor(Math.random()*greetings.length)]);},[language,firstName]));
 
   useEffect(() => {
     let active = true;
@@ -129,6 +130,7 @@ export default function Home() {
         </View>
       </View>
     </Modal>
+    <BottomNav />
 
   </SafeAreaView>;
 }
