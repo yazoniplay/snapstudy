@@ -8,6 +8,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import AdBanner from "../components/AdBanner";
+import ConfirmActionModal from "../components/ConfirmActionModal";
 
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage, type AppLanguage } from "../lib/language";
@@ -21,6 +22,8 @@ export default function Account() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmSignOut,setConfirmSignOut]=useState(false);
+  const [signingOut,setSigningOut]=useState(false);
   const [colorDraft, setColorDraft] = useState(accentColor);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
@@ -107,9 +110,11 @@ export default function Account() {
 
 
   async function signOut() {
+    setSigningOut(true);
     const { error } = await supabase.auth.signOut();
-    if (error) Alert.alert("Couldn't sign out", error.message);
-    else router.replace("/auth");
+    setSigningOut(false);
+    if (error) Alert.alert("Sign out failed", error.message);
+    else {setConfirmSignOut(false);router.replace("/auth");}
   }
 
   async function exportStudyData(){
@@ -128,7 +133,8 @@ export default function Account() {
     else Alert.alert("Check your email","We sent a password reset link to your account email.");
   }
 
-  if (loading) return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.muted}>{t("loadingAccount")}</Text></View></SafeAreaView>;
+  if (loading) return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.muted}>{t("loadingAccount")}</Text></View><ConfirmActionModal visible={confirmSignOut} title={language==="sv"?"Vill du logga ut?":"Sign out?"} message={language==="sv"?"Du behöver logga in igen för att fortsätta använda SnapStudy. Dina sparade studier raderas inte.":"You’ll need to sign in again to use SnapStudy. Your saved study data will not be deleted."} confirmLabel={language==="sv"?"Logga ut":"Sign out"} cancelLabel={language==="sv"?"Stanna kvar":"Stay signed in"} busy={signingOut} onCancel={()=>setConfirmSignOut(false)} onConfirm={signOut}/>
+    </SafeAreaView>;
 
   const settingsCategories = [
     { title: "Profile", subtitle: "Name, username and photo", icon: "person-outline" as const },
@@ -294,7 +300,7 @@ export default function Account() {
           <Pressable style={s.secondary} onPress={sendPasswordReset}><Text style={s.secondaryText}>{language==="sv"?"Skicka länk för lösenordsåterställning":"Send password reset link"}</Text></Pressable>
           <Pressable style={s.secondary} onPress={exportStudyData}><Text style={s.secondaryText}>{language==="sv"?"Exportera mina studiedata":"Export my study data"}</Text></Pressable>
           <Text style={s.cardText}>{language==="sv"?"Exporten innehåller lokalt sparade SnapStudy-inställningar och studiedata.":"The export includes locally stored SnapStudy preferences and study data."}</Text>
-          <Pressable style={s.danger} onPress={signOut}>
+          <Pressable style={s.danger} onPress={()=>setConfirmSignOut(true)}>
             <Text style={s.dangerText}>{t("signOut")}</Text>
           </Pressable>
         </View>
