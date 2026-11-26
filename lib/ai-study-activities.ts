@@ -1,5 +1,5 @@
 import { loadStudyData, saveStudyData } from "./cloud-study-data";
-export type AIStudyActivity = { id:string; type:"quiz"|"flashcards"; title:string; createdAt:number; data:any; completed?:boolean; score?:number; total?:number; known?:number };
+export type AIStudyActivity = { id:string; type:"quiz"|"flashcards"|"guide"; title:string; createdAt:number; data:any; completed?:boolean; score?:number; total?:number; known?:number };
 const KEY="snapstudy:ai-study-activities";
 export async function saveAIStudyActivity(type:AIStudyActivity["type"],data:any):Promise<AIStudyActivity>{
  const existing=await loadStudyData<AIStudyActivity[]>(KEY,[]);
