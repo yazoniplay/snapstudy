@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
 import MarkdownText from "../components/MarkdownText";
 import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
+import { saveAIStudyActivity } from "../lib/ai-study-activities";
 import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
@@ -142,13 +143,15 @@ export default function SnapStudyAI() {
         if (markerAt >= 0) {
           const parsed = JSON.parse(answer.slice(markerAt + quizMarker.length).trim());
           if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.questions) && parsed.questions.length >= 1 && parsed.questions.every((q: any) => typeof q.question === "string" && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every((choice: any) => typeof choice.label === "string" && typeof choice.correct === "boolean" && typeof choice.explanation === "string") && q.choices.filter((choice: any) => choice.correct).length === 1)) {
-            await saveStudyData("snapstudy:ai-quiz-active", { title: parsed.title, questions: parsed.questions });
+            const activity = await saveAIStudyActivity("quiz", { title: parsed.title, questions: parsed.questions });
+            await saveStudyData("snapstudy:ai-quiz-active", { title: parsed.title, questions: parsed.questions, activityId: activity.id });
             generatedRoute = "/ai-quiz";
           }
         } else if (flashAt >= 0) {
           const parsed = JSON.parse(answer.slice(flashAt + flashcardMarker.length).trim());
           if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.cards) && parsed.cards.length >= 2 && parsed.cards.every((card: any) => typeof card.front === "string" && typeof card.back === "string" && card.front.trim() && card.back.trim())) {
-            await saveStudyData("snapstudy:ai-flashcards-active", { title: parsed.title, cards: parsed.cards });
+            const activity = await saveAIStudyActivity("flashcards", { title: parsed.title, cards: parsed.cards });
+            await saveStudyData("snapstudy:ai-flashcards-active", { title: parsed.title, cards: parsed.cards, activityId: activity.id });
             generatedRoute = "/ai-flashcards";
           }
         }
@@ -186,6 +189,7 @@ export default function SnapStudyAI() {
       {!filtered.length ? <Text style={s.noChats}>{sv ? "Inga chattar ännu" : "No chats yet"}</Text> : null}
     </ScrollView>
     <View style={s.sideBottom}>
+      <Pressable onPress={() => router.push("/ai-activities")} style={s.sideLink}><Ionicons name="library-outline" size={17} color={c.muted}/><Text style={s.sideLinkText}>{sv ? "Sparade aktiviteter" : "Saved activities"}</Text></Pressable>
       <Pressable onPress={() => router.push("/history")} style={s.sideLink}><Ionicons name="book-outline" size={17} color={c.muted}/><Text style={s.sideLinkText}>{sv ? "Studiehistorik" : "Study history"}</Text></Pressable>
       <Pressable onPress={() => router.push("/account")} style={s.sideLink}><Ionicons name="settings-outline" size={17} color={c.muted}/><Text style={s.sideLinkText}>{sv ? "Inställningar" : "Settings"}</Text></Pressable>
     </View>
@@ -198,6 +202,7 @@ export default function SnapStudyAI() {
         <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}>{wide ? <Ionicons name="menu-outline" size={21} color={c.text}/> : <Ionicons name="menu" size={21} color={c.text}/>}</Pressable>
         <Text style={s.topTitle}>SnapStudy AI</Text>
         <View style={{ flex: 1 }}/>
+        <Pressable onPress={() => router.push("/ai-activities")} style={s.iconButton} accessibilityLabel={sv ? "Sparade studieaktiviteter" : "Saved study activities"}><Ionicons name="library-outline" size={20} color={c.text}/></Pressable>
         <Pressable onPress={createChat} style={s.iconButton}><Ionicons name="create-outline" size={21} color={c.text}/></Pressable>
       </View>
       <KeyboardAvoidingView style={s.chatArea} behavior={Platform.OS === "ios" ? "padding" : undefined}>
