@@ -21,7 +21,7 @@ Deno.serve(async(req:Request)=>{
  if(req.method!=="POST")return json({error:"POST required"},405);
  if(!req.headers.get("Authorization")?.startsWith("Bearer "))return json({error:"Sign in to use SnapStudy AI."},401);
  try{
-  const body=await req.json();const messages=(Array.isArray(body.messages)?body.messages:[]).filter((m:any)=>["user","assistant"].includes(m?.role)&&typeof m?.content==="string").slice(-16).map((m:any)=>({role:m.role,content:m.content.slice(0,5000),...(typeof m.imageBase64==="string"&&m.imageBase64.length<=8_000_000?{imageBase64:m.imageBase64,imageMimeType:typeof m.imageMimeType==="string"&&/^image\\/(jpeg|png|webp|gif)$/.test(m.imageMimeType)?m.imageMimeType:"image/jpeg"}:{})})) as Msg[];
+  const body=await req.json();const messages=(Array.isArray(body.messages)?body.messages:[]).filter((m:any)=>["user","assistant"].includes(m?.role)&&typeof m?.content==="string").slice(-16).map((m:any)=>({role:m.role,content:m.content.slice(0,5000),...(typeof m.imageBase64==="string"&&m.imageBase64.length<=8_000_000?{imageBase64:m.imageBase64,imageMimeType:typeof m.imageMimeType==="string"&&/^image\/(jpeg|png|webp|gif)$/.test(m.imageMimeType)?m.imageMimeType:"image/jpeg"}:{})})) as Msg[];
   if(!messages.length||messages[messages.length-1].role!=="user")return json({error:"Send a message first."},400);
   const context=JSON.stringify(body.context||{}).slice(0,18000);
   const geminiKey=env("GEMINI_API_KEY");const geminiModel=env("GEMINI_CHAT_MODEL")||env("GEMINI_MODEL")||"gemini-2.5-flash-lite";
