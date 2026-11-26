@@ -39,7 +39,7 @@ export default function Study(){
  const matchMotion=useRef(new Animated.Value(1)).current;const matchAwarded=useRef(false);
  const [speedSeconds,setSpeedSeconds]=useState(60),[speedRunning,setSpeedRunning]=useState(false),[speedIndex,setSpeedIndex]=useState(0),[speedScore,setSpeedScore]=useState(0),[speedAnswered,setSpeedAnswered]=useState(false);const speedAwarded=useRef(false);
  const [focusSeconds,setFocusSeconds]=useState(1500),[focusRunning,setFocusRunning]=useState(false);
- const [gameXP,setGameXP]=useState(0);
+ const [gameXP,setGameXP]=useState(0),[usageVersion,setUsageVersion]=useState(0);
  const focusAwarded=useRef(false); const focusRunId=useRef("focus-"+Date.now());
  const modeMotion=useRef(new Animated.Value(1)).current;
  const flashMotion=useRef(new Animated.Value(1)).current;
@@ -129,7 +129,7 @@ export default function Study(){
         await AsyncStorage.removeItem("snapstudy:pending-notes");
       }else{x=await analyzeNotes(images,generationLanguage);}
       if(!active) return;
-      setData(x);
+      setData(x);setUsageVersion(v=>v+1);
       try{
        const createdAt=Date.now();
        const last=JSON.stringify({topic:x.topic,summary:x.summary,createdAt,result:x});
@@ -214,7 +214,7 @@ export default function Study(){
  const modeLabel=(m:Mode)=>m==="test"?t("practiceTest"):m==="concepts"?t("keyConcepts"):m==="written"?(language==="sv"?"Skrivsvar":"Written practice"):m==="cloze"?(language==="sv"?"Fyll i luckor":"Fill the blanks"):m==="matching"?(language==="sv"?"Matcha par":language==="ar"?"طابق الأزواج":"Match pairs"):m==="speed"?(language==="sv"?"Snabbquiz":language==="ar"?"تحدي السرعة":"Speed round"):m==="plan"?t("studyPlan"):m==="teach"?t("teachBack"):m==="focus"?t("focusTimer"):m==="summary"?t("summary"):m==="flashcards"?t("flashcards"):m==="quiz"?t("quiz"):m;
  if(error)return <SafeAreaView style={s.safe}><View style={s.center}><Text style={s.title}>{t("couldntAnalyze")}</Text><Text style={s.error}>{error}</Text><Text style={s.muted}>{t("checkConnection")}</Text><Pressable style={s.button} onPress={()=>router.replace("/history")}><Text style={s.buttonText}>{t("backHome")}</Text></Pressable></View></SafeAreaView>;
  if(!data)return <SafeAreaView style={s.loadingScreen}><View pointerEvents="none" style={s.glowOne}/><View pointerEvents="none" style={s.glowTwo}/><View style={s.loadingContent}><Animated.View style={[s.loadingLogo,{transform:[{scale:loadingPulse.interpolate({inputRange:[0,1],outputRange:[0.94,1.06]})}]}]}><Ionicons name="sparkles" size={34} color="#FFFFFF"/></Animated.View><Text style={s.loadingBrand}>SNAPSTUDY</Text><Text style={s.loadingTitle}>{language==="sv"?"Gör dina anteckningar till något magiskt":language==="ar"?"نحوّل ملاحظاتك إلى شيء رائع":"Turning your notes into magic"}</Text><Text style={s.loadingSubtitle}>{language==="sv"?"Vi bygger dina kort och quiz…":language==="ar"?"نجهّز البطاقات والاختبار…":"Making flashcards, quizzes & a study plan…"}</Text><View style={s.loadingDots}><View style={s.loadingDot}/><View style={[s.loadingDot,{opacity:0.65}]}/><View style={[s.loadingDot,{opacity:0.35}]}/></View><Text style={s.loadingFoot}>{t("readingNotes")}</Text></View></SafeAreaView>;
- return <SafeAreaView style={[s.safe,{direction:language==="ar"?"rtl":"ltr"}]}><View style={{paddingHorizontal:16,paddingTop:8}}><DailyAIUsage /></View><Animated.ScrollView style={{opacity:modeMotion,transform:[{translateY:modeMotion.interpolate({inputRange:[0,1],outputRange:[8,0]})}]}} contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+ return <SafeAreaView style={[s.safe,{direction:language==="ar"?"rtl":"ltr"}]}><View style={{paddingHorizontal:16,paddingTop:8}}><DailyAIUsage key={usageVersion} /></View><Animated.ScrollView style={{opacity:modeMotion,transform:[{translateY:modeMotion.interpolate({inputRange:[0,1],outputRange:[8,0]})}]}} contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
   <Pressable onPress={()=>router.replace("/")}><Text style={s.back}>{t("newScan")}</Text></Pressable>
   <Text style={s.eyebrow}>{t("studySession")}</Text><Text style={s.title}>{data.topic}</Text>
   <Pressable onPress={()=>router.push("/progress")} style={{backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:14,padding:12,marginTop:9,marginBottom:10,flexDirection:"row",alignItems:"center",gap:10}}><View style={{flex:1}}><Text style={{color:c.accent,fontSize:11,fontWeight:"900"}}>LEVEL {getLevel(gameXP).level} · {gameXP.toLocaleString()} XP</Text><View style={{height:6,backgroundColor:c.border,borderRadius:6,overflow:"hidden",marginTop:8}}><View style={{height:"100%",width:(getLevel(gameXP).progress*100)+"%",backgroundColor:c.accent}}/></View><Text style={{color:c.muted,fontSize:10,marginTop:5}}>{getLevel(gameXP).nextXp-gameXP} XP to next level</Text></View><Ionicons name="trophy-outline" size={20} color={c.accent}/></Pressable>
