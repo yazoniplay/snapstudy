@@ -10,6 +10,16 @@ export type GamificationState = {
   streakFreezes: number;
   streakFreezeDates: string[];
 };
+export type XPRewardNotice = { xp: number; title: string; level: number; previousLevel: number; leveledUp: boolean };
+type XPRewardListener = (notice: XPRewardNotice) => void;
+const xpRewardListeners = new Set<XPRewardListener>();
+export function subscribeXPRewards(listener: XPRewardListener) {
+  xpRewardListeners.add(listener);
+  return () => { xpRewardListeners.delete(listener); };
+}
+function publishXPReward(notice: XPRewardNotice) {
+  for (const listener of xpRewardListeners) listener(notice);
+}
 export const EMPTY_GAMIFICATION: GamificationState = {
   totalXp: 0, events: [],
   stats: { cardsReviewed: 0, quizzesCompleted: 0, focusSessions: 0, focusMinutes: 0, tasksCompleted: 0, studySetsCreated: 0, perfectQuizzes: 0 },
@@ -54,6 +64,8 @@ export function getLevel(totalXp: number) {
 export async function awardXP(id: string, amount: number, kind: XPKind, title: string, extra?: Partial<GamificationState["stats"]>): Promise<GamificationState> {
   const state = await loadGamification();
   if (state.events.some(event => event.id === id)) return state;
+  const previousTotalXp = state.totalXp;
+  const previousLevel = getLevel(previousTotalXp).level;
   const date = localDate();
   const event: XPEvent = { id, xp: Math.max(0, Math.floor(amount)), kind, title, date };
   state.events = [event, ...state.events].slice(0, 1500);
@@ -87,6 +99,11 @@ export async function awardXP(id: string, amount: number, kind: XPKind, title: s
   const weekly=[{id:"weekly-cards",title:"Review 50 flashcards",progress:weekEvents.filter(e=>e.kind==="card").length,goal:50,xp:120},{id:"weekly-quiz",title:"Complete 5 quizzes",progress:weekEvents.filter(e=>e.kind==="quiz").length,goal:5,xp:150},{id:"weekly-focus",title:"Complete 120 focus minutes",progress:weekEvents.filter(e=>e.kind==="focus").reduce((n,e)=>n+(Number(e.title.match(/(\d+)-minute/)?.[1])||25),0),goal:120,xp:180},{id:"weekly-days",title:"Study on 5 different days",progress:new Set(weekEvents.map(e=>e.date)).size,goal:5,xp:200}];
   for(const q of weekly){const qid="quest:"+weekStart+":"+q.id;if(q.progress>=q.goal&&!state.events.some(e=>e.id===qid)){state.totalXp+=q.xp;state.events.unshift({id:qid,xp:q.xp,kind:"achievement",title:"Weekly quest: "+q.title,date});}}
   await saveStudyData(KEY, state);
+  const xpEarned = state.totalXp - previousTotalXp;
+  if (xpEarned > 0) {
+    const level = getLevel(state.totalXp).level;
+    publishXPReward({ xp: xpEarned, title, level, previousLevel, leveledUp: level > previousLevel });
+  }
   return state;
 }
 export function getDailyQuestProgress(state: GamificationState) {
