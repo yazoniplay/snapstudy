@@ -15,7 +15,7 @@ export default function DailyAIUsage(){
  if(!usage)return null;
  return <View style={[styles.wrap,{backgroundColor:c.surface,borderColor:c.border}]}>
   <Text style={[styles.label,{color:c.muted}]}>{sv?"DAGLIG AI-ANVÄNDNING":"DAILY AI USAGE"} · {usage.plan.toUpperCase()}</Text>
-  <Text style={[styles.value,{color:c.text}]}>{sv?"Chatt":"Chat"} {usage.chatUsed}/{usage.chatLimit}  ·  {sv?"Studiegrejer":"Study materials"} {usage.studyUsed}/{usage.studyLimit}</Text>
+  <Text style={[styles.value,{color:c.text}]}>{sv?"AI-meddelanden":"AI messages"} {usage.chatUsed}/{usage.chatLimit}  ·  {sv?"Studiegenereringar":"Study generations"} {usage.studyUsed}/{usage.studyLimit}</Text>
   {usage.plan==="free"?<Pressable onPress={()=>router.push("/plus")}><Text style={[styles.plus,{color:c.accent}]}>{sv?"Få högre gränser med Plus →":"Get higher limits with Plus →"}</Text></Pressable>:null}
  </View>;
 }
