@@ -236,7 +236,7 @@ export default function SnapStudyAI() {
             <View style={s.welcomeIcon}><Ionicons name="sparkles" size={25} color={c.accent}/></View>
             <Text style={s.welcomeTitle}>{sv ? "Vad ska vi plugga idag?" : "What are we studying today?"}</Text>
             <Text style={s.welcomeSub}>{sv ? "Din AI-läxhjälpare kan hjälpa dig med dina sparade studier." : "Your AI study partner can help with your saved study material."}</Text>
-            {( {
+            {(( {
  en:["Explain my weak topics","Quiz me on my latest study set","Help me prepare for my exam"],
  sv:["Förklara mina svåra ämnen","Förhör mig på mitt senaste studiepaket","Hjälp mig att plugga till provet"],
  ar:["اشرح لي المواضيع التي أجدها صعبة","اختبرني في أحدث مجموعة دراسية","ساعدني في الاستعداد للامتحان"],
