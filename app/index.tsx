@@ -19,7 +19,7 @@ import { useLanguage } from "../lib/language";
 export default function Home() {
   const { colors:c } = useTheme();
   const { width: viewportWidth } = useWindowDimensions();
-  const desktopLayout = viewportWidth >= 1100;
+  const desktopLayout = viewportWidth >= 1100;\n  const compactLayout = viewportWidth < 600;
   const {t,language}=useLanguage();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
@@ -117,7 +117,7 @@ export default function Home() {
   if (camera) return <View style={s.cameraScreen}><CameraView ref={cameraRef} style={s.cameraView} facing="back" /><View style={s.cameraOverlay}><Pressable style={s.close} onPress={()=>setCamera(false)}><Text style={s.closeText}>×</Text></Pressable><Text style={s.cameraHint}>{t("cameraHint")}</Text><Pressable style={s.capture} onPress={capture} disabled={busy}><View style={s.captureRing}/></Pressable></View></View>;
 
   return <SafeAreaView style={s.safe}>
-    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:desktopLayout?36:24,paddingTop:24,paddingBottom:34,gap:18,width:"100%",maxWidth:desktopLayout?1280:940,alignSelf:"center"}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
+    <Animated.ScrollView contentContainerStyle={{paddingHorizontal:desktopLayout?36:compactLayout?14:24,paddingTop:compactLayout?14:24,paddingBottom:compactLayout?112:40,gap:compactLayout?14:18,width:"100%",maxWidth:desktopLayout?1280:940,alignSelf:"center"}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
       <SnapStudyHomeDashboard name={firstName} avatarUrl={avatarUrl} welcomeLine={welcomeLine} gameState={gameState} onScan={cameraOpen} onNotes={()=>setNotesModal(true)} onPhotos={library} busy={busy} />
 
     </Animated.ScrollView>    <Modal visible={notesModal} transparent animationType="fade" onRequestClose={()=>setNotesModal(false)}>
