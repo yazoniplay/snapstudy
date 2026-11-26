@@ -7,6 +7,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
+import ConfirmActionModal from "../components/ConfirmActionModal";
 
 type ChatReaction = {message_id:string;user_id:string;emoji:string};
 type ChatMessage = { id:string; friendship_id:string; sender_id:string; message_type:"text"|"image"|"gift"; body:string|null; media_path:string|null; gift_code:string|null; created_at:string; read_at:string|null; delivered_at:string|null; reply_to?:string|null; edited_at?:string|null; deleted_at?:string|null; imageUrl?:string|null; reactions?:ChatReaction[] };
@@ -29,6 +30,8 @@ export default function Chat() {
   const [draft,setDraft] = useState("");
   const [loading,setLoading] = useState(true);
   const [sending,setSending] = useState(false);
+  const [messageToDelete,setMessageToDelete]=useState<ChatMessage|null>(null);
+  const [deletingMessage,setDeletingMessage]=useState(false);
   const [giftPicker,setGiftPicker] = useState(false);
   const [replyTo,setReplyTo] = useState<string|null>(null);
   const [editingMessageId,setEditingMessageId] = useState<string|null>(null);
@@ -103,11 +106,13 @@ export default function Chat() {
   function openMessageActions(message:ChatMessage,mine:boolean) {
     const buttons:any[]=[{text:"Reply",onPress:()=>{setReplyTo(message.id);setEditingMessageId(null);}}];
     if(mine&&message.message_type==="text"&&!message.deleted_at)buttons.push({text:"Edit",onPress:()=>{setDraft(message.body||"");setEditingMessageId(message.id);setReplyTo(null);}});
-    if(mine&&message.message_type==="text"&&!message.deleted_at)buttons.push({text:"Delete",style:"destructive",onPress:async()=>{const {error}=await supabase.from("messages").update({body:"This message was deleted.",deleted_at:new Date().toISOString(),edited_at:null}).eq("id",message.id).eq("sender_id",userId);if(error)Alert.alert("Couldn't delete message",error.message);else await loadMessages();}});
+    if(mine&&message.message_type==="text"&&!message.deleted_at)buttons.push({text:"Delete",style:"destructive",onPress:()=>setMessageToDelete(message)});
     buttons.push({text:"Cancel",style:"cancel"});
     Alert.alert("Message actions","Reply, react, or manage your message.",buttons);
   }
 
+  async function confirmDeleteMessage(){if(!messageToDelete||deletingMessage)return;setDeletingMessage(true);const {error}=await supabase.from("messages").update({body:"This message was deleted.",deleted_at:new Date().toISOString(),edited_at:null}).eq("id",messageToDelete.id).eq("sender_id",userId);setDeletingMessage(false);if(error)Alert.alert("Could not delete message",error.message);else{setMessageToDelete(null);await loadMessages();}}
+  
   async function sendImage() {
     if (sending || !userId) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -183,6 +188,7 @@ export default function Chat() {
         <Pressable style={[s.sendButton,(!draft.trim()||sending)&&{opacity:0.55}]} onPress={sendText} disabled={!draft.trim()||sending||!userId} accessibilityLabel="Send message">{sending?<ActivityIndicator size="small" color={c.onAccent}/>:<Ionicons name="arrow-up" size={21} color={c.onAccent}/>}</Pressable>
       </View>
     </KeyboardAvoidingView>
+  <ConfirmActionModal visible={!!messageToDelete} title="Delete this message?" message="This message will be replaced with a deleted-message notice for everyone in this chat." confirmLabel="Delete message" cancelLabel="Keep message" busy={deletingMessage} onCancel={()=>setMessageToDelete(null)} onConfirm={confirmDeleteMessage}/>
   </SafeAreaView>;
 }
 
