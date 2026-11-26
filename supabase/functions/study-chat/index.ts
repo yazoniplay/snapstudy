@@ -111,7 +111,18 @@ Deno.serve(async(req:Request)=>{
   const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());providers.sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return(x<0?999:x)-(y<0?999:y);});
   const errors:string[]=[];
   if(geminiKey){try{return json({message:await callGemini(geminiKey,geminiModel,messages,contextWithResearch,researchPrompt)});}catch(e){errors.push("Gemini: "+String(e).slice(0,160));console.warn(errors[errors.length-1]);}}
-  for(const p of providers){try{return json({message:await callCompatible(p.base,p.key,p.model,messages,contextWithResearch,researchPrompt)});}catch(e){errors.push(p.id+": "+String(e).slice(0,140));console.warn(errors[errors.length-1]);}}
+  for(const p of providers){
+   const hasImages=messages.some(m=>!!m.imageBase64);
+   let models=[p.model];
+   if(p.id==="groq")models=[...models,...(hasImages?["qwen/qwen3.8-27b"]:["openai/gpt-oss-120b","openai/gpt-oss-20b","llama-3.3-70b-versatile","llama-3.1-8b-instant"])];
+   if(p.id==="nvidia")models=[...models,...(hasImages?["nvidia/nemotron-3.5-super-vl-120b-a12b","stepfun-ai/step-3.7-flash"]:["nvidia/nemotron-3.5-super-120b-a12b","stepfun-ai/step-3.7-flash"])];
+   if(p.id==="tokenharbor")models=[...models,"deepseek-v4.1-flash:free","mimo-v2.6-flash:free"];
+   models=models.filter((m,i,a)=>m&&a.indexOf(m)===i);
+   for(const model of models){
+    try{return json({message:await callCompatible(p.base,p.key,model,messages,contextWithResearch,researchPrompt)});}
+    catch(e){const detail=p.id+": "+model+": "+String(e).slice(0,120);errors.push(detail);console.warn(detail);}
+   }
+  }
   return json({error:"SnapStudy AI could not reach an available model. Check the AI provider keys and quota in Supabase. "+(errors[0]||"No AI provider key is configured.")},503);
  }catch(e){console.error("study-chat failed",e);return json({error:"SnapStudy AI could not process that message."},500);}
 });
