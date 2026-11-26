@@ -17,7 +17,9 @@ export default function Friends() {
   const [userId, setUserId] = useState("");
   const [tab, setTab] = useState<"friends" | "requests" | "find">("friends");
   const [links, setLinks] = useState<FriendRow[]>([]);
-  const [results, setResults] = useState<Profile[]>([]);\n  const [suggestions,setSuggestions]=useState<Profile[]>([]);\n  const [suggestionsLoading,setSuggestionsLoading]=useState(false);
+  const [results, setResults] = useState<Profile[]>([]);
+  const [suggestions,setSuggestions]=useState<Profile[]>([]);
+  const [suggestionsLoading,setSuggestionsLoading]=useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
