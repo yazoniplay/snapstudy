@@ -154,11 +154,24 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
   }else if(p.model==="auto")throw new Error("AI Horde could not load its live chat model list");
  }
  const errors:string[]=[];
+ if(p.id==="groq"){
+  const fallbacks=images.length?["qwen/qwen3.8-27b"]:["openai/gpt-oss-120b","openai/gpt-oss-20b","llama-3.3-70b-versatile","llama-3.1-8b-instant"];
+  models=[...models,...fallbacks].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,5);
+ }
+ if(p.id==="tokenharbor")models=[...models,"deepseek-v4.1-flash:free","mimo-v2.6-flash:free"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
  for(const model of models){
   try{
-   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen","cloudflare"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},providerTimeout);
-   const data=await response.json();
-   if(!response.ok)throw new Error(data.error?.message||"HTTP "+response.status);
+   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:p.id==="aihorde"?3500:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen","cloudflare"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},providerTimeout);
+   const raw=await response.text();
+   if(!response.ok){let detail=raw;try{const e=JSON.parse(raw);detail=e.error?.message||e.message||raw;}catch{}throw new Error(String(detail).slice(0,500)||"HTTP "+response.status);}
+   let data:any;
+   try{data=JSON.parse(raw);}catch{
+    const chunks=raw.split(/\r?\n/).filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trim()).filter(v=>v&&v!=="[DONE]");
+    const parsed=chunks.map(v=>{try{return JSON.parse(v);}catch{return null;}}).filter(Boolean);
+    const streamed=parsed.map((p:any)=>p.choices?.[0]?.delta?.content||p.choices?.[0]?.message?.content||"").join("");
+    if(!streamed.trim())throw new Error("Provider returned malformed JSON/SSE: "+raw.slice(0,180));
+    return parse(streamed);
+   }
    const answer=data.choices?.[0]?.message?.content;
    return parse(typeof answer==="string"?answer:Array.isArray(answer)?answer.map((x:any)=>x.text||"").join("\n"):"");
   }catch(e){const message=e instanceof Error?e.message:String(e);errors.push(model+": "+message.slice(0,120));console.warn("AI model fallback",p.id,model,message.slice(0,180));}
