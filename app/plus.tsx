@@ -107,11 +107,25 @@ export default function Plus() {
     <View style={s.featureCard}>
       {[t("benefit1"),t("benefit2"),t("benefit3"),t("benefit4")].map(x=><View style={s.featureRow} key={x}><Text style={s.plusCheck}>✦</Text><Text style={s.featureText}>{x}</Text></View>)}
     </View>
+    <Text style={s.sectionTitle}>Pro study workspace</Text>
+    <View style={s.featureCard}>
+      <Pressable onPress={()=>router.push("/ai-coach")} style={{flexDirection:"row",alignItems:"center",paddingVertical:12,gap:12}}>
+        <View style={s.proFeatureIcon}><Ionicons name="sparkles" size={20} color={c.accent}/></View>
+        <View style={{flex:1}}><Text style={s.proFeatureTitle}>Open AI Study Coach</Text><Text style={s.proFeatureBody}>Get tutoring grounded in your weak topics and recent sessions.</Text></View>
+        <Ionicons name="chevron-forward" size={20} color={c.muted}/>
+      </Pressable>
+      <View style={{height:1,backgroundColor:c.border}}/>
+      <Pressable onPress={()=>router.push("/exam-prep")} style={{flexDirection:"row",alignItems:"center",paddingVertical:12,gap:12}}>
+        <View style={s.proFeatureIcon}><Ionicons name="school-outline" size={20} color={c.accent}/></View>
+        <View style={{flex:1}}><Text style={s.proFeatureTitle}>Build an Exam Prep Plan</Text><Text style={s.proFeatureBody}>Generate a day-by-day revision plan with practice goals.</Text></View>
+        <Ionicons name="chevron-forward" size={20} color={c.muted}/>
+      </Pressable>
+    </View>
     <Text style={s.sectionTitle}>More ways to study with Pro</Text>
     <View style={s.proGrid}>
       {[
-        {icon:"sparkles" as const,title:"AI study coach",body:"Step-by-step explanations and follow-up practice.",status:"Planned"},
-        {icon:"school-outline" as const,title:"Exam prep packs",body:"Revision plans, practice sets and exam-day checklists.",status:"Planned"},
+        {icon:"sparkles" as const,title:"AI study coach",body:"Personalized tutoring using your saved weak topics and recent study sessions.",status:"Open coach"},
+        {icon:"school-outline" as const,title:"Exam prep",body:"Build a timed revision plan and practice schedule for your next test.",status:"Create plan"},
         {icon:"repeat-outline" as const,title:"Smart review",body:"Bring back difficult cards and revisit weak topics.",status:"In app"},
         {icon:"time-outline" as const,title:"Focus sessions",body:"Timed study blocks with progress and breaks.",status:"In app"},
         {icon:"cloud-download-outline" as const,title:"Export study packs",body:"Save your summaries and flashcards for offline use.",status:trialStatus.active ? "Trial unlocked" : "Pro feature"},
