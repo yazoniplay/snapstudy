@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
 import MarkdownText from "../components/MarkdownText";
+import ConfirmActionModal from "../components/ConfirmActionModal";
 import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
 import { saveAIStudyActivity } from "../lib/ai-study-activities";
 import { supabase } from "../lib/supabase";
@@ -25,6 +26,7 @@ export default function SnapStudyAI() {
   const wide = width >= 820;
   const s = styles(c, wide, width);
   const [chats, setChats] = useState<Chat[]>([]);
+  const [chatToDelete,setChatToDelete]=useState<Chat|null>(null);
   const [activeId, setActiveId] = useState("");
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
@@ -194,6 +196,8 @@ export default function SnapStudyAI() {
     }
   };
 
+  const confirmDeleteChat=async()=>{if(!chatToDelete)return;const next=chats.filter(x=>x.id!==chatToDelete.id);await persist(next);if(activeId===chatToDelete.id)setActiveId(next[0]?.id||"");setChatToDelete(null);};
+
   const sidebar = <View style={s.sidebar}>
     <View style={s.sidebarHeader}>
       <View style={s.brandIcon}><Ionicons name="sparkles" size={17} color={c.onAccent}/></View>
@@ -207,7 +211,7 @@ export default function SnapStudyAI() {
         <Pressable style={s.historyTap} onPress={() => { setActiveId(chat.id); setSidebarOpen(false); }}>
           <Text numberOfLines={1} style={s.historyTitle}>{chat.title}</Text>
         </Pressable>
-        <Pressable style={s.deleteChat} onPress={() => { const next = chats.filter(x => x.id !== chat.id); persist(next).catch(() => {}); if (activeId === chat.id) setActiveId(next[0]?.id || ""); }}>
+        <Pressable style={s.deleteChat} onPress={() => setChatToDelete(chat)}>
           <Ionicons name="trash-outline" size={15} color={c.subtle}/>
         </Pressable>
       </View>)}
@@ -264,7 +268,8 @@ export default function SnapStudyAI() {
       </KeyboardAvoidingView>
     </View>
     {!wide && sidebarOpen ? <Animated.View style={[s.overlay, { opacity: mobileSidebarProgress }]}><Pressable onPress={() => setSidebarOpen(false)} style={s.scrim}/><Animated.View style={[s.drawer, { transform: [{ translateX: mobileSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [-28, 0] }) }] }]}>{sidebar}</Animated.View></Animated.View> : null}
-  </View></SafeAreaView>;
+  </View><ConfirmActionModal visible={!!chatToDelete} title={sv?"Ta bort AI-chatten?":"Delete AI chat?"} message={sv?"Hela den här konversationen tas bort från din sparade AI-chatthistorik.":"This entire conversation will be removed from your saved AI chat history."} confirmLabel={sv?"Ta bort chatten":"Delete chat"} cancelLabel={sv?"Behåll chatten":"Keep chat"} onCancel={()=>setChatToDelete(null)} onConfirm={confirmDeleteChat}/>
+  </SafeAreaView>;
 }
 
 const styles = (c: ThemeColors, wide: boolean, width: number) => StyleSheet.create({
