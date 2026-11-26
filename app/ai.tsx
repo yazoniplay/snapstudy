@@ -134,23 +134,30 @@ export default function SnapStudyAI() {
       if (error) throw error;
       let answer = typeof data?.message === "string" ? data.message.trim() : "";
       if (!answer) throw new Error(data?.error || "No response came back.");
-      let generatedQuiz: any = null;
+      let generatedRoute: string | null = null;
       const quizMarker = "[[SNAPSTUDY_QUIZ]]";
+      const flashcardMarker = "[[SNAPSTUDY_FLASHCARDS]]";
       const markerAt = answer.indexOf(quizMarker);
-      if (markerAt >= 0) {
-        const payload = answer.slice(markerAt + quizMarker.length).trim();
-        try {
-          const parsed = JSON.parse(payload);
+      const flashAt = answer.indexOf(flashcardMarker);
+      try {
+        if (markerAt >= 0) {
+          const parsed = JSON.parse(answer.slice(markerAt + quizMarker.length).trim());
           if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.questions) && parsed.questions.length >= 1 && parsed.questions.every((q: any) => typeof q.question === "string" && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every((choice: any) => typeof choice.label === "string" && typeof choice.correct === "boolean" && typeof choice.explanation === "string") && q.choices.filter((choice: any) => choice.correct).length === 1)) {
-            generatedQuiz = { title: parsed.title, questions: parsed.questions };
-            await saveStudyData("snapstudy:ai-quiz-active", generatedQuiz);
-            answer = sv ? "Jag har gjort ett interaktivt quiz åt dig. Nu öppnar vi det!" : "I made an interactive quiz for you. Opening it now!";
+            await saveStudyData("snapstudy:ai-quiz-active", { title: parsed.title, questions: parsed.questions });
+            generatedRoute = "/ai-quiz";
           }
-        } catch { generatedQuiz = null; }
-      }
+        } else if (flashAt >= 0) {
+          const parsed = JSON.parse(answer.slice(flashAt + flashcardMarker.length).trim());
+          if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.cards) && parsed.cards.length >= 2 && parsed.cards.every((card: any) => typeof card.front === "string" && typeof card.back === "string" && card.front.trim() && card.back.trim())) {
+            await saveStudyData("snapstudy:ai-flashcards-active", { title: parsed.title, cards: parsed.cards });
+            generatedRoute = "/ai-flashcards";
+          }
+        }
+      } catch { generatedRoute = null; }
+      if (generatedRoute) answer = sv ? "Din interaktiva studieaktivitet är klar. Nu öppnar vi den!" : "Your interactive study activity is ready. Opening it now!";
       const completed = { ...updated, updatedAt: Date.now(), messages: [...updated.messages, { id: Date.now() + "-a", role: "assistant" as const, content: answer, createdAt: Date.now() }].slice(-80) };
       await persist([completed, ...first.filter(x => x.id !== target!.id)]);
-      if (generatedQuiz) router.push("/ai-quiz");
+      if (generatedRoute) router.push(generatedRoute as any);
     } catch (err: any) {
       const message = err?.message || "SnapStudy AI couldn't connect. Try again.";
       const failed = { ...updated, messages: [...updated.messages, { id: Date.now() + "-e", role: "assistant" as const, content: (sv ? "Jag kunde inte få svar: " : "I couldn't get a reply: ") + message, createdAt: Date.now() }] };
@@ -189,7 +196,7 @@ export default function SnapStudyAI() {
     {wide ? <Animated.View pointerEvents={sidebarCollapsed ? "none" : "auto"} style={[s.desktopSidebar, { width: desktopSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [0, 265] }), opacity: desktopSidebarProgress, transform: [{ translateX: desktopSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }] }]}><View style={s.desktopSidebarInner}>{sidebar}</View></Animated.View> : null}
     <View style={s.main}>
       <View style={s.topbar}>
-        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}>{wide ? <MaterialCommunityIcons name="view-sidebar-outline" size={21} color={c.text}/> : <Ionicons name="menu" size={21} color={c.text}/>}</Pressable>
+        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}>{wide ? <Ionicons name="menu-outline" size={21} color={c.text}/> : <Ionicons name="menu" size={21} color={c.text}/>}</Pressable>
         <Text style={s.topTitle}>SnapStudy AI</Text>
         <View style={{ flex: 1 }}/>
         <Pressable onPress={createChat} style={s.iconButton}><Ionicons name="create-outline" size={21} color={c.text}/></Pressable>
@@ -200,7 +207,7 @@ export default function SnapStudyAI() {
             <View style={s.welcomeIcon}><Ionicons name="sparkles" size={25} color={c.accent}/></View>
             <Text style={s.welcomeTitle}>{sv ? "Vad ska vi plugga idag?" : "What are we studying today?"}</Text>
             <Text style={s.welcomeSub}>{sv ? "Din AI-läxhjälpare kan hjälpa dig med dina sparade studier." : "Your AI study partner can help with your saved study material."}</Text>
-            {(sv ? ["Förklara mina svåra ämnen", "Förhör mig på senaste studiepaketet", "Hjälp mig plugga till provet"] : ["Explain my weak topics", "Quiz me on my latest study set", "Help me prepare for my exam"]).map(prompt => <Pressable key={prompt} onPress={() => send(prompt)} style={s.prompt}><Text style={s.promptText}>{prompt}</Text><Ionicons name="arrow-up-right" size={16} color={c.accent}/></Pressable>)}
+            {(sv ? ["Förklara mina svåra ämnen", "Förhör mig på senaste studiepaketet", "Hjälp mig plugga till provet"] : ["Explain my weak topics", "Quiz me on my latest study set", "Help me prepare for my exam"]).map(prompt => <Pressable key={prompt} onPress={() => send(prompt)} style={s.prompt}><Text style={s.promptText}>{prompt}</Text><Ionicons name="arrow-forward" size={16} color={c.accent}/></Pressable>)}
           </View> : messages.map(message => <View key={message.id} style={[s.message, message.role === "user" && s.userMessage]}>
             <View style={[s.avatar, message.role === "user" && s.userAvatar]}><Ionicons name={message.role === "user" ? "person" : "sparkles"} size={15} color={message.role === "user" ? c.onAccent : c.accent}/></View>
             <View style={s.messageBody}><Text style={s.role}>{message.role === "user" ? (sv ? "Du" : "You") : "SnapStudy AI"}</Text>{message.imageBase64 ? <Image source={{ uri: `data:${message.imageMimeType || "image/jpeg"};base64,${message.imageBase64}` }} style={s.messageImage} resizeMode="contain"/> : null}<MarkdownText>{message.content}</MarkdownText></View>
