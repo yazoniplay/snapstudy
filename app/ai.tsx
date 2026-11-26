@@ -220,7 +220,19 @@ export default function SnapStudyAI() {
             <View style={s.welcomeIcon}><Ionicons name="sparkles" size={25} color={c.accent}/></View>
             <Text style={s.welcomeTitle}>{sv ? "Vad ska vi plugga idag?" : "What are we studying today?"}</Text>
             <Text style={s.welcomeSub}>{sv ? "Din AI-läxhjälpare kan hjälpa dig med dina sparade studier." : "Your AI study partner can help with your saved study material."}</Text>
-            {(sv ? ["Förklara mina svåra ämnen", "Förhör mig på senaste studiepaketet", "Hjälp mig plugga till provet"] : ["Explain my weak topics", "Quiz me on my latest study set", "Help me prepare for my exam"]).map(prompt => <Pressable key={prompt} onPress={() => send(prompt)} style={s.prompt}><Text style={s.promptText}>{prompt}</Text><Ionicons name="arrow-forward" size={16} color={c.accent}/></Pressable>)}
+            {( {
+ en:["Explain my weak topics","Quiz me on my latest study set","Help me prepare for my exam"],
+ sv:["Förklara mina svåra ämnen","Förhör mig på mitt senaste studiepaket","Hjälp mig att plugga till provet"],
+ ar:["اشرح لي المواضيع التي أجدها صعبة","اختبرني في أحدث مجموعة دراسية","ساعدني في الاستعداد للامتحان"],
+ es:["Explícame los temas que me cuestan","Hazme un test de mi último material","Ayúdame a preparar el examen"],
+ fr:["Explique-moi les sujets difficiles","Fais-moi un quiz sur ma dernière fiche","Aide-moi à préparer mon examen"],
+ de:["Erkläre mir meine schwierigen Themen","Teste mich zu meinem letzten Lernset","Hilf mir, mich auf die Prüfung vorzubereiten"],
+ pt:["Explica os temas em que tenho dificuldade","Faz um quiz do meu último conjunto de estudo","Ajuda-me a preparar-me para o exame"],
+ hi:["मेरे कठिन विषयों को समझाओ","मेरे नवीनतम अध्ययन सेट पर क्विज़ लो","परीक्षा की तैयारी में मेरी मदद करो"],
+ zh:["解释我不擅长的知识点","测测我最近的学习资料","帮我准备考试"],
+ ja:["苦手なテーマを説明して","最近の学習セットでクイズして","試験勉強を手伝って"],
+ tr:["Zorlandığım konuları açıkla","Son çalışma setimden beni test et","Sınava hazırlanmama yardım et"]
+ } as Record<string,string[]>)[language] || ["Explain my weak topics","Quiz me on my latest study set","Help me prepare for my exam"]).map(prompt => <Pressable key={prompt} onPress={() => send(prompt)} style={s.prompt}><Text style={s.promptText}>{prompt}</Text><Ionicons name="arrow-forward" size={16} color={c.accent}/></Pressable>)}
           </View> : messages.map(message => <View key={message.id} style={[s.message, message.role === "user" && s.userMessage]}>
             <View style={[s.avatar, message.role === "user" && s.userAvatar]}><Ionicons name={message.role === "user" ? "person" : "sparkles"} size={15} color={message.role === "user" ? c.onAccent : c.accent}/></View>
             <View style={s.messageBody}><Text style={s.role}>{message.role === "user" ? (sv ? "Du" : "You") : "SnapStudy AI"}</Text>{message.imageBase64 ? <Image source={{ uri: `data:${message.imageMimeType || "image/jpeg"};base64,${message.imageBase64}` }} style={s.messageImage} resizeMode="contain"/> : null}<MarkdownText>{message.content}</MarkdownText></View>
