@@ -114,7 +114,7 @@ async function availableHordeChatModels(p:P):Promise<string[]>{
   return (Array.isArray(body.data)?body.data:[]).map((item:any)=>String(item?.id||"")).filter(Boolean);
  }catch{return [];}
 }
-async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
+async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000,maxTokens=4500) {
  const runStarted=Date.now();
  const providerTimeout=Math.max(3000,Math.min(budgetMs,p.id==="gemini"?20000:p.id==="groq"?26000:p.id==="tokenharbor"?28000:p.id==="cloudflare"?26000:p.id==="nvidia"?28000:p.id==="opencodezen"?12000:20000));
  const instruction=lang&&lang!=="auto"?`EXPLICIT OUTPUT LANGUAGE: ${lang}. Write every student-facing field in this language, naturally and consistently. This explicit output language is the only reason to translate away from the source language.`:"AUTOMATIC SOURCE-LANGUAGE MODE (MANDATORY): Inspect the pasted text or OCR-readable image text first, identify the dominant language carrying the lesson, and write every student-facing field in that same language. The UI language is irrelevant and must not override the source. Swedish source material—including a photo of Swedish notes—must produce natural Swedish throughout, with å, ä and ö preserved. Never translate Swedish into English by default. Do not mix languages unless the source itself requires it.";
@@ -128,7 +128,7 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
   for(const model of candidates){
    if(budgetMs-(Date.now()-runStarted)<4000)break;
    try{
-    const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2,maxOutputTokens:16000}})},Math.max(3000,Math.min(providerTimeout,16000,budgetMs-(Date.now()-runStarted))));
+    const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2,maxOutputTokens:Math.min(maxTokens,16000)}})},Math.max(3000,Math.min(providerTimeout,16000,budgetMs-(Date.now()-runStarted))));
     const data=await response.json();
     if(!response.ok)throw new Error(data.error?.message||"Gemini HTTP "+response.status);
     const result=parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
@@ -167,7 +167,7 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  for(const model of models){
   if(budgetMs-(Date.now()-runStarted)<4000)break;
   try{
-   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:p.id==="aihorde"?3500:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen","cloudflare"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},Math.max(3000,Math.min(providerTimeout,budgetMs-(Date.now()-runStarted))));
+   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:p.id==="aihorde"?3500:maxTokens,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen","cloudflare"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},Math.max(3000,Math.min(providerTimeout,budgetMs-(Date.now()-runStarted))));
    const raw=await response.text();
    if(!response.ok){let detail=raw;try{const e=JSON.parse(raw);detail=e.error?.message||e.message||raw;}catch{}throw new Error(String(detail).slice(0,500)||"HTTP "+response.status);}
    let data:any;
@@ -187,7 +187,7 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
 serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return new Response("Method not allowed",{status:405,headers:cors});
- let quotaClient:any=null,adminClient:any=null,quotaUserId:string|null=null,studyReserved=false;
+ let quotaClient:any=null,adminClient:any=null,quotaUserId:string|null=null,studyReserved=false,usagePlan="free";
  try{
   const authHeader=req.headers.get("Authorization")||"",token=authHeader.startsWith("Bearer ")?authHeader.slice(7):"";
   const url=Deno.env.get("SUPABASE_URL")||"",key=Deno.env.get("SUPABASE_ANON_KEY")||Deno.env.get("SUPABASE_PUBLISHABLE_KEY")||"",serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
@@ -202,6 +202,7 @@ serve(async(req)=>{
    const {data:quota,error:quotaError}=await quotaClient.rpc("consume_ai_quota",{p_kind:"study"});
    if(quotaError)throw new Error("Daily AI limits are temporarily unavailable. Please try again.");
    if(!quota?.allowed){const {data:usage}=await quotaClient.rpc("get_ai_usage");return new Response(JSON.stringify({error:"You've reached today's study-generation limit. You can make more study materials after midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage}),{status:429,headers:{...cors,"Content-Type":"application/json"}});}
+   usagePlan=quota.plan==="plus"?"plus":"free";
    studyReserved=true;
   }
   const notesText=typeof body.notesText==="string"?body.notesText.trim():"",src=Array.isArray(body.images)&&body.images.length?body.images:body.imageBase64?[{imageBase64:body.imageBase64,mimeType:body.mimeType}]:[];
@@ -210,7 +211,7 @@ serve(async(req)=>{
   const failures=[],deadline=Date.now()+112000;
   for(const p of ps){
    const remaining=deadline-Date.now();if(remaining<4000){failures.push("remaining providers skipped: request time budget reached");break;}
-   try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText,Math.min(remaining,45000));console.log("AI provider success",p.id);studyReserved=false;const {data:usage}=await quotaClient.rpc("get_ai_usage");return new Response(JSON.stringify({...result,usage}),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}
+   try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText,Math.min(remaining,45000),usagePlan==="plus"?8000:4500);console.log("AI provider success",p.id);studyReserved=false;const {data:usage}=await quotaClient.rpc("get_ai_usage");return new Response(JSON.stringify({...result,usage}),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}
    catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}
   }
   throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
