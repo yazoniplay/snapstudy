@@ -16,7 +16,7 @@ import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 export default function Home() {
-  const { colors:c, mode } = useTheme();
+  const { colors:c } = useTheme();
   const { width: viewportWidth } = useWindowDimensions();
   const desktopLayout = viewportWidth >= 1100;
   const {t,language}=useLanguage();
