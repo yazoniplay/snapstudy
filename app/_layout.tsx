@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import BottomNav from "../components/BottomNav";
 import MessageNotification from "../components/MessageNotification";
+import XPRewardSplash from "../components/XPRewardSplash";
 import { ThemeProvider, useTheme } from "../lib/theme";
 import { LanguageProvider } from "../lib/language";
 import { supabase } from "../lib/supabase";
@@ -57,6 +58,7 @@ function AppStack() {
       />
       {showBottomNav ? <BottomNav /> : null}
       <MessageNotification />
+      <XPRewardSplash />
     </View>
   );
 }
