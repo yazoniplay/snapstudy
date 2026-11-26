@@ -20,7 +20,7 @@ async function releaseQuota(client:any,kind:"chat"|"study"){
  try{await client.rpc("release_ai_quota",{p_kind:kind});}catch(e){console.warn("Could not release AI quota",kind,String(e));}
 }
 async function readUsage(client:any){
- const {data,error}=await client.rpc("get_ai_usage");if(error)throw error;return data;
+ try{const {data,error}=await client.rpc("get_ai_usage");if(error)throw error;return data;}catch(e){console.warn("Could not read daily AI usage",String(e));return null;}
 }
 function wantsStudyActivity(message:string){
  return /(?:make|create|generate|build|start|gör|skapa|generera).{0,55}(?:quiz|test|flash ?cards?|study guide|revision sheet|frågekort|studieguide)|(?:quiz me|förhör mig|help me study|prepare me for (?:a )?(?:test|exam)|hjälp mig plugga till (?:ett )?prov)/i.test(message);
