@@ -9,7 +9,7 @@ import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 
 type ChatReaction = {message_id:string;user_id:string;emoji:string};
-type ChatMessage = { id:string; friendship_id:string; sender_id:string; message_type:"text"|"image"|"gift"; body:string|null; media_path:string|null; gift_code:string|null; created_at:string; read_at:string|null; reply_to?:string|null; edited_at?:string|null; deleted_at?:string|null; imageUrl?:string|null; reactions?:ChatReaction[] };
+type ChatMessage = { id:string; friendship_id:string; sender_id:string; message_type:"text"|"image"|"gift"; body:string|null; media_path:string|null; gift_code:string|null; created_at:string; read_at:string|null; delivered_at:string|null; reply_to?:string|null; edited_at?:string|null; deleted_at?:string|null; imageUrl?:string|null; reactions?:ChatReaction[] };
 const GIFTS: Record<string,{emoji:string;label:string}> = {
   heart:{emoji:"💗",label:"A little love"}, star:{emoji:"⭐",label:"You're a star"},
   book:{emoji:"📚",label:"Study buddy"}, trophy:{emoji:"🏆",label:"You did it"},
@@ -43,7 +43,7 @@ export default function Chat() {
     const {data:{user}} = await supabase.auth.getUser();
     if (!user) { router.replace("/auth"); return; }
     setUserId(user.id);
-    const {data,error} = await supabase.from("messages").select("id,friendship_id,sender_id,message_type,body,media_path,gift_code,created_at,read_at,reply_to,edited_at,deleted_at").eq("friendship_id",friendshipId).order("created_at",{ascending:true}).limit(250);
+    const {data,error} = await supabase.from("messages").select("id,friendship_id,sender_id,message_type,body,media_path,gift_code,created_at,read_at,delivered_at,reply_to,edited_at,deleted_at").eq("friendship_id",friendshipId).order("created_at",{ascending:true}).limit(250);
     if (error) { Alert.alert("Couldn't load chat",error.message); setLoading(false); return; }
     const rows = (data || []) as ChatMessage[];
     const ids=rows.map(message=>message.id);
@@ -137,7 +137,7 @@ export default function Chat() {
   return <SafeAreaView style={s.safe}>
     <LinearGradient colors={[c.surface,c.accentSoft]} start={{x:0,y:0}} end={{x:1,y:1}} style={s.header}>
       <Pressable style={s.backButton} onPress={()=>router.back()}><Ionicons name="chevron-back" size={25} color={c.text}/></Pressable>
-      <View style={s.avatar}><Text style={s.avatarText}>{friendName.slice(0,1).toUpperCase()}</Text></View>
+      <Pressable accessibilityRole="button" accessibilityLabel={`View ${friendName} profile`} onPress={()=>router.push({pathname:"/profile",params:{userId:friendId}})} style={s.avatar}><Text style={s.avatarText}>{friendName.slice(0,1).toUpperCase()}</Text></Pressable>
       <View style={{flex:1}}><Text style={s.headerName} numberOfLines={1}>{friendName}</Text><Text style={s.headerSub}>Your private study chat</Text></View>
       <Pressable style={s.headerAction} onPress={()=>Alert.alert("Chat safety","Only chat with people you know. You can remove this friend from the Friends screen.")}><Ionicons name="shield-checkmark-outline" size={20} color={c.accent}/></Pressable>
     </LinearGradient>
@@ -156,7 +156,7 @@ export default function Chat() {
               {message.message_type==="text"&&<Text style={[s.messageText,mine&&s.mineText]}>{message.deleted_at?"This message was deleted.":message.body}</Text>}
               {message.message_type==="image"&&(message.imageUrl?<Image source={{uri:message.imageUrl}} style={s.sentImage} resizeMode="cover"/>:<Text style={s.messageText}>Photo unavailable</Text>)}
               {message.message_type==="gift"&&gift&&<View style={s.giftContent}><Text style={s.giftEmoji}>{gift.emoji}</Text><Text style={[s.giftLabel,mine&&s.mineText]}>{gift.label}</Text></View>}
-              <Text style={[s.time,mine&&s.mineTime]}>{new Date(message.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}{message.edited_at&&!message.deleted_at?" · Edited":""}{mine&&message.read_at?" · Seen":""}</Text>
+              <Text style={[s.time,mine&&s.mineTime]}>{new Date(message.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}{message.edited_at&&!message.deleted_at?" · Edited":""}{mine?(message.read_at?" · Seen":message.delivered_at?" · Delivered":" · Sent"):""}</Text>
             </Pressable>
             <View style={s.messageExtras}>
               <View style={s.reactionRow}>{Object.entries(reactionGroups).map(([emoji,value])=><Pressable key={emoji} style={[s.reactionChip,value.mine&&s.reactionMine]} onPress={()=>toggleReaction(message,emoji)}><Text style={s.reactionText}>{emoji} {value.count}</Text></Pressable>)}<Pressable style={s.quickReact} onPress={()=>toggleReaction(message,"👍")}><Text style={s.quickReactText}>＋</Text></Pressable></View>
