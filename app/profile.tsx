@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
+import ConfirmActionModal from "../components/ConfirmActionModal";
 
 type PublicProfile = { id:string; username:string|null; display_name:string|null; avatar_url:string|null; profile_about:string|null; profile_status:string|null };
 type Friendship = { id:string; user_a:string; user_b:string; requested_by:string; status:"pending"|"accepted"|"declined" };
@@ -19,6 +20,7 @@ export default function StudentProfile() {
   const [online,setOnline]=useState(false);
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
+  const [confirmRemove,setConfirmRemove]=useState(false);
   const [error,setError]=useState("");
 
   const load=useCallback(async()=>{
@@ -70,7 +72,9 @@ export default function StudentProfile() {
   const outgoing=friendship?.status==="pending"&&friendship.requested_by===userId;
   async function addFriend(){setBusy(true);const {error}=await supabase.rpc("send_friend_request",{target_user_id:targetId});if(error)setError(error.message);else await load();setBusy(false);}
   async function acceptRequest(){setBusy(true);const {error}=await supabase.rpc("respond_friend_request",{target_user_id:targetId,accept_request:true});if(error)setError(error.message);else await load();setBusy(false);}
-  function removeFriend(){if(!friendship)return;Alert.alert("Remove friend?",`Remove ${name} from your study circle?`,[{text:"Cancel",style:"cancel"},{text:"Remove",style:"destructive",onPress:async()=>{setBusy(true);const {error}=await supabase.from("friendships").delete().eq("id",friendship.id);if(error)setError(error.message);else await load();setBusy(false);}}]);}
+  function removeFriend(){if(friendship)setConfirmRemove(true);}
+  async function confirmRemoveFriend(){if(!friendship||busy)return;setBusy(true);const {error}=await supabase.from("friendships").delete().eq("id",friendship.id);if(error)setError(error.message);else{setConfirmRemove(false);await load();}setBusy(false);}
+
   function openChat(){if(friendship&&accepted)router.push({pathname:"/chat",params:{friendshipId:friendship.id,friendId:targetId,name}});}
 
   return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container}>
@@ -91,7 +95,8 @@ export default function StudentProfile() {
       </View>
       <View style={s.bioCard}><View style={s.sectionHeading}><Ionicons name="person-circle-outline" size={19} color={c.accent}/><Text style={s.sectionTitle}>About me</Text></View><Text style={s.bio}>{person.profile_about?.trim()||"This student hasn’t added a bio yet."}</Text></View>
     </>}
-  </ScrollView></SafeAreaView>;
+  </ScrollView><ConfirmActionModal visible={confirmRemove} title="Remove friend?" message={"Remove "+name+" from your study circle? You can send another request later."} confirmLabel="Remove friend" cancelLabel="Keep friend" busy={busy} onCancel={()=>setConfirmRemove(false)} onConfirm={confirmRemoveFriend}/>
+ </SafeAreaView>;
 }
 
 const styles=(c:ThemeColors)=>StyleSheet.create({
