@@ -135,7 +135,7 @@ Deno.serve(async(req:Request)=>{
   chatReserved=true;
   if(wantsStudyActivity(latestUser)){
    const studyQuota=await reserveQuota(quotaClient.client,"study");
-   if(!studyQuota.allowed){await releaseQuota(quotaClient.admin,"chat",quotaClient.userId);chatReserved=false;return json({error:"You've reached today's study-generation limit. You can make more study materials after midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage:await readUsage(quotaClient)},429);}
+   if(!studyQuota.allowed){await releaseQuota(quotaClient.admin,"chat",quotaClient.userId);chatReserved=false;return json({error:"You've reached today's study-generation limit. You can make more study materials after midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage:await readUsage(quotaClient.client)},429);}
    studyReserved=true;
   }
   const context=JSON.stringify(body.context||{}).slice(0,18000);
@@ -148,7 +148,7 @@ Deno.serve(async(req:Request)=>{
   const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());providers.sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return(x<0?999:x)-(y<0?999:y);});
   const errors:string[]=[];
   const chatDeadline=Date.now()+105000;
-  if(geminiKey){try{const message=await callGemini(geminiKey,geminiModel,messages,contextWithResearch,researchPrompt);return json({message,usage:await readUsage(quotaClient)});}catch(e){errors.push("Gemini: "+String(e).slice(0,160));console.warn(errors[errors.length-1]);}}
+  if(geminiKey){try{const message=await callGemini(geminiKey,geminiModel,messages,contextWithResearch,researchPrompt);return json({message,usage:await readUsage(quotaClient.client)});}catch(e){errors.push("Gemini: "+String(e).slice(0,160));console.warn(errors[errors.length-1]);}}
   for(const p of providers){
    const hasImages=messages.some(m=>!!m.imageBase64);
    let models=[p.model];
@@ -158,12 +158,12 @@ Deno.serve(async(req:Request)=>{
    models=models.filter((m,i,a)=>m&&a.indexOf(m)===i);
    for(const model of models){
     const remaining=chatDeadline-Date.now();if(remaining<4000)break;
-    try{const message=await callCompatible(p.base,p.key,model,messages,contextWithResearch,researchPrompt,Math.min(28000,remaining));return json({message,usage:await readUsage(quotaClient)});}
+    try{const message=await callCompatible(p.base,p.key,model,messages,contextWithResearch,researchPrompt,Math.min(28000,remaining));return json({message,usage:await readUsage(quotaClient.client)});}
     catch(e){const detail=p.id+": "+model+": "+String(e).slice(0,120);errors.push(detail);console.warn(detail);}
    }
   }
   if(studyReserved){await releaseQuota(quotaClient.admin,"study",quotaClient.userId);studyReserved=false;}
-  if(chatReserved){await releaseQuota(quotaClient,"chat");chatReserved=false;}
-  return json({error:"SnapStudy AI could not reach an available model. Check the AI provider keys and quota in Supabase. "+(errors[0]||"No AI provider key is configured."),code:"AI_UNAVAILABLE",usage:await readUsage(quotaClient)},503);
+  if(chatReserved){await releaseQuota(quotaClient.admin,"chat",quotaClient.userId);chatReserved=false;}
+  return json({error:"SnapStudy AI could not reach an available model. Check the AI provider keys and quota in Supabase. "+(errors[0]||"No AI provider key is configured."),code:"AI_UNAVAILABLE",usage:await readUsage(quotaClient.client)},503);
  }catch(e){if(quotaClient){if(studyReserved)await releaseQuota(quotaClient.admin,"study",quotaClient.userId);if(chatReserved)await releaseQuota(quotaClient.admin,"chat",quotaClient.userId);}console.error("study-chat failed",e);return json({error:e instanceof Error?e.message:"SnapStudy AI could not process that message."},500);}
 });
