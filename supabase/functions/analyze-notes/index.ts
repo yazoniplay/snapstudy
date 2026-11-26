@@ -121,7 +121,7 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  const sourceText=notesText? "\n\nSOURCE NOTES (use only these facts):\n"+notesText : "";
  const content=[{type:"text",text:prompt+"\n"+instruction+sourceText},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
  if(p.url==="gemini") {
-  const candidates=[p.model,...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim()),"gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.8-flash","gemini-3.5-flash"].filter((x,i,a)=>x&&!/^gemini-2\.5-/i.test(x)&&a.indexOf(x)===i).slice(0,4);
+  const candidates=[p.model,"gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.8-flash","gemini-3.5-flash",...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim())].filter((x,i,a)=>x&&!/^gemini-2\.5-/i.test(x)&&a.indexOf(x)===i).slice(0,5);
   const errors:string[]=[];
   for(const model of candidates){
    if(budgetMs-(Date.now()-runStarted)<4000)break;
@@ -139,10 +139,10 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  if(p.id==="cloudflare"){
   const currentModels=["@cf/deepseek-ai/deepseek-v4.1-flash-1017","@cf/google/gemma-4-26b-a4b-it","@cf/qwen/qwen3.8-27b"];
   const configured=env("CLOUDFLARE_FALLBACK_MODELS").split(",").map(x=>x.trim()).filter(Boolean);
-  models=[p.model,...configured,...currentModels].filter((x,i,a)=>x&&!/@cf\/(?:zai-org\/glm-4\.7-flash|zai-org\/glm-5\.2|deepseek-ai\/deepseek-v4-(?:flash-0731|pro-0813)|qwen\/qwen3-30b-a3b-fp8)/i.test(x)&&a.indexOf(x)===i).slice(0,4);
+  models=[p.model,...currentModels,...configured].filter((x,i,a)=>x&&!/@cf\/(?:zai-org\/glm-4\.7-flash|zai-org\/glm-5\.2|deepseek-ai\/deepseek-v4-(?:flash-0731|pro-0813)|qwen\/qwen3-30b-a3b-fp8)/i.test(x)&&a.indexOf(x)===i).slice(0,4);
  }
  if(p.id==="nvidia"){
-  const candidates=[p.model,...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim()),"nvidia/nemotron-3.5-super-120b-a12b","nvidia/nemotron-3.5-super-vl-120b-a12b","stepfun-ai/step-3.7-flash"];
+  const candidates=[p.model,"nvidia/nemotron-3.5-super-120b-a12b","nvidia/nemotron-3.5-super-vl-120b-a12b","stepfun-ai/step-3.7-flash",...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim())];
   models=candidates.filter((x,i,a)=>x&&a.indexOf(x)===i);
   models=images.length?models.filter(x=>/vl|vision|step-3\.7-flash/i.test(x)).slice(0,3):models.slice(0,4);
  }
