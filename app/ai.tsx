@@ -30,6 +30,7 @@ export default function SnapStudyAI() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [attachment, setAttachment] = useState<ImageAttachment | null>(null);
+  const [attachmentError, setAttachmentError] = useState("");
   const [busy, setBusy] = useState(false);
   const [context, setContext] = useState<any>({ language });
   const scroll = useRef<ScrollView>(null);
@@ -83,10 +84,27 @@ export default function SnapStudyAI() {
     return [...chats].sort((a, b) => b.updatedAt - a.updatedAt).filter(chat => !q || chat.title.toLowerCase().includes(q) || chat.messages.some(m => m.content.toLowerCase().includes(q)));
   }, [chats, search]);
 
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], base64: true, quality: 0.6, allowsEditing: false });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      if (!asset.base64) throw new Error(sv ? "Bilden kunde inte läsas. Försök igen." : "Could not read the image. Please try again.");
+      if (asset.base64.length > 8_000_000) throw new Error(sv ? "Bilden är för stor. Välj en mindre bild." : "That image is too large. Choose a smaller image.");
+      setAttachment({ base64: asset.base64, mimeType: asset.mimeType || "image/jpeg", uri: asset.uri, name: asset.fileName || undefined });
+      setAttachmentError("");
+    } catch (error: any) {
+      setAttachmentError(error?.message || (sv ? "Kunde inte bifoga bilden." : "Could not attach the image."));
+    }
+  };
+
   const send = async (raw = input) => {
-    const value = raw.trim();
-    if (!value || busy) return;
+    const image = attachment;
+    const value = raw.trim() || (image ? (sv ? "Beskriv och hjälp mig förstå den här bilden." : "Please describe and help me understand this image.") : "");
+    if ((!value && !image) || busy) return;
     setInput("");
+    setAttachment(null);
+    setAttachmentError("");
     let target = active;
     if (!target) {
       target = makeChat();
@@ -144,7 +162,7 @@ export default function SnapStudyAI() {
     {wide && !sidebarCollapsed ? <View style={s.desktopSidebar}>{sidebar}</View> : null}
     <View style={s.main}>
       <View style={s.topbar}>
-        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}><Ionicons name={wide ? (sidebarCollapsed ? "sidebar" : "sidebar-outline") : "menu"} size={21} color={c.text}/></Pressable>
+        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}><Ionicons name={wide ? "menu-outline" : "menu"} size={21} color={c.text}/></Pressable>
         <Text style={s.topTitle}>SnapStudy AI</Text>
         <View style={{ flex: 1 }}/>
         <Pressable onPress={createChat} style={s.iconButton}><Ionicons name="create-outline" size={21} color={c.text}/></Pressable>
