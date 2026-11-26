@@ -37,7 +37,16 @@ export default function SnapStudyAI() {
   const scroll = useRef<ScrollView>(null);
   const desktopSidebarProgress = useRef(new Animated.Value(1)).current;
   const mobileSidebarProgress = useRef(new Animated.Value(0)).current;
-  useEffect(() => {\n    Animated.timing(desktopSidebarProgress, { toValue: sidebarCollapsed ? 0 : 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();\n  }, [sidebarCollapsed, desktopSidebarProgress]);\n  useEffect(() => {\n    if (!sidebarOpen || wide) return;\n    mobileSidebarProgress.setValue(0);\n    Animated.timing(mobileSidebarProgress, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();\n  }, [sidebarOpen, wide, mobileSidebarProgress]);\n\n  const active = chats.find(chat => chat.id === activeId);
+  useEffect(() => {
+    Animated.timing(desktopSidebarProgress, { toValue: sidebarCollapsed ? 0 : 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [sidebarCollapsed, desktopSidebarProgress]);
+  useEffect(() => {
+    if (!sidebarOpen || wide) return;
+    mobileSidebarProgress.setValue(0);
+    Animated.timing(mobileSidebarProgress, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [sidebarOpen, wide, mobileSidebarProgress]);
+
+  const active = chats.find(chat => chat.id === activeId);
   const messages = active?.messages || [];
 
   const persist = useCallback(async (next: Chat[]) => {
