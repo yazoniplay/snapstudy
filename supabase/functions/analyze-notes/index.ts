@@ -114,6 +114,7 @@ async function availableHordeChatModels(p:P):Promise<string[]>{
  }catch{return [];}
 }
 async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
+ const runStarted=Date.now();
  const providerTimeout=Math.max(3000,Math.min(budgetMs,p.id==="gemini"?20000:p.id==="groq"?26000:p.id==="tokenharbor"?28000:p.id==="cloudflare"?26000:p.id==="nvidia"?28000:p.id==="opencodezen"?12000:20000));
  const instruction=lang&&lang!=="auto"?`EXPLICIT OUTPUT LANGUAGE: ${lang}. Write every student-facing field in this language, naturally and consistently. This explicit output language is the only reason to translate away from the source language.`:"AUTOMATIC SOURCE-LANGUAGE MODE (MANDATORY): Inspect the pasted text or OCR-readable image text first, identify the dominant language carrying the lesson, and write every student-facing field in that same language. The UI language is irrelevant and must not override the source. Swedish source material—including a photo of Swedish notes—must produce natural Swedish throughout, with å, ä and ö preserved. Never translate Swedish into English by default. Do not mix languages unless the source itself requires it.";
  if(p.id==="groq"&&notesText.length>26000)throw new Error("Groq skipped for long notes to avoid its request-size limit; another configured provider will process the full source");
@@ -123,8 +124,9 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
   const candidates=[p.model,...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim()),"gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.8-flash","gemini-3.5-flash"].filter((x,i,a)=>x&&!/^gemini-2\.5-/i.test(x)&&a.indexOf(x)===i).slice(0,4);
   const errors:string[]=[];
   for(const model of candidates){
+   if(budgetMs-(Date.now()-runStarted)<4000)break;
    try{
-    const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})},Math.min(providerTimeout,16000));
+    const response=await fetchTimed("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":p.key},body:JSON.stringify({contents:[{parts:[{text:prompt+"\n"+instruction+sourceText},...images.map(x=>({inlineData:{mimeType:x.mimeType||"image/jpeg",data:x.imageBase64}}))]}],generationConfig:{responseMimeType:"application/json",temperature:0.2,maxOutputTokens:16000}})},Math.max(3000,Math.min(providerTimeout,16000,budgetMs-(Date.now()-runStarted))));
     const data=await response.json();
     if(!response.ok)throw new Error(data.error?.message||"Gemini HTTP "+response.status);
     const result=parse(data.candidates?.[0]?.content?.parts?.map((x:any)=>x.text||"").join("\n")||"");
@@ -161,8 +163,9 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  }
  if(p.id==="tokenharbor")models=[...models,"deepseek-v4.1-flash:free","mimo-v2.6-flash:free"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
  for(const model of models){
+  if(budgetMs-(Date.now()-runStarted)<4000)break;
   try{
-   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:p.id==="aihorde"?3500:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen","cloudflare"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},providerTimeout);
+   const response=await fetchTimed(p.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",...(p.key?{"Authorization":"Bearer "+p.key}:{})},body:JSON.stringify({model,messages:[{role:"system",content:"Return only valid JSON study materials."},{role:"user",content}],temperature:0.2,max_tokens:p.id==="aihorde"?3500:10000,...(["groq","openrouter","siliconflow","sambanova","ollama","opencodezen","cloudflare"].includes(p.id)?{response_format:{type:"json_object"}}:{})})},Math.max(3000,Math.min(providerTimeout,budgetMs-(Date.now()-runStarted))));
    const raw=await response.text();
    if(!response.ok){let detail=raw;try{const e=JSON.parse(raw);detail=e.error?.message||e.message||raw;}catch{}throw new Error(String(detail).slice(0,500)||"HTTP "+response.status);}
    let data:any;
