@@ -7,7 +7,7 @@ function json(data:any,status=200){return new Response(JSON.stringify(data),{sta
 async function timedFetch(url:string,init:RequestInit,ms=22000){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),ms);try{return await fetch(url,{...init,signal:controller.signal});}finally{clearTimeout(timer);}}
 async function callGemini(key:string,model:string,messages:Msg[],context:string){
  const contents=messages.map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:m.content}]}));
- const response=await timedFetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:systemPrompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context}]},contents,generationConfig:{temperature:0.45,maxOutputTokens:1600}}}),18000);
+ const response=await timedFetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:systemPrompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context}]},contents,generationConfig:{temperature:0.45,maxOutputTokens:1600}})},18000);
  const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Gemini HTTP "+response.status);
  const answer=data.candidates?.[0]?.content?.parts?.map((p:any)=>p.text||"").join("\n").trim();if(!answer)throw new Error("Gemini returned an empty answer");return answer;
 }
