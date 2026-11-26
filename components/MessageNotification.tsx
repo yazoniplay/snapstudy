@@ -26,6 +26,7 @@ export default function MessageNotification(){
           if(!message||message.sender_id===user.id||!message.friendship_id)return;
           const {data:friendship}=await supabase.from("friendships").select("id,user_a,user_b,status").eq("id",message.friendship_id).eq("status","accepted").maybeSingle();
           if(!friendship)return;
+          if(message.id)await supabase.from("messages").update({delivered_at:new Date().toISOString()}).eq("id",message.id).is("delivered_at",null);
           const friendId=friendship.user_a===user.id?friendship.user_b:friendship.user_a;
           const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",friendId).maybeSingle();
           const name=profile?.display_name||profile?.username||"Study buddy";
