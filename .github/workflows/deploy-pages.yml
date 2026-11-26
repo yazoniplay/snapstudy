@@ -1,4 +1,5 @@
 name: Deploy SnapStudy to GitHub Pages
+# Keep the Pages workflow eligible on feature commits that update the Expo app.
 
 on:
   push:
