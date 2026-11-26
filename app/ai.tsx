@@ -134,6 +134,20 @@ export default function SnapStudyAI() {
       if (error) throw error;
       let answer = typeof data?.message === "string" ? data.message.trim() : "";
       if (!answer) throw new Error(data?.error || "No response came back.");
+      const countMatch = value.match(/\\b(\\d{1,2})\\s*-?\\s*(?:questions?|frågor?|preguntas?|fragen|問題|문제)\\b/i) || value.match(/\\b(?:quiz|test|förhör|prov)\\b[^\\d]{0,24}(\\d{1,2})\\b/i);
+      const requestedQuizCount = countMatch ? Math.min(50, Math.max(1, Number(countMatch[1]))) : null;
+      const quizMarkerForRetry = "[[SNAPSTUDY_QUIZ]]";
+      if (requestedQuizCount && answer.includes(quizMarkerForRetry)) {
+        try {
+          const firstQuiz = JSON.parse(answer.slice(answer.indexOf(quizMarkerForRetry) + quizMarkerForRetry.length).trim());
+          if (Array.isArray(firstQuiz.questions) && firstQuiz.questions.length !== requestedQuizCount) {
+            const correction = "The previous quiz had " + firstQuiz.questions.length + " questions, but I asked for exactly " + requestedQuizCount + ". Regenerate the entire quiz with EXACTLY " + requestedQuizCount + " questions. Count them carefully. Return only the quiz action marker and valid JSON."; 
+            const retryMessages = [...updated.messages.slice(-14).map(m => ({role:m.role,content:m.content})),{role:"assistant" as const,content:answer},{role:"user" as const,content:correction}];
+            const retry = await supabase.functions.invoke("study-chat",{body:{messages:retryMessages,context}});
+            if (!retry.error && typeof retry.data?.message === "string" && retry.data.message.trim()) answer=retry.data.message.trim();
+          }
+        } catch { /* The strict quiz validator below will avoid saving malformed activity data. */ }
+      }
       let generatedRoute: string | null = null;
       const quizMarker = "[[SNAPSTUDY_QUIZ]]";
       const flashcardMarker = "[[SNAPSTUDY_FLASHCARDS]]";
@@ -144,7 +158,7 @@ export default function SnapStudyAI() {
       try {
         if (markerAt >= 0) {
           const parsed = JSON.parse(answer.slice(markerAt + quizMarker.length).trim());
-          if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.questions) && parsed.questions.length >= 1 && parsed.questions.every((q: any) => typeof q.question === "string" && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every((choice: any) => typeof choice.label === "string" && typeof choice.correct === "boolean" && typeof choice.explanation === "string") && q.choices.filter((choice: any) => choice.correct).length === 1)) {
+          if (parsed && typeof parsed.title === "string" && Array.isArray(parsed.questions) && parsed.questions.length >= 1 && (!requestedQuizCount || parsed.questions.length === requestedQuizCount) && parsed.questions.every((q: any) => typeof q.question === "string" && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every((choice: any) => typeof choice.label === "string" && typeof choice.correct === "boolean" && typeof choice.explanation === "string") && q.choices.filter((choice: any) => choice.correct).length === 1)) {
             const activity = await saveAIStudyActivity("quiz", { title: parsed.title, questions: parsed.questions });
             await saveStudyData("snapstudy:ai-quiz-active", { title: parsed.title, questions: parsed.questions, activityId: activity.id });
             generatedRoute = "/ai-quiz";
@@ -242,7 +256,7 @@ export default function SnapStudyAI() {
         <View style={s.composerWrap}>
           {attachment ? <View style={s.attachmentPreview}><Image source={{ uri: `data:${attachment.mimeType};base64,${attachment.base64}` }} style={s.attachmentThumb} resizeMode="cover"/><Text numberOfLines={1} style={s.attachmentName}>{attachment.name || (sv ? "Bild bifogad" : "Image attached")}</Text><Pressable onPress={() => setAttachment(null)} style={s.removeAttachment}><Ionicons name="close-circle" size={21} color={c.muted}/></Pressable></View> : null}
           {attachmentError ? <Text style={s.attachmentError}>{attachmentError}</Text> : null}
-          <View style={s.composer}><TextInput value={input} onChangeText={setInput} multiline maxLength={4000} placeholder={sv ? "Fråga SnapStudy AI" : "Message SnapStudy AI"} placeholderTextColor={c.subtle} style={s.input} onSubmitEditing={() => send()}/><View style={s.composerBottom}><Pressable onPress={pickImage} disabled={busy} style={s.attachButton} accessibilityLabel={sv ? "Bifoga bild" : "Attach image"}><Ionicons name="image-outline" size={20} color={c.muted}/></Pressable><Pressable onPress={() => router.push("/study-hub")} style={s.contextButton}><Ionicons name="add-circle-outline" size={19} color={c.muted}/><Text style={s.contextLabel}>{sv ? "Studiepaket" : "Study context"}</Text></Pressable><View style={{ flex: 1 }}/><Pressable disabled={(!input.trim() && !attachment) || busy} onPress={() => send()} style={[s.send, ((!input.trim() && !attachment) || busy) && s.disabled]}><Ionicons name="arrow-up" size={19} color={c.onAccent}/></Pressable></View></View>
+          <View style={s.composer}><TextInput value={input} onChangeText={setInput} multiline placeholder={sv ? "Fråga SnapStudy AI" : "Message SnapStudy AI"} placeholderTextColor={c.subtle} style={s.input} onSubmitEditing={() => send()}/><View style={s.composerBottom}><Pressable onPress={pickImage} disabled={busy} style={s.attachButton} accessibilityLabel={sv ? "Bifoga bild" : "Attach image"}><Ionicons name="image-outline" size={20} color={c.muted}/></Pressable><Pressable onPress={() => router.push("/study-hub")} style={s.contextButton}><Ionicons name="add-circle-outline" size={19} color={c.muted}/><Text style={s.contextLabel}>{sv ? "Studiepaket" : "Study context"}</Text></Pressable><View style={{ flex: 1 }}/><Pressable disabled={(!input.trim() && !attachment) || busy} onPress={() => send()} style={[s.send, ((!input.trim() && !attachment) || busy) && s.disabled]}><Ionicons name="arrow-up" size={19} color={c.onAccent}/></Pressable></View></View>
           <Text style={s.disclaimer}>{sv ? "AI kan göra misstag. Kontrollera viktiga svar." : "SnapStudy AI can make mistakes. Check important answers."}</Text>
         </View>
       </KeyboardAvoidingView>
