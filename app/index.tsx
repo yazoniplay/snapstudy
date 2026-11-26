@@ -117,7 +117,7 @@ export default function Home() {
 
   return <SafeAreaView style={s.safe}>
     <Animated.ScrollView contentContainerStyle={{paddingHorizontal:desktopLayout?36:24,paddingTop:24,paddingBottom:34,gap:18,width:"100%",maxWidth:desktopLayout?1280:940,alignSelf:"center"}} showsVerticalScrollIndicator={false} style={{opacity:entrance,transform:[{translateY:entrance.interpolate({inputRange:[0,1],outputRange:[10,0]})}]}}>
-      <SnapStudyHomeDashboard name={firstName} avatarUrl={avatarUrl} welcomeLine={welcomeLine} gameState={gameState} onScan={cameraOpen} onNotes={()=>setNotesModal(true)} busy={busy} />
+      <SnapStudyHomeDashboard name={firstName} avatarUrl={avatarUrl} welcomeLine={welcomeLine} gameState={gameState} onScan={cameraOpen} onNotes={()=>setNotesModal(true)} onPhotos={library} busy={busy} />
 
     </Animated.ScrollView>    <Modal visible={notesModal} transparent animationType="fade" onRequestClose={()=>setNotesModal(false)}>
       <View style={{flex:1,backgroundColor:"rgba(5,8,18,0.72)",justifyContent:"center",padding:22}}>
