@@ -12,7 +12,7 @@ async function callGemini(key:string,model:string,messages:Msg[],context:string)
  const answer=data.candidates?.[0]?.content?.parts?.map((p:any)=>p.text||"").join("\n").trim();if(!answer)throw new Error("Gemini returned an empty answer");return answer;
 }
 async function callCompatible(base:string,key:string,model:string,messages:Msg[],context:string){
- const response=await timedFetch(base.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model,messages:[{role:"system",content:systemPrompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context},...messages],temperature:0.45,max_tokens:1600})});
+ const response=await timedFetch(base.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model,messages:[{role:"system",content:systemPrompt+"\n\nPRIVATE USER STUDY CONTEXT (JSON):\n"+context},...messages.map(m=>({role:m.role,content:m.imageBase64?[{type:"text",text:m.content},{type:"image_url",image_url:{url:"data:"+(m.imageMimeType||"image/jpeg")+";base64,"+m.imageBase64}}]:m.content}))],temperature:0.45,max_tokens:1600})});
  const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Provider HTTP "+response.status);
  const answer=data.choices?.[0]?.message?.content;if(typeof answer!=="string"||!answer.trim())throw new Error("Provider returned an empty answer");return answer.trim();
 }
