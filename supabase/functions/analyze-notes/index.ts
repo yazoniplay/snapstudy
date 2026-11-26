@@ -1,3 +1,4 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Multi-provider study AI fallback
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
@@ -186,16 +187,30 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
 serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return new Response("Method not allowed",{status:405,headers:cors});
+ let quotaClient:any=null,studyReserved=false;
  try{
-  const body=await req.json(),notesText=typeof body.notesText==="string"?body.notesText.trim():"",src=Array.isArray(body.images)&&body.images.length?body.images:body.imageBase64?[{imageBase64:body.imageBase64,mimeType:body.mimeType}]:[];
+  const authHeader=req.headers.get("Authorization")||"",token=authHeader.startsWith("Bearer ")?authHeader.slice(7):"";
+  const url=Deno.env.get("SUPABASE_URL")||"",key=Deno.env.get("SUPABASE_ANON_KEY")||Deno.env.get("SUPABASE_PUBLISHABLE_KEY")||"";
+  if(!token||!url||!key)throw new Error("Sign in to create study materials.");
+  quotaClient=createClient(url,key,{global:{headers:{Authorization:authHeader}},auth:{persistSession:false,autoRefreshToken:false}});
+  const {data:authData,error:authError}=await quotaClient.auth.getUser(token);
+  if(authError||!authData.user)throw new Error("Your session is invalid. Please sign in again.");
+  const body=await req.json();
+  if(typeof body.action==="undefined"||body.action==="analyze"){
+   const {data:quota,error:quotaError}=await quotaClient.rpc("consume_ai_quota",{p_kind:"study"});
+   if(quotaError)throw new Error("Daily AI limits are temporarily unavailable. Please try again.");
+   if(!quota?.allowed){const {data:usage}=await quotaClient.rpc("get_ai_usage");return new Response(JSON.stringify({error:"You've reached today's study-generation limit. You can make more study materials after midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage}),{status:429,headers:{...cors,"Content-Type":"application/json"}});}
+   studyReserved=true;
+  }
+  const notesText=typeof body.notesText==="string"?body.notesText.trim():"",src=Array.isArray(body.images)&&body.images.length?body.images:body.imageBase64?[{imageBase64:body.imageBase64,mimeType:body.mimeType}]:[];
   const images=src.filter((x:any)=>x?.imageBase64).slice(0,6);if(!images.length&&!notesText)throw new Error("Paste your notes or choose notes images.");if(notesText.length>40000)throw new Error("Notes are too long. Paste up to 40,000 characters.");
   const ps=providers();if(!ps.length)throw new Error("Configure at least one AI provider secret in Supabase.");
   const failures=[],deadline=Date.now()+112000;
   for(const p of ps){
    const remaining=deadline-Date.now();if(remaining<4000){failures.push("remaining providers skipped: request time budget reached");break;}
-   try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText,Math.min(remaining,45000));console.log("AI provider success",p.id);return new Response(JSON.stringify(result),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}
+   try{const result=await run(p,images,typeof body.outputLanguage==="string"?body.outputLanguage:"auto",notesText,Math.min(remaining,45000));console.log("AI provider success",p.id);studyReserved=false;const {data:usage}=await quotaClient.rpc("get_ai_usage");return new Response(JSON.stringify({...result,usage}),{headers:{...cors,"Content-Type":"application/json","X-SnapStudy-AI-Provider":p.id}});}
    catch(e){const m=e instanceof Error?e.message:String(e);failures.push(p.id+": "+m.slice(0,160));console.warn("AI fallback",p.id,m.slice(0,220));}
   }
   throw new Error("Every configured AI provider failed: "+failures.join(" | ").slice(0,1400));
- }catch(e){return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
+ }catch(e){if(quotaClient&&studyReserved){try{await quotaClient.rpc("release_ai_quota",{p_kind:"study"});}catch(releaseError){console.warn("Could not release study quota",String(releaseError));}}return new Response(JSON.stringify({error:e instanceof Error?e.message:"AI failed"}),{status:500,headers:{...cors,"Content-Type":"application/json"}});}
 });
