@@ -4,20 +4,21 @@ const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"au
 const env=(key:string)=>Deno.env.get(key)?.trim()||"";
 async function quotaClientFor(req:Request){
  const authHeader=req.headers.get("Authorization")||"",token=authHeader.startsWith("Bearer ")?authHeader.slice(7):"";
- const url=env("SUPABASE_URL"),key=env("SUPABASE_ANON_KEY")||env("SUPABASE_PUBLISHABLE_KEY");
- if(!token||!url||!key)throw new Error("Sign in to use SnapStudy AI.");
+ const url=env("SUPABASE_URL"),key=env("SUPABASE_ANON_KEY")||env("SUPABASE_PUBLISHABLE_KEY"),serviceKey=env("SUPABASE_SERVICE_ROLE_KEY");
+ if(!token||!url||!key||!serviceKey)throw new Error("Sign in to use SnapStudy AI.");
  const client=createClient(url,key,{global:{headers:{Authorization:authHeader}},auth:{persistSession:false,autoRefreshToken:false}});
  const {data,error}=await client.auth.getUser(token);
  if(error||!data.user)throw new Error("Your session is invalid. Please sign in again.");
- return client;
+ const admin=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
+ return {client,admin,userId:data.user.id};
 }
 async function reserveQuota(client:any,kind:"chat"|"study"){
  const {data,error}=await client.rpc("consume_ai_quota",{p_kind:kind});
  if(error)throw new Error("Daily AI limits are temporarily unavailable. Please try again.");
  return data as {allowed:boolean;used:number;limit:number;plan:string;resetsAt:string};
 }
-async function releaseQuota(client:any,kind:"chat"|"study"){
- try{await client.rpc("release_ai_quota",{p_kind:kind});}catch(e){console.warn("Could not release AI quota",kind,String(e));}
+async function releaseQuota(admin:any,kind:"chat"|"study",userId:string){
+ try{await admin.rpc("release_ai_quota",{p_user_id:userId,p_kind:kind});}catch(e){console.warn("Could not release AI quota",kind,String(e));}
 }
 async function readUsage(client:any){
  try{const {data,error}=await client.rpc("get_ai_usage");if(error)throw error;return data;}catch(e){console.warn("Could not read daily AI usage",String(e));return null;}
@@ -129,12 +130,12 @@ Deno.serve(async(req:Request)=>{
   if(!messages.length||messages[messages.length-1].role!=="user")return json({error:"Send a message first."},400);
   const latestUser=messages.filter(m=>m.role==="user").at(-1)?.content||"";
   quotaClient=await quotaClientFor(req);
-  const chatQuota=await reserveQuota(quotaClient,"chat");
-  if(!chatQuota.allowed)return json({error:"You've reached today's SnapStudy AI chat limit. Your chats reset at midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage:await readUsage(quotaClient)},429);
+  const chatQuota=await reserveQuota(quotaClient.client,"chat");
+  if(!chatQuota.allowed)return json({error:"You've reached today's SnapStudy AI chat limit. Your chats reset at midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage:await readUsage(quotaClient.client)},429);
   chatReserved=true;
   if(wantsStudyActivity(latestUser)){
-   const studyQuota=await reserveQuota(quotaClient,"study");
-   if(!studyQuota.allowed){await releaseQuota(quotaClient,"chat");chatReserved=false;return json({error:"You've reached today's study-generation limit. You can make more study materials after midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage:await readUsage(quotaClient)},429);}
+   const studyQuota=await reserveQuota(quotaClient.client,"study");
+   if(!studyQuota.allowed){await releaseQuota(quotaClient.admin,"chat",quotaClient.userId);chatReserved=false;return json({error:"You've reached today's study-generation limit. You can make more study materials after midnight (Sweden time).",code:"DAILY_LIMIT_REACHED",usage:await readUsage(quotaClient)},429);}
    studyReserved=true;
   }
   const context=JSON.stringify(body.context||{}).slice(0,18000);
@@ -161,8 +162,8 @@ Deno.serve(async(req:Request)=>{
     catch(e){const detail=p.id+": "+model+": "+String(e).slice(0,120);errors.push(detail);console.warn(detail);}
    }
   }
-  if(studyReserved){await releaseQuota(quotaClient,"study");studyReserved=false;}
+  if(studyReserved){await releaseQuota(quotaClient.admin,"study",quotaClient.userId);studyReserved=false;}
   if(chatReserved){await releaseQuota(quotaClient,"chat");chatReserved=false;}
   return json({error:"SnapStudy AI could not reach an available model. Check the AI provider keys and quota in Supabase. "+(errors[0]||"No AI provider key is configured."),code:"AI_UNAVAILABLE",usage:await readUsage(quotaClient)},503);
- }catch(e){if(quotaClient){if(studyReserved)await releaseQuota(quotaClient,"study");if(chatReserved)await releaseQuota(quotaClient,"chat");}console.error("study-chat failed",e);return json({error:e instanceof Error?e.message:"SnapStudy AI could not process that message."},500);}
+ }catch(e){if(quotaClient){if(studyReserved)await releaseQuota(quotaClient.admin,"study",quotaClient.userId);if(chatReserved)await releaseQuota(quotaClient.admin,"chat",quotaClient.userId);}console.error("study-chat failed",e);return json({error:e instanceof Error?e.message:"SnapStudy AI could not process that message."},500);}
 });
