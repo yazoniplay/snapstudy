@@ -2,6 +2,7 @@ import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
 import BottomNav from "../components/BottomNav";
+import MessageNotification from "../components/MessageNotification";
 import { ThemeProvider, useTheme } from "../lib/theme";
 import { LanguageProvider } from "../lib/language";
 
@@ -21,6 +22,7 @@ function AppStack() {
         }}
       />
       {showBottomNav ? <BottomNav /> : null}
+      <MessageNotification />
     </View>
   );
 }
