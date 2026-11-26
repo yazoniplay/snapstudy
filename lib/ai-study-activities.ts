@@ -7,6 +7,7 @@ export async function saveAIStudyActivity(type:AIStudyActivity["type"],data:any)
  await saveStudyData(KEY,[activity,...(Array.isArray(existing)?existing:[])].slice(0,100));
  return activity;
 }
+export async function deleteAIStudyActivity(id:string){const list=await loadStudyData<AIStudyActivity[]>(KEY,[]);await saveStudyData(KEY,(Array.isArray(list)?list:[]).filter(item=>item.id!==id));}
 export async function updateAIStudyActivity(id:string,patch:Partial<AIStudyActivity>){
  const list=await loadStudyData<AIStudyActivity[]>(KEY,[]);
  if(!Array.isArray(list))return;
