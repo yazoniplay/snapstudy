@@ -3,6 +3,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SafeAreaV
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
+import MarkdownText from "../components/MarkdownText";
 import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
 import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
@@ -153,7 +154,7 @@ export default function SnapStudyAI() {
             {(sv ? ["Förklara mina svåra ämnen", "Förhör mig på senaste studiepaketet", "Hjälp mig plugga till provet"] : ["Explain my weak topics", "Quiz me on my latest study set", "Help me prepare for my exam"]).map(prompt => <Pressable key={prompt} onPress={() => send(prompt)} style={s.prompt}><Text style={s.promptText}>{prompt}</Text><Ionicons name="arrow-up-right" size={16} color={c.accent}/></Pressable>)}
           </View> : messages.map(message => <View key={message.id} style={[s.message, message.role === "user" && s.userMessage]}>
             <View style={[s.avatar, message.role === "user" && s.userAvatar]}><Ionicons name={message.role === "user" ? "person" : "sparkles"} size={15} color={message.role === "user" ? c.onAccent : c.accent}/></View>
-            <View style={s.messageBody}><Text style={s.role}>{message.role === "user" ? (sv ? "Du" : "You") : "SnapStudy AI"}</Text><Text selectable style={s.messageText}>{message.content}</Text></View>
+            <View style={s.messageBody}><Text style={s.role}>{message.role === "user" ? (sv ? "Du" : "You") : "SnapStudy AI"}</Text><MarkdownText>{message.content}</MarkdownText></View>
           </View>)}
           {busy ? <View style={s.thinking}><ActivityIndicator color={c.accent}/><Text style={s.thinkingText}>{sv ? "SnapStudy AI skriver…" : "SnapStudy AI is thinking…"}</Text></View> : null}
         </ScrollView>
