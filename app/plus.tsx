@@ -116,6 +116,12 @@ export default function Plus() {
         <Ionicons name="chevron-forward" size={20} color={c.muted}/>
       </Pressable>
       <View style={{height:1,backgroundColor:c.border}}/>
+      <Pressable onPress={()=>router.push("/pro-insights")} style={{flexDirection:"row",alignItems:"center",paddingVertical:12,gap:12}}>
+        <View style={s.proFeatureIcon}><Ionicons name="analytics-outline" size={20} color={c.accent}/></View>
+        <View style={{flex:1}}><Text style={s.proFeatureTitle}>Smart Learning Insights</Text><Text style={s.proFeatureBody}>Analyze your saved study sessions and weak topics to build a focused revision plan.</Text></View>
+        <Ionicons name="chevron-forward" size={20} color={c.muted}/>
+      </Pressable>
+
       <Pressable onPress={()=>router.push("/exam-prep")} style={{flexDirection:"row",alignItems:"center",paddingVertical:12,gap:12}}>
         <View style={s.proFeatureIcon}><Ionicons name="school-outline" size={20} color={c.accent}/></View>
         <View style={{flex:1}}><Text style={s.proFeatureTitle}>Build an Exam Prep Plan</Text><Text style={s.proFeatureBody}>Generate a day-by-day revision plan with practice goals.</Text></View>
