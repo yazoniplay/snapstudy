@@ -1,11 +1,26 @@
+import { supabase } from "./supabase";
+
 export type StudyResult={topic:string;summary:string;flashcards:{question:string;answer:string}[];quiz:{question:string;options:string[];answer:number;explanation:string;topic?:string}[];practiceTest:{question:string;answer:string}[]};
 export type StudyLanguage = "en" | "sv" | "ar";
 type StudyImage={base64:string;mimeType:string};
-const API_URL=process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL||"https://thqxjxrtcvcrnqnnmjzi.supabase.co/functions/v1/analyze-notes";
+
 async function postStudy(body:Record<string,unknown>):Promise<StudyResult>{
- const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
- const data=await response.json();
- if(!response.ok)throw new Error(data?.error||"AI study request failed");
+ // Use Supabase's function client so it attaches the project's apikey and the
+ // signed-in user's access token. A raw fetch here was being rejected by the
+ // Edge Function gateway with UNAUTHORIZED_NO_AUTH_HEADER.
+ const {data,error}=await supabase.functions.invoke("analyze-notes",{body});
+ if(error){
+  let message=error.message||"AI study request failed";
+  const response=(error as any).context;
+  if(response&&typeof response.json==="function"){
+   try{
+    const details=await response.json();
+    if(typeof details?.error==="string")message=details.error;
+    else if(typeof details?.message==="string")message=details.message;
+   }catch{/* Keep the original Functions error message. */}
+  }
+  throw new Error(message);
+ }
  if(!data||typeof data.topic!=="string"||typeof data.summary!=="string"||!Array.isArray(data.flashcards)||!Array.isArray(data.quiz)||!Array.isArray(data.practiceTest))throw new Error("The AI returned an incomplete study session. Please try again.");
  return data as StudyResult;
 }
