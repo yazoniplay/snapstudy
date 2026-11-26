@@ -58,7 +58,7 @@ export default function Chat() {
     setMessages(hydrated);
     setLoading(false);
     const unread = rows.filter(message=>message.sender_id!==user.id && !message.read_at).map(message=>message.id);
-    if (unread.length) await supabase.from("messages").update({read_at:new Date().toISOString()}).in("id",unread);
+    if (unread.length) await supabase.from("messages").update({delivered_at:new Date().toISOString(),read_at:new Date().toISOString()}).in("id",unread);
     setTimeout(()=>scrollRef.current?.scrollToEnd({animated:true}),80);
   },[friendshipId]);
 
