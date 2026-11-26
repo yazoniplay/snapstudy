@@ -19,7 +19,8 @@ import { useLanguage } from "../lib/language";
 export default function Home() {
   const { colors:c } = useTheme();
   const { width: viewportWidth } = useWindowDimensions();
-  const desktopLayout = viewportWidth >= 1100;\n  const compactLayout = viewportWidth < 600;
+  const desktopLayout = viewportWidth >= 1100;
+  const compactLayout = viewportWidth < 600;
   const {t,language}=useLanguage();
   const s = makeStyles(c);
   const [busy, setBusy] = useState(false);
