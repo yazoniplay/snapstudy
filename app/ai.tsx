@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Animated, Easing, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Feather from "@expo/vector-icons/Feather";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
@@ -34,7 +35,9 @@ export default function SnapStudyAI() {
   const [busy, setBusy] = useState(false);
   const [context, setContext] = useState<any>({ language });
   const scroll = useRef<ScrollView>(null);
-  const active = chats.find(chat => chat.id === activeId);
+  const desktopSidebarProgress = useRef(new Animated.Value(1)).current;
+  const mobileSidebarProgress = useRef(new Animated.Value(0)).current;
+  useEffect(() => {\n    Animated.timing(desktopSidebarProgress, { toValue: sidebarCollapsed ? 0 : 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();\n  }, [sidebarCollapsed, desktopSidebarProgress]);\n  useEffect(() => {\n    if (!sidebarOpen || wide) return;\n    mobileSidebarProgress.setValue(0);\n    Animated.timing(mobileSidebarProgress, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();\n  }, [sidebarOpen, wide, mobileSidebarProgress]);\n\n  const active = chats.find(chat => chat.id === activeId);
   const messages = active?.messages || [];
 
   const persist = useCallback(async (next: Chat[]) => {
@@ -159,10 +162,10 @@ export default function SnapStudyAI() {
   </View>;
 
   return <SafeAreaView style={s.safe}><View style={s.app}>
-    {wide && !sidebarCollapsed ? <View style={s.desktopSidebar}>{sidebar}</View> : null}
+    {wide ? <Animated.View pointerEvents={sidebarCollapsed ? "none" : "auto"} style={[s.desktopSidebar, { width: desktopSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [0, 265] }), opacity: desktopSidebarProgress, transform: [{ translateX: desktopSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }] }]}><View style={s.desktopSidebarInner}>{sidebar}</View></Animated.View> : null}
     <View style={s.main}>
       <View style={s.topbar}>
-        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}><Ionicons name={wide ? "menu-outline" : "menu"} size={21} color={c.text}/></Pressable>
+        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}>{wide ? <Feather name="sidebar" size={20} color={c.text}/> : <Ionicons name="menu" size={21} color={c.text}/>}</Pressable>
         <Text style={s.topTitle}>SnapStudy AI</Text>
         <View style={{ flex: 1 }}/>
         <Pressable onPress={createChat} style={s.iconButton}><Ionicons name="create-outline" size={21} color={c.text}/></Pressable>
@@ -188,7 +191,7 @@ export default function SnapStudyAI() {
         </View>
       </KeyboardAvoidingView>
     </View>
-    {!wide && sidebarOpen ? <View style={s.overlay}><Pressable onPress={() => setSidebarOpen(false)} style={s.scrim}/><View style={s.drawer}>{sidebar}</View></View> : null}
+    {!wide && sidebarOpen ? <Animated.View style={[s.overlay, { opacity: mobileSidebarProgress }]}><Pressable onPress={() => setSidebarOpen(false)} style={s.scrim}/><Animated.View style={[s.drawer, { transform: [{ translateX: mobileSidebarProgress.interpolate({ inputRange: [0, 1], outputRange: [-28, 0] }) }] }]}>{sidebar}</Animated.View></Animated.View> : null}
   </View></SafeAreaView>;
 }
 
