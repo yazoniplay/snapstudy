@@ -54,7 +54,7 @@ export function getLevel(totalXp: number) {
 export async function awardXP(id: string, amount: number, kind: XPKind, title: string, extra?: Partial<GamificationState["stats"]>): Promise<GamificationState> {
   const state = await loadGamification();
   if (state.events.some(event => event.id === id)) return state;
-  const date = new Date().toLocaleDateString("en-CA");
+  const date = localDate();
   const event: XPEvent = { id, xp: Math.max(0, Math.floor(amount)), kind, title, date };
   state.events = [event, ...state.events].slice(0, 1500);
   state.totalXp += event.xp;
@@ -82,11 +82,15 @@ export async function awardXP(id: string, amount: number, kind: XPKind, title: s
       state.events.unshift({ id: questId, xp: quest.bonus, kind: "achievement", title: quest.title, date });
     }
   }
+  const monday = new Date(date+"T12:00:00"); monday.setDate(monday.getDate()-((monday.getDay()+6)%7)); const weekStart=localDate(monday);
+  const weekEvents=state.events.filter(e=>e.date>=weekStart&&e.date<=date&&e.xp>0&&!e.id.startsWith("quest:"));
+  const weekly=[{id:"weekly-cards",title:"Review 50 flashcards",progress:weekEvents.filter(e=>e.kind==="card").length,goal:50,xp:120},{id:"weekly-quiz",title:"Complete 5 quizzes",progress:weekEvents.filter(e=>e.kind==="quiz").length,goal:5,xp:150},{id:"weekly-focus",title:"Complete 120 focus minutes",progress:weekEvents.filter(e=>e.kind==="focus").reduce((n,e)=>n+(Number(e.title.match(/(\\d+)-minute/)?.[1])||25),0),goal:120,xp:180},{id:"weekly-days",title:"Study on 5 different days",progress:new Set(weekEvents.map(e=>e.date)).size,goal:5,xp:200}];
+  for(const q of weekly){const qid="quest:"+weekStart+":"+q.id;if(q.progress>=q.goal&&!state.events.some(e=>e.id===qid)){state.totalXp+=q.xp;state.events.unshift({id:qid,xp:q.xp,kind:"achievement",title:"Weekly quest: "+q.title,date});}}
   await saveStudyData(KEY, state);
   return state;
 }
 export function getDailyQuestProgress(state: GamificationState) {
-  const today = new Date().toLocaleDateString("en-CA");
+  const today = localDate();
   const events = state.events.filter(event => event.date === today);
   return [
     { id: "cards", title: "Review 10 flashcards", goal: 10, progress: Math.min(10, events.filter(e => e.kind === "card").length), xp: 30 },
@@ -94,4 +98,32 @@ export function getDailyQuestProgress(state: GamificationState) {
     { id: "focus", title: "Complete a focus session", goal: 1, progress: Math.min(1, events.filter(e => e.kind === "focus").length), xp: 50 },
     { id: "study", title: "Create a study set", goal: 1, progress: Math.min(1, events.filter(e => e.kind === "study").length), xp: 35 },
   ];
+}
+
+export function getWeeklyQuestProgress(state:GamificationState){
+ const today=localDate(),monday=new Date(today+"T12:00:00");monday.setDate(monday.getDate()-((monday.getDay()+6)%7));const start=localDate(monday);
+ const events=state.events.filter(e=>e.date>=start&&e.date<=today&&e.xp>0&&!e.id.startsWith("quest:"));
+ return [
+  {id:"weekly-cards",title:"Review 50 flashcards",progress:events.filter(e=>e.kind==="card").length,goal:50,xp:120},
+  {id:"weekly-quiz",title:"Complete 5 quizzes",progress:events.filter(e=>e.kind==="quiz").length,goal:5,xp:150},
+  {id:"weekly-focus",title:"Complete 120 focus minutes",progress:events.filter(e=>e.kind==="focus").reduce((n,e)=>n+(Number(e.title.match(/(\\d+)-minute/)?.[1])||25),0),goal:120,xp:180},
+  {id:"weekly-days",title:"Study on 5 different days",progress:new Set(events.map(e=>e.date)).size,goal:5,xp:200},
+ ].map(q=>({...q,progress:Math.min(q.goal,q.progress),completed:q.progress>=q.goal}));
+}
+export function getStreak(state:GamificationState){
+ const days=new Set([...getActivityDays(state),...(state.streakFreezeDates||[])]);
+ let current=0,cursor=localDate();if(!days.has(cursor))cursor=shiftDate(cursor,-1);
+ while(days.has(cursor)){current++;cursor=shiftDate(cursor,-1);if(current>4000)break;}
+ let best=0,run=0,previous="";for(const day of [...days].sort()){run=previous&&shiftDate(previous,1)===day?run+1:1;best=Math.max(best,run);previous=day;}
+ return{current,best,activeToday:days.has(localDate()),days:[...days]};
+}
+export async function useStreakFreeze():Promise<{state:GamificationState;used:boolean;message:string}>{
+ const state=await loadGamification(),today=localDate(),yesterday=shiftDate(today,-1),before=shiftDate(today,-2),active=new Set(getActivityDays(state));
+ if(state.streakFreezes<1)return{state,used:false,message:"You don't have a streak freeze available yet."};
+ if(!active.has(today))return{state,used:false,message:"Study today first, then you can protect yesterday."};
+ if(active.has(yesterday))return{state,used:false,message:"Yesterday already counts toward your streak."};
+ if(!active.has(before))return{state,used:false,message:"A freeze can protect one missed day in an active streak."};
+ state.streakFreezes-=1;state.streakFreezeDates=[...new Set([...state.streakFreezeDates,yesterday])];
+ state.events.unshift({id:"streak-freeze:"+yesterday,xp:0,kind:"achievement",title:"Streak freeze used",date:today});
+ await saveStudyData(KEY,state);return{state,used:true,message:"Yesterday is protected. Your streak stays alive!"};
 }
