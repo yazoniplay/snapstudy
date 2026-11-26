@@ -41,7 +41,7 @@ export default function StudentProfile() {
   useEffect(()=>{void load();},[load]);
   useEffect(()=>{
     if(!targetId)return;
-    const channel=supabase.channel("snapstudy-presence-profile",{config:{presence:{key:"profile-viewer-"+Math.random().toString(36).slice(2)}}})
+    const channel=supabase.channel("snapstudy-presence",{config:{presence:{key:"profile-viewer"}}})
       .on("presence",{event:"sync"},()=>{
         const state=channel.presenceState() as Record<string,Array<{user_id?:string}>>;
         const ids=Object.entries(state).flatMap(([key,metas])=>metas.map(meta=>meta.user_id||key));
