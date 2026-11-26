@@ -60,7 +60,7 @@ function providers():P[] {
  {id:"sambanova",key:env("SAMBANOVA_API_KEY"),url:env("SAMBANOVA_BASE_URL")||"https://api.sambanova.ai/v1",model:env("SAMBANOVA_MODEL")||"deepseek-ai/DeepSeek-V3.2"}
  ];
  const order=env("AI_PROVIDER_ORDER").split(",").map(x=>x.trim().toLowerCase());
- return list.filter(p=>(p.key||p.id==="aihorde")&&(p.url==="gemini"||p.url)).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
+ return list.filter(p=>(p.key||p.id==="aihorde")&&(p.url==="gemini"||p.url)&&(p.id!=="opencodezen"||!/-free$/i.test(p.model))).sort((a,b)=>{const x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);});
 }
 function extractJson(raw:string):string {
  let text=String(raw||"").trim().replace(/^\uFEFF/,"");
@@ -119,7 +119,8 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  const instruction=lang&&lang!=="auto"?`EXPLICIT OUTPUT LANGUAGE: ${lang}. Write every student-facing field in this language, naturally and consistently. This explicit output language is the only reason to translate away from the source language.`:"AUTOMATIC SOURCE-LANGUAGE MODE (MANDATORY): Inspect the pasted text or OCR-readable image text first, identify the dominant language carrying the lesson, and write every student-facing field in that same language. The UI language is irrelevant and must not override the source. Swedish source material—including a photo of Swedish notes—must produce natural Swedish throughout, with å, ä and ö preserved. Never translate Swedish into English by default. Do not mix languages unless the source itself requires it.";
  if(p.id==="groq"&&notesText.length>26000)throw new Error("Groq skipped for long notes to avoid its request-size limit; another configured provider will process the full source");
  const sourceText=notesText? "\n\nSOURCE NOTES (use only these facts):\n"+notesText : "";
- const content=[{type:"text",text:prompt+"\n"+instruction+sourceText},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
+ const hordeCompact=p.id==="aihorde"?"\n\nAI HORDE OUTPUT LIMIT: This provider has a strict 3500-token output cap. Override the usual quantity requirements: produce a compact 250-word lesson, 8 flashcards, 8 quiz questions and 5 written practice questions, all complete and valid JSON. Do not exceed the output cap.":"";
+ const content=[{type:"text",text:prompt+"\n"+instruction+hordeCompact+sourceText},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
  if(p.url==="gemini") {
   const candidates=[p.model,"gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.8-flash","gemini-3.5-flash",...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim())].filter((x,i,a)=>x&&!/^gemini-2\.5-/i.test(x)&&a.indexOf(x)===i).slice(0,5);
   const errors:string[]=[];
