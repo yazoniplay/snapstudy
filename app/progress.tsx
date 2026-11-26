@@ -5,7 +5,8 @@ import { router, useFocusEffect } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
 import { ACHIEVEMENTS, getActivityDays, getDailyQuestProgress, getLevel, getRank, getStreak, getWeeklyQuestProgress, loadGamification, useStreakFreeze, type GamificationState } from "../lib/gamification";
 import { useTheme, type ThemeColors } from "../lib/theme";
-import { useLanguage } from "../lib/language";\nimport { supabase } from "../lib/supabase";
+import { useLanguage } from "../lib/language";
+import { supabase } from "../lib/supabase";
 
 export default function Progress(){
  const {colors:c}=useTheme();const {language}=useLanguage();const s=styles(c);const sv=language==="sv";
