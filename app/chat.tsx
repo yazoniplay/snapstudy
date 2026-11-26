@@ -39,7 +39,14 @@ export default function Chat() {
   const scrollRef = useRef<ScrollView>(null);
   function broadcastTyping(typing:boolean){channelRef.current?.send({type:"broadcast",event:"typing",payload:{userId,typing}}).catch(()=>{});if(!typing&&typingTimeout.current){clearTimeout(typingTimeout.current);typingTimeout.current=null;}}
 
-  useEffect(()=>{\n    if(!friendId)return;\n    let alive=true;\n    supabase.rpc("get_public_profile",{target_user_id:friendId}).then(({data})=>{if(alive)setFriendAvatar((data||[])[0]?.avatar_url||null);});\n    return()=>{alive=false;};\n  },[friendId]);\n\n  const loadMessages = useCallback(async () => {
+  useEffect(()=>{
+    if(!friendId)return;
+    let alive=true;
+    supabase.rpc("get_public_profile",{target_user_id:friendId}).then(({data})=>{if(alive)setFriendAvatar((data||[])[0]?.avatar_url||null);});
+    return()=>{alive=false;};
+  },[friendId]);
+
+  const loadMessages = useCallback(async () => {
     if (!friendshipId) { Alert.alert("Chat unavailable","Open a chat from your friends list."); router.replace("/friends"); return; }
     const {data:{user}} = await supabase.auth.getUser();
     if (!user) { router.replace("/auth"); return; }
