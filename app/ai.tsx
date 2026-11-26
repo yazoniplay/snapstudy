@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
 import MarkdownText from "../components/MarkdownText";
@@ -9,7 +10,8 @@ import { supabase } from "../lib/supabase";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
 
-type Message = { id: string; role: "user" | "assistant"; content: string; createdAt: number };
+type Message = { id: string; role: "user" | "assistant"; content: string; createdAt: number; imageBase64?: string; imageMimeType?: string; imageUri?: string };
+type ImageAttachment = { base64: string; mimeType: string; uri: string; name?: string };
 type Chat = { id: string; title: string; createdAt: number; updatedAt: number; messages: Message[] };
 const makeChat = (): Chat => ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: "New chat", createdAt: Date.now(), updatedAt: Date.now(), messages: [] });
 const titleFor = (value: string) => value.trim().replace(/\\s+/g, " ").slice(0, 42) || "New chat";
@@ -26,6 +28,8 @@ export default function SnapStudyAI() {
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [attachment, setAttachment] = useState<ImageAttachment | null>(null);
   const [busy, setBusy] = useState(false);
   const [context, setContext] = useState<any>({ language });
   const scroll = useRef<ScrollView>(null);
@@ -88,14 +92,14 @@ export default function SnapStudyAI() {
       target = makeChat();
       setActiveId(target.id);
     }
-    const userMessage: Message = { id: Date.now() + "-u", role: "user", content: value, createdAt: Date.now() };
+    const userMessage: Message = { id: Date.now() + "-u", role: "user", content: value, createdAt: Date.now(), ...(image ? { imageBase64: image.base64, imageMimeType: image.mimeType, imageUri: image.uri } : {}) };
     const updated: Chat = { ...target, title: target.messages.length ? target.title : titleFor(value), updatedAt: Date.now(), messages: [...target.messages, userMessage].slice(-80) };
     const first = [updated, ...chats.filter(x => x.id !== target!.id)];
     await persist(first);
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("study-chat", {
-        body: { messages: updated.messages.slice(-16).map(m => ({ role: m.role, content: m.content })), context }
+        body: { messages: updated.messages.slice(-16).map(m => ({ role: m.role, content: m.content, ...(m.imageBase64 ? { imageBase64: m.imageBase64, imageMimeType: m.imageMimeType } : {}) })), context }
       });
       if (error) throw error;
       const answer = typeof data?.message === "string" ? data.message.trim() : "";
@@ -137,10 +141,10 @@ export default function SnapStudyAI() {
   </View>;
 
   return <SafeAreaView style={s.safe}><View style={s.app}>
-    {wide ? <View style={s.desktopSidebar}>{sidebar}</View> : null}
+    {wide && !sidebarCollapsed ? <View style={s.desktopSidebar}>{sidebar}</View> : null}
     <View style={s.main}>
       <View style={s.topbar}>
-        {!wide ? <Pressable onPress={() => setSidebarOpen(true)} style={s.iconButton}><Ionicons name="menu" size={21} color={c.text}/></Pressable> : null}
+        <Pressable onPress={() => wide ? setSidebarCollapsed(v => !v) : setSidebarOpen(true)} style={s.iconButton} accessibilityLabel={wide ? (sidebarCollapsed ? "Show sidebar" : "Collapse sidebar") : "Open chat history"}><Ionicons name={wide ? (sidebarCollapsed ? "sidebar" : "sidebar-outline") : "menu"} size={21} color={c.text}/></Pressable>
         <Text style={s.topTitle}>SnapStudy AI</Text>
         <View style={{ flex: 1 }}/>
         <Pressable onPress={createChat} style={s.iconButton}><Ionicons name="create-outline" size={21} color={c.text}/></Pressable>
@@ -154,12 +158,12 @@ export default function SnapStudyAI() {
             {(sv ? ["Förklara mina svåra ämnen", "Förhör mig på senaste studiepaketet", "Hjälp mig plugga till provet"] : ["Explain my weak topics", "Quiz me on my latest study set", "Help me prepare for my exam"]).map(prompt => <Pressable key={prompt} onPress={() => send(prompt)} style={s.prompt}><Text style={s.promptText}>{prompt}</Text><Ionicons name="arrow-up-right" size={16} color={c.accent}/></Pressable>)}
           </View> : messages.map(message => <View key={message.id} style={[s.message, message.role === "user" && s.userMessage]}>
             <View style={[s.avatar, message.role === "user" && s.userAvatar]}><Ionicons name={message.role === "user" ? "person" : "sparkles"} size={15} color={message.role === "user" ? c.onAccent : c.accent}/></View>
-            <View style={s.messageBody}><Text style={s.role}>{message.role === "user" ? (sv ? "Du" : "You") : "SnapStudy AI"}</Text><MarkdownText>{message.content}</MarkdownText></View>
+            <View style={s.messageBody}><Text style={s.role}>{message.role === "user" ? (sv ? "Du" : "You") : "SnapStudy AI"}</Text>{message.imageBase64 ? <Image source={{ uri: `data:${message.imageMimeType || "image/jpeg"};base64,${message.imageBase64}` }} style={s.messageImage} resizeMode="contain"/> : null}<MarkdownText>{message.content}</MarkdownText></View>
           </View>)}
           {busy ? <View style={s.thinking}><ActivityIndicator color={c.accent}/><Text style={s.thinkingText}>{sv ? "SnapStudy AI skriver…" : "SnapStudy AI is thinking…"}</Text></View> : null}
         </ScrollView>
         <View style={s.composerWrap}>
-          <View style={s.composer}><TextInput value={input} onChangeText={setInput} multiline maxLength={4000} placeholder={sv ? "Fråga SnapStudy AI" : "Message SnapStudy AI"} placeholderTextColor={c.subtle} style={s.input} onSubmitEditing={() => send()}/><View style={s.composerBottom}><Pressable onPress={() => router.push("/study-hub")} style={s.contextButton}><Ionicons name="add-circle-outline" size={19} color={c.muted}/><Text style={s.contextLabel}>{sv ? "Studiepaket" : "Study context"}</Text></Pressable><View style={{ flex: 1 }}/><Pressable disabled={!input.trim() || busy} onPress={() => send()} style={[s.send, (!input.trim() || busy) && s.disabled]}><Ionicons name="arrow-up" size={19} color={c.onAccent}/></Pressable></View></View>
+          <View style={s.composer}><TextInput value={input} onChangeText={setInput} multiline maxLength={4000} placeholder={sv ? "Fråga SnapStudy AI" : "Message SnapStudy AI"} placeholderTextColor={c.subtle} style={s.input} onSubmitEditing={() => send()}/><View style={s.composerBottom}><Pressable onPress={pickImage} disabled={busy} style={s.attachButton} accessibilityLabel={sv ? "Bifoga bild" : "Attach image"}><Ionicons name="image-outline" size={20} color={c.muted}/></Pressable><Pressable onPress={() => router.push("/study-hub")} style={s.contextButton}><Ionicons name="add-circle-outline" size={19} color={c.muted}/><Text style={s.contextLabel}>{sv ? "Studiepaket" : "Study context"}</Text></Pressable><View style={{ flex: 1 }}/><Pressable disabled={(!input.trim() && !attachment) || busy} onPress={() => send()} style={[s.send, (!input.trim() || busy) && s.disabled]}><Ionicons name="arrow-up" size={19} color={c.onAccent}/></Pressable></View></View>
           <Text style={s.disclaimer}>{sv ? "AI kan göra misstag. Kontrollera viktiga svar." : "SnapStudy AI can make mistakes. Check important answers."}</Text>
         </View>
       </KeyboardAvoidingView>
@@ -172,6 +176,6 @@ const styles = (c: ThemeColors, wide: boolean, width: number) => StyleSheet.crea
   safe:{flex:1,backgroundColor:c.bg}, app:{flex:1,flexDirection:"row",backgroundColor:c.bg}, desktopSidebar:{width:265,borderRightWidth:1,borderRightColor:c.border}, sidebar:{flex:1,backgroundColor:c.surface,padding:12}, sidebarHeader:{flexDirection:"row",alignItems:"center",gap:9,padding:5,marginBottom:14}, brandIcon:{width:31,height:31,borderRadius:10,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"}, brand:{flex:1,color:c.text,fontSize:14,fontWeight:"900"}, newChat:{height:42,borderRadius:12,borderWidth:1,borderColor:c.border,flexDirection:"row",alignItems:"center",gap:9,paddingHorizontal:12,marginBottom:11}, newChatLabel:{color:c.text,fontSize:12,fontWeight:"800"}, search:{height:38,borderRadius:10,backgroundColor:c.input,flexDirection:"row",alignItems:"center",gap:8,paddingHorizontal:10,marginBottom:12}, searchInput:{flex:1,color:c.text,fontSize:12,padding:0}, history:{flex:1}, historyRow:{minHeight:37,borderRadius:9,flexDirection:"row",alignItems:"center",paddingLeft:9,paddingRight:3}, selectedRow:{backgroundColor:c.accentSoft}, historyTap:{flex:1,paddingVertical:9}, historyTitle:{color:c.muted,fontSize:11,fontWeight:"700"}, deleteChat:{width:28,height:30,alignItems:"center",justifyContent:"center"}, noChats:{color:c.subtle,fontSize:11,padding:8}, sideBottom:{borderTopWidth:1,borderTopColor:c.border,paddingTop:8}, sideLink:{flexDirection:"row",alignItems:"center",gap:9,padding:10}, sideLinkText:{color:c.muted,fontSize:11,fontWeight:"700"},
   main:{flex:1,minWidth:0}, topbar:{height:56,flexDirection:"row",alignItems:"center",paddingHorizontal:15,gap:9,borderBottomWidth:1,borderBottomColor:c.border}, iconButton:{width:36,height:36,borderRadius:10,alignItems:"center",justifyContent:"center"}, topTitle:{color:c.text,fontSize:14,fontWeight:"900"}, chatArea:{flex:1}, chatScroll:{flex:1}, chatContent:{width:"100%",maxWidth:820,alignSelf:"center",paddingHorizontal:wide?28:16,paddingTop:25,paddingBottom:24,gap:25}, emptyContent:{flexGrow:1,justifyContent:"center",paddingBottom:45}, welcome:{width:"100%",maxWidth:620,alignSelf:"center",alignItems:"center"}, welcomeIcon:{width:54,height:54,borderRadius:18,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center",marginBottom:17}, welcomeTitle:{color:c.text,fontSize:wide?27:22,fontWeight:"900",textAlign:"center"}, welcomeSub:{color:c.muted,fontSize:13,lineHeight:20,textAlign:"center",marginTop:9,marginBottom:20}, prompt:{width:"100%",minHeight:52,borderRadius:13,borderWidth:1,borderColor:c.border,backgroundColor:c.surface,paddingHorizontal:14,paddingVertical:12,flexDirection:"row",alignItems:"center",gap:10,marginTop:8},promptText:{color:c.text,fontSize:12,fontWeight:"700",flex:1},
   message:{flexDirection:"row",alignItems:"flex-start",gap:12,width:"100%"},userMessage:{backgroundColor:c.surface,borderWidth:1,borderColor:c.border,borderRadius:15,padding:13},avatar:{width:30,height:30,borderRadius:10,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center",flexShrink:0},userAvatar:{backgroundColor:c.accent},messageBody:{flex:1,minWidth:0},role:{color:c.text,fontSize:12,fontWeight:"900",marginBottom:7},messageText:{color:c.text,fontSize:14,lineHeight:23},thinking:{flexDirection:"row",alignItems:"center",gap:10,paddingVertical:8},thinkingText:{color:c.muted,fontSize:12},
-  composerWrap:{width:"100%",maxWidth:820,alignSelf:"center",paddingHorizontal:wide?28:15,paddingTop:10,paddingBottom:2},composer:{borderWidth:1,borderColor:c.border,borderRadius:21,backgroundColor:c.surface,padding:10},input:{color:c.text,fontSize:14,lineHeight:21,minHeight:38,maxHeight:140,paddingHorizontal:8,paddingTop:7,paddingBottom:6},composerBottom:{flexDirection:"row",alignItems:"center",gap:8,paddingTop:4},contextButton:{flexDirection:"row",alignItems:"center",gap:5,padding:5},contextLabel:{color:c.muted,fontSize:10,fontWeight:"700"},send:{width:36,height:36,borderRadius:12,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},disabled:{opacity:0.4},disclaimer:{color:c.subtle,fontSize:9,textAlign:"center",paddingVertical:8},
+  composerWrap:{width:"100%",maxWidth:820,alignSelf:"center",paddingHorizontal:wide?28:15,paddingTop:10,paddingBottom:2},attachmentPreview:{flexDirection:"row",alignItems:"center",gap:9,padding:9,marginBottom:8,borderRadius:12,backgroundColor:c.surface,borderWidth:1,borderColor:c.border},attachmentThumb:{width:42,height:42,borderRadius:8,backgroundColor:c.input},attachmentName:{flex:1,color:c.muted,fontSize:11,fontWeight:"700"},removeAttachment:{width:30,height:30,alignItems:"center",justifyContent:"center"},attachButton:{width:34,height:34,borderRadius:10,alignItems:"center",justifyContent:"center"},messageImage:{width:"100%",maxWidth:420,height:240,borderRadius:12,marginBottom:9,backgroundColor:c.input},composer:{borderWidth:1,borderColor:c.border,borderRadius:21,backgroundColor:c.surface,padding:10},input:{color:c.text,fontSize:14,lineHeight:21,minHeight:38,maxHeight:140,paddingHorizontal:8,paddingTop:7,paddingBottom:6},composerBottom:{flexDirection:"row",alignItems:"center",gap:8,paddingTop:4},contextButton:{flexDirection:"row",alignItems:"center",gap:5,padding:5},contextLabel:{color:c.muted,fontSize:10,fontWeight:"700"},send:{width:36,height:36,borderRadius:12,backgroundColor:c.accent,alignItems:"center",justifyContent:"center"},disabled:{opacity:0.4},disclaimer:{color:c.subtle,fontSize:9,textAlign:"center",paddingVertical:8},
   overlay:{position:"absolute",left:0,right:0,top:0,bottom:0,flexDirection:"row"},scrim:{position:"absolute",left:0,right:0,top:0,bottom:0,backgroundColor:"rgba(0,0,0,0.45)"},drawer:{width:Math.min(300,width*0.86),height:"100%",backgroundColor:c.surface}
 });
