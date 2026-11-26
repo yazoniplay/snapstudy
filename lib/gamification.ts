@@ -90,16 +90,10 @@ export async function awardXP(id: string, amount: number, kind: XPKind, title: s
   return state;
 }
 export function getDailyQuestProgress(state: GamificationState) {
-  const today = localDate();
-  const events = state.events.filter(event => event.date === today);
-  return [
-    { id: "cards", title: "Review 10 flashcards", goal: 10, progress: Math.min(10, events.filter(e => e.kind === "card").length), xp: 30 },
-    { id: "quiz", title: "Finish a quiz", goal: 1, progress: Math.min(1, events.filter(e => e.kind === "quiz").length), xp: 40 },
-    { id: "focus", title: "Complete a focus session", goal: 1, progress: Math.min(1, events.filter(e => e.kind === "focus").length), xp: 50 },
-    { id: "study", title: "Create a study set", goal: 1, progress: Math.min(1, events.filter(e => e.kind === "study").length), xp: 35 },
-  ];
+ const today=localDate(),events=state.events.filter(event=>event.date===today&&!event.id.startsWith("quest:"));
+ const definitions=[{id:"cards",title:"Review 10 flashcards",goal:10,xp:30,kind:"card" as XPKind,icon:"🎴"},{id:"quiz",title:"Finish a quiz",goal:1,xp:40,kind:"quiz" as XPKind,icon:"🎯"},{id:"focus",title:"Complete a focus session",goal:1,xp:50,kind:"focus" as XPKind,icon:"⏱️"},{id:"study",title:"Create a study set",goal:1,xp:35,kind:"study" as XPKind,icon:"📚"}];
+ return definitions.map(q=>{const progress=Math.min(q.goal,events.filter(e=>e.kind===q.kind).length);return{...q,progress,completed:progress>=q.goal};});
 }
-
 export function getWeeklyQuestProgress(state:GamificationState){
  const today=localDate(),monday=new Date(today+"T12:00:00");monday.setDate(monday.getDate()-((monday.getDay()+6)%7));const start=localDate(monday);
  const events=state.events.filter(e=>e.date>=start&&e.date<=today&&e.xp>0&&!e.id.startsWith("quest:"));
