@@ -89,7 +89,7 @@ export default function Friends() {
 
   function personCard(person: Profile, action: ReactNode, key = person.id) {
     return <View key={key} style={s.personCard}>
-      <View style={s.personAvatar}>{person.avatar_url ? <Image source={{ uri: person.avatar_url }} style={s.avatarImage}/> : <Text style={s.avatarLetter}>{displayName(person).slice(0,1).toUpperCase()}</Text>}</View>
+      <Pressable accessibilityRole="button" accessibilityLabel={`View ${displayName(person)} profile`} onPress={()=>router.push({pathname:"/profile",params:{userId:person.id}})} style={s.personAvatar}>{person.avatar_url ? <Image source={{ uri: person.avatar_url }} style={s.avatarImage}/> : <Text style={s.avatarLetter}>{displayName(person).slice(0,1).toUpperCase()}</Text>}</Pressable>
       <View style={s.personMeta}><Text style={s.personName} numberOfLines={1}>{displayName(person)}</Text><Text style={s.personHandle} numberOfLines={1}>@{person.username || "student"}</Text></View>
       {action}
     </View>;
