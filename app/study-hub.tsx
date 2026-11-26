@@ -29,7 +29,8 @@ export default function StudyHub(){
  {title:sv?"Framsteg och märken":"Progress & achievements",description:sv?"XP, nivåer och mål":"XP, levels and milestones",icon:"trending-up-outline",route:"/progress",color:"#A28AF3"},
  {title:sv?"Topplista":"Leaderboard",description:sv?"Jämför dina framsteg":"Celebrate your progress",icon:"trophy-outline",route:"/leaderboard",color:"#E8B45F"},
  {title:sv?"Vänner och chatt":"Friends & chat",description:sv?"Hitta studiekompisar":"Find study buddies",icon:"people-outline",route:"/friends",color:"#5BB6D6"},
- {title:sv?"Studiebibliotek":"Study library",description:sv?"Organisera dina studiepaket":"Organize your study sets",icon:"library-outline",route:"/library",color:"#D879B0"}
+ {title:sv?"Studiebibliotek":"Study library",description:sv?"Organisera dina studiepaket":"Organize your study sets",icon:"library-outline",route:"/library",color:"#D879B0"},
+ {title:sv?"SnapStudy Plus":"SnapStudy Plus",description:sv?"Utforska extra studiefunktioner":"Explore extra study features",icon:"diamond-outline",route:"/plus",color:"#B78AF2"}
  ];
  const week=useMemo(()=>Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-6+i);return{date:d.toDateString(),label:d.toLocaleDateString(language==="sv"?"sv-SE":language==="ar"?"ar":"en-US",{weekday:"short"}).slice(0,2),count:sessions.filter(x=>new Date(x.createdAt).toDateString()===d.toDateString()).length,isToday:d.toDateString()===new Date().toDateString()}}),[sessions,language]);const max=Math.max(1,...week.map(x=>x.count));
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
