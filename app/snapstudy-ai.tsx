@@ -4,6 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useFocusEffect } from "expo-router";
 import { LocalizedText as Text } from "../components/LocalizedText";
 import MarkdownText from "../components/MarkdownText";
+import DailyAIUsage from "../components/DailyAIUsage";
 import { loadStudyData, saveStudyData } from "../lib/cloud-study-data";
 import { getDailyQuestProgress, loadGamification } from "../lib/gamification";
 import { supabase } from "../lib/supabase";
@@ -25,6 +26,7 @@ export default function SnapStudyAI(){
  return <SafeAreaView style={s.safe}><View style={s.container}>
   <View style={s.header}><Pressable onPress={()=>router.back()} style={s.back}><Ionicons name="chevron-back" size={22} color={c.text}/></Pressable><View style={s.botIcon}><Ionicons name="sparkles" size={20} color={c.onAccent}/></View><View style={{flex:1}}><Text style={s.title}>SnapStudy AI</Text><Text style={s.subtitle}>{sv?"Din läxhjälpare · känner till dina studier":"Homework helper · knows your study progress"}</Text></View><Pressable onPress={clearChat} style={s.clear}><Ionicons name="trash-outline" size={18} color={c.muted}/></Pressable></View>
   <View style={s.contextPill}><Ionicons name="shield-checkmark-outline" size={14} color="#4CB99B"/><Text style={s.contextText}>{sv?"Använder dina sparade studiepaket, historik och svåra frågor":"Uses your saved study sets, history and weak topics"}</Text></View>
+  <DailyAIUsage />
   <ScrollView ref={scroll} style={s.chat} contentContainerStyle={s.chatContent} onContentSizeChange={()=>scroll.current?.scrollToEnd({animated:true})}>
    {!messages.length?<View style={s.welcomeCard}><View style={s.welcomeSpark}><Ionicons name="sparkles" size={23} color={c.accent}/></View><Text style={s.welcomeTitle}>{sv?"Vad ska vi reda ut idag?":"What are we figuring out today?"}</Text><Text style={s.welcomeBody}>{sv?"Jag kan förklara dina anteckningar, gå igenom vad du brukar missa och hjälpa dig att öva inför prov.":"I can explain your notes, spot patterns in what you miss, and help you practise for a test."}</Text><View style={s.quickList}>{quick.map(q=><Pressable key={q} onPress={()=>send(q)} style={s.quick}><Text style={s.quickText}>{q}</Text><Ionicons name="arrow-up-right" size={15} color={c.accent}/></Pressable>)}</View></View>:messages.map(m=><View key={m.id} style={[s.messageRow,m.role==="user"&&s.userRow]}><View style={[s.messageIcon,m.role==="user"?s.userIcon:s.aiIconSmall]}><Ionicons name={m.role==="user"?"person":"sparkles"} size={14} color={m.role==="user"?c.onAccent:c.accent}/></View><View style={[s.bubble,m.role==="user"?s.userBubble:s.aiBubble]}><MarkdownText style={[s.messageText,m.role==="user"&&s.userText]}>{m.content}</MarkdownText></View></View>)}
    {busy?<View style={s.typing}><ActivityIndicator size="small" color={c.accent}/><Text style={s.typingText}>{sv?"SnapStudy AI tänker…":"SnapStudy AI is thinking…"}</Text></View>:null}
