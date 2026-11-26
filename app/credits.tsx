@@ -2,7 +2,6 @@ import { LocalizedText as Text, LocalizedTextInput as TextInput } from "../compo
 import { Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import BottomNav from "../components/BottomNav";
 import SnapStudyMark from "../components/SnapStudyMark";
 import { useTheme, type ThemeColors } from "../lib/theme";
 import { useLanguage } from "../lib/language";
@@ -26,6 +25,10 @@ export default function Credits() {
     sponsoredBody: sv ? "Sponsrat innehåll märks tydligt och hålls separat från dina studiefrågor och svar." : ar ? "يُوضَع المحتوى المدعوم بعلامة واضحة ويظل منفصلًا عن أسئلة الدراسة وإجاباتها." : "Sponsored content is clearly labeled and kept separate from your study questions and answers.",
     thanks: sv ? "TACK" : ar ? "شكرًا" : "ACKNOWLEDGEMENTS",
     thanksBody: sv ? "Till elever, lärare och kreatörer som delar idéer och hjälper till att göra digitalt lärande mer användbart." : ar ? "إلى الطلاب والمعلمين والمبدعين الذين يشاركون الأفكار ويساعدون في جعل التعلّم الرقمي أكثر فائدة." : "To students, teachers, and creators who share ideas and help make digital learning more useful.",
+    technology: sv ? "TEKNIK OCH ÖPPEN KÄLLKOD" : ar ? "التقنيات والمصدر المفتوح" : "TECHNOLOGY & OPEN SOURCE",
+    technologyBody: sv ? "Byggt med Expo, React Native, Expo Router, Supabase och Ionicons. Tack till teamen och bidragsgivarna bakom dessa verktyg." : ar ? "تم بناء التطبيق باستخدام Expo وReact Native وExpo Router وSupabase وIonicons. شكرًا للفرق والمساهمين في هذه الأدوات." : "Built with Expo, React Native, Expo Router, Supabase, and Ionicons. Thanks to the teams and open-source contributors behind these tools.",
+    ai: sv ? "AI-STÖD" : ar ? "خدمات الذكاء الاصطناعي" : "AI SERVICES",
+    aiBody: sv ? "SnapStudy AI och AI-funktionerna anropas via Supabase Edge Functions och använder de modellleverantörer som projektet har konfigurerat." : ar ? "تُستدعى SnapStudy AI وميزات الذكاء الاصطناعي عبر Supabase Edge Functions وتستخدم مزوّدي النماذج المُعدّين للمشروع." : "SnapStudy AI and study AI features are called through Supabase Edge Functions and use the model providers configured for the project.",
     creator: sv ? "BAKOM SNAPSTUDY" : ar ? "وراء سناب ستدي" : "BEHIND SNAPSTUDY",
     creatorRole: sv ? "Oberoende utvecklare · Sverige" : ar ? "مطوّر مستقل · السويد" : "Independent developer · Sweden",
     creatorBody: sv ? "Jag är YAZONI. Jag bygger digitala produkter med fokus på genomtänkt design och funktioner som faktiskt hjälper." : ar ? "أنا YAZONI. أبني منتجات رقمية تركّز على التصميم المدروس والميزات المفيدة فعلًا." : "I'm YAZONI. I build digital products with a focus on thoughtful design and features that genuinely help.",
@@ -37,6 +40,8 @@ export default function Credits() {
     { icon: "book-outline" as const, title: copy.learning, body: copy.learningBody, tint: "#48BFA0" },
     { icon: "megaphone-outline" as const, title: copy.sponsored, body: copy.sponsoredBody, tint: "#E6A44C" },
     { icon: "heart-outline" as const, title: copy.thanks, body: copy.thanksBody, tint: "#E77FAF" },
+    { icon: "code-slash-outline" as const, title: copy.technology, body: copy.technologyBody, tint: "#6EA8F5" },
+    { icon: "sparkles-outline" as const, title: copy.ai, body: copy.aiBody, tint: "#9A7BFF" },
   ];
   return (
     <SafeAreaView style={s.safe}>
@@ -95,7 +100,6 @@ export default function Credits() {
         </View>
         <Text style={s.footer}>SNAPSTUDY · {sv ? "BYGGT FÖR ATT HJÄLPA DIG LÄRA" : ar ? "مصمم لمساعدتك على التعلّم" : "BUILT TO HELP YOU LEARN"}</Text>
       </ScrollView>
-      <BottomNav />
     </SafeAreaView>
   );
 }
