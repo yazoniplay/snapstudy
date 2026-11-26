@@ -56,8 +56,8 @@ export default function Account() {
       setProfileStatus(typeof user.user_metadata?.profile_status==="string"?user.user_metadata.profile_status:"Ready to study");
       setProfileBanner(typeof user.user_metadata?.profile_banner==="string"?user.user_metadata.profile_banner:"violet");
       setAvatarEffect(typeof user.user_metadata?.avatar_effect==="string"?user.user_metadata.avatar_effect:"glow");
-      const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,current_streak,longest_streak").eq("id", user.id).maybeSingle();
-      if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setCurrentStreak(profileResult.data.current_streak || 0); setLongestStreak(profileResult.data.longest_streak || 0); }
+      const profileResult = await supabase.from("profiles").select("username,display_name,avatar_url,current_streak,longest_streak,profile_about,profile_status").eq("id", user.id).maybeSingle();
+      if (profileResult.data) { setHandle(profileResult.data.username || ""); if (profileResult.data.display_name) setName(profileResult.data.display_name); setAvatarUrl(profileResult.data.avatar_url || null); setCurrentStreak(profileResult.data.current_streak || 0); setLongestStreak(profileResult.data.longest_streak || 0); setProfileAbout(profileResult.data.profile_about || ""); setProfileStatus(profileResult.data.profile_status || "Ready to study"); }
       supabase.from("profiles").update({ leaderboard_opt_in: true }).eq("id", user.id).then(() => {});
       const savedAccent = user.user_metadata?.accent_color;
       if (typeof savedAccent === "string" && /^#[0-9A-Fa-f]{6}$/.test(savedAccent)) { setAccentColor(savedAccent); setColorDraft(savedAccent.toUpperCase()); }
@@ -71,8 +71,8 @@ export default function Account() {
     if (!user) { setSaving(false); return; }
     const cleanName = name.trim().slice(0, 60) || "Student";
     const cleanHandle = handle.trim().toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24);
-    const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanName, profile_about:profileAbout.slice(0,160), profile_status:profileStatus, profile_banner:profileBanner, avatar_effect:avatarEffect } });
-    const { error: profileError } = await supabase.from("profiles").update({ display_name: cleanName, ...(cleanHandle.length >= 3 ? { username: cleanHandle } : {}) }).eq("id", user.id);
+    const { error: authError } = await supabase.auth.updateUser({ data: { full_name: cleanName, profile_about:profileAbout.slice(0,160), profile_status:profileStatus.slice(0,80), profile_banner:profileBanner, avatar_effect:avatarEffect } });
+    const { error: profileError } = await supabase.from("profiles").update({ display_name: cleanName, profile_about: profileAbout.slice(0,160), profile_status: profileStatus.slice(0,80), ...(cleanHandle.length >= 3 ? { username: cleanHandle } : {}) }).eq("id", user.id);
     setSaving(false);
     if (authError || profileError) Alert.alert(t("couldntSave"), authError?.message || profileError?.message || "Couldn't update profile.");
     else { setName(cleanName); if (cleanHandle.length >= 3) setHandle(cleanHandle); Alert.alert(t("saved"), t("profileUpdated")); }
