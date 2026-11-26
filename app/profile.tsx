@@ -30,10 +30,12 @@ export default function StudentProfile() {
       setUserId(user.id);
       if(!targetId){setError("No student was selected. Go back and tap a profile photo again.");return;}
       if(targetId===user.id){router.replace("/account");return;}
-      const {data:profile,error:profileError}=await supabase.from("profiles")
-        .select("id,username,display_name,avatar_url,profile_about,profile_status")
-        .eq("id",targetId).maybeSingle();
+      // Use the narrowly-scoped public profile RPC rather than querying the
+      // profiles table directly. This avoids table RLS/column permission
+      // differences between web sessions and native sessions.
+      const {data:profiles,error:profileError}=await supabase.rpc("get_public_profile",{target_user_id:targetId});
       if(profileError)throw profileError;
+      const profile=Array.isArray(profiles)?profiles[0]:profiles;
       if(!profile){setError("This profile is unavailable or no longer exists.");return;}
       setPerson(profile as PublicProfile);
       const {data:links,error:friendError}=await supabase.from("friendships")
@@ -92,3 +94,23 @@ const styles=(c:ThemeColors)=>StyleSheet.create({
  safe:{flex:1,backgroundColor:c.bg},container:{padding:18,paddingBottom:30},back:{flexDirection:"row",alignItems:"center",gap:7,paddingVertical:9,marginBottom:14},backText:{fontSize:13,fontWeight:"800",color:c.text},loading:{alignItems:"center",paddingVertical:70,gap:12},errorCard:{alignItems:"center",padding:24,borderRadius:24,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,marginTop:20},inlineError:{color:c.danger,backgroundColor:c.surface,padding:12,borderRadius:12,marginBottom:12},title:{fontSize:22,fontWeight:"900",color:c.text,textAlign:"center",marginTop:10},sub:{fontSize:13,lineHeight:20,color:c.muted,marginTop:8,textAlign:"center"},
  hero:{alignItems:"center",paddingHorizontal:22,paddingTop:30,paddingBottom:25,borderRadius:28,borderWidth:1,borderColor:c.border,backgroundColor:c.surface,overflow:"hidden"},avatarWrap:{width:108,height:108,marginBottom:16,position:"relative"},avatar:{width:108,height:108,borderRadius:36,borderWidth:3,borderColor:c.surface},avatarFallback:{width:108,height:108,borderRadius:36,backgroundColor:c.accentSoft,alignItems:"center",justifyContent:"center",borderWidth:2,borderColor:c.surface},avatarLetter:{fontSize:40,fontWeight:"900",color:c.accent},onlineDot:{position:"absolute",right:1,bottom:1,width:23,height:23,borderRadius:12,borderWidth:4,borderColor:c.surface},online:{backgroundColor:"#22C55E"},offline:{backgroundColor:c.subtle},name:{fontSize:27,fontWeight:"900",letterSpacing:-.7,color:c.text,textAlign:"center"},handle:{fontSize:12,color:c.muted,marginTop:4},statusPill:{flexDirection:"row",alignItems:"center",gap:7,paddingHorizontal:13,paddingVertical:9,borderRadius:15,backgroundColor:c.input,borderWidth:1,borderColor:c.border,marginTop:16,maxWidth:"100%"},statusDot:{width:8,height:8,borderRadius:4},statusText:{fontSize:11,color:c.text,fontWeight:"700"},actions:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:9,marginTop:21,flexWrap:"wrap"},primary:{minHeight:45,paddingHorizontal:19,borderRadius:15,backgroundColor:c.accent,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:8},primaryText:{fontSize:12,fontWeight:"900",color:c.onAccent},secondary:{minHeight:45,paddingHorizontal:16,borderRadius:15,backgroundColor:c.input,borderWidth:1,borderColor:c.border,flexDirection:"row",alignItems:"center",gap:7},secondaryText:{fontSize:12,fontWeight:"800",color:c.danger},pending:{flexDirection:"row",alignItems:"center",gap:7,paddingHorizontal:16,paddingVertical:13,borderRadius:15,backgroundColor:c.input,borderWidth:1,borderColor:c.border},pendingText:{fontSize:12,fontWeight:"800",color:c.accent},bioCard:{padding:18,borderRadius:22,backgroundColor:c.surface,borderWidth:1,borderColor:c.border,marginTop:16},sectionHeading:{flexDirection:"row",alignItems:"center",gap:8},sectionTitle:{fontSize:15,fontWeight:"900",color:c.text},bio:{fontSize:13,lineHeight:20,color:c.muted,marginTop:12}
 });
+
+// Expo Router displays this boundary instead of leaving a blank white screen
+// if a web/native render error occurs inside this route.
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0B0E16", justifyContent: "center", padding: 24 }}>
+      <View style={{ alignItems: "center", gap: 12 }}>
+        <Ionicons name="alert-circle-outline" size={34} color="#FF9AAA" />
+        <Text style={{ color: "#FFFFFF", fontSize: 21, fontWeight: "900", textAlign: "center" }}>Profile couldn’t open</Text>
+        <Text style={{ color: "#C1C9D8", fontSize: 13, lineHeight: 20, textAlign: "center" }}>{error?.message || "Something went wrong while opening this profile."}</Text>
+        <Pressable onPress={retry} style={{ backgroundColor: "#8B5CF6", borderRadius: 13, paddingHorizontal: 20, paddingVertical: 13 }}>
+          <Text style={{ color: "#FFFFFF", fontWeight: "900" }}>Try again</Text>
+        </Pressable>
+        <Pressable onPress={() => router.replace("/friends")} style={{ padding: 12 }}>
+          <Text style={{ color: "#C1C9D8", fontWeight: "800" }}>Back to people</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
+}
