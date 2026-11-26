@@ -38,9 +38,9 @@ const env = (k:string) => Deno.env.get(k)?.trim() || "";
 type P = {id:string;key:string;url:string;model:string};
 function providers():P[] {
  const list:P[]=[
- {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-2.5-flash-lite"},
- {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"qwen/qwen3.8-27b"},
- {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"nvidia/nemotron-3.5-super-vl-120b-a12b"},
+ {id:"gemini",key:env("GEMINI_API_KEY"),url:"gemini",model:env("GEMINI_MODEL")||"gemini-3.5-flash-lite"},
+ {id:"groq",key:env("GROQ_API_KEY"),url:env("GROQ_BASE_URL")||"https://api.groq.com/openai/v1",model:env("GROQ_MODEL")||"openai/gpt-oss-120b"},
+ {id:"nvidia",key:env("NVIDIA_API_KEY"),url:env("NVIDIA_BASE_URL")||"https://integrate.api.nvidia.com/v1",model:env("NVIDIA_MODEL")||"nvidia/nemotron-3.5-super-120b-a12b"},
  {id:"tokenharbor",key:env("TOKEN_HARBOR_KEY")||env("TOKENHARBOR_API_KEY"),url:env("TOKEN_HARBOR_BASE_URL")||env("TOKENHARBOR_BASE_URL")||"https://tokenharbor.ai/v1",model:env("TOKEN_HARBOR_MODEL")||env("TOKENHARBOR_MODEL")||"deepseek-v4.1-flash:free"},
  {id:"huggingface",key:env("HUGGINGFACE_API_KEY")||env("HF_TOKEN"),url:env("HUGGINGFACE_BASE_URL")||"https://router.huggingface.co/v1",model:env("HUGGINGFACE_MODEL")||"Qwen/Qwen2.5-VL-72B-Instruct"},
  {id:"openrouter",key:env("OPENROUTER_API_KEY"),url:env("OPENROUTER_BASE_URL")||"https://openrouter.ai/api/v1",model:env("OPENROUTER_MODEL")||"openrouter/free"},
@@ -49,7 +49,7 @@ function providers():P[] {
  {id:"siliconflow",key:env("SILICONFLOW_API_KEY"),url:env("SILICONFLOW_BASE_URL")||"https://api.siliconflow.com/v1",model:env("SILICONFLOW_MODEL")||"Qwen/Qwen3-30B-A3B-Instruct-2507"},
  {id:"orcarouter",key:env("ORCAROUTER_API_KEY"),url:env("ORCAROUTER_BASE_URL")||"https://api.orcarouter.ai/v1",model:env("ORCAROUTER_MODEL")||"orcarouter/auto"},
  {id:"bazaarlink",key:env("BAZAARLINK_API_KEY"),url:env("BAZAARLINK_BASE_URL")||"https://api.bazaarlink.ai/v1",model:env("BAZAARLINK_MODEL")||"auto:free"},
- {id:"cloudflare",key:env("CLOUDFLARE_API_TOKEN"),url:env("CLOUDFLARE_BASE_URL")||(env("CLOUDFLARE_ACCOUNT_ID")?"https://api.cloudflare.com/client/v4/accounts/"+env("CLOUDFLARE_ACCOUNT_ID")+"/ai/v1":""),model:env("CLOUDFLARE_WORKERS_AI_MODEL")||env("CLOUDFLARE_MODEL")||"@cf/zai-org/glm-4.7-flash"},
+ {id:"cloudflare",key:env("CLOUDFLARE_API_TOKEN"),url:env("CLOUDFLARE_BASE_URL")||(env("CLOUDFLARE_ACCOUNT_ID")?"https://api.cloudflare.com/client/v4/accounts/"+env("CLOUDFLARE_ACCOUNT_ID")+"/ai/v1":""),model:env("CLOUDFLARE_WORKERS_AI_MODEL")||env("CLOUDFLARE_MODEL")||"@cf/deepseek-ai/deepseek-v4.1-flash-1017"},
  {id:"ollama",key:env("OLLAMA_API_KEY"),url:env("OLLAMA_BASE_URL")||"https://ollama.com/v1",model:env("OLLAMA_MODEL")||"llama3.3"},
  {id:"agentrouter",key:env("AGENTROUTER_API_KEY"),url:env("AGENTROUTER_BASE_URL")||"https://agentrouter.org/v1",model:env("AGENTROUTER_MODEL")||"deepseek-v4-flash"},
  {id:"routeway",key:env("ROUTEWAY_API_KEY"),url:env("ROUTEWAY_BASE_URL")||"https://api.routeway.ai/v1",model:env("ROUTEWAY_MODEL")||"minimax-m3.1-flash:free"},
@@ -114,12 +114,12 @@ async function availableHordeChatModels(p:P):Promise<string[]>{
  }catch{return [];}
 }
 async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
- const providerTimeout=Math.max(3000,Math.min(budgetMs,p.id==="gemini"?15000:p.id==="groq"?26000:p.id==="tokenharbor"?28000:p.id==="cloudflare"?22000:p.id==="nvidia"?18000:p.id==="opencodezen"?12000:20000));
+ const providerTimeout=Math.max(3000,Math.min(budgetMs,p.id==="gemini"?20000:p.id==="groq"?26000:p.id==="tokenharbor"?28000:p.id==="cloudflare"?26000:p.id==="nvidia"?28000:p.id==="opencodezen"?12000:20000));
  const instruction=lang&&lang!=="auto"?`EXPLICIT OUTPUT LANGUAGE: ${lang}. Write every student-facing field in this language, naturally and consistently. This explicit output language is the only reason to translate away from the source language.`:"AUTOMATIC SOURCE-LANGUAGE MODE (MANDATORY): Inspect the pasted text or OCR-readable image text first, identify the dominant language carrying the lesson, and write every student-facing field in that same language. The UI language is irrelevant and must not override the source. Swedish source material—including a photo of Swedish notes—must produce natural Swedish throughout, with å, ä and ö preserved. Never translate Swedish into English by default. Do not mix languages unless the source itself requires it.";
  const sourceText=notesText? "\n\nSOURCE NOTES (use only these facts):\n"+notesText : "";
  const content=[{type:"text",text:prompt+"\n"+instruction+sourceText},...images.map(x=>({type:"image_url",image_url:{url:"data:"+(x.mimeType||"image/jpeg")+";base64,"+x.imageBase64}}))];
  if(p.url==="gemini") {
-  const candidates=[p.model,...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim()),"gemini-2.5-flash-lite","gemini-2.5-flash","gemini-3-flash"].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);
+  const candidates=[p.model,...env("GEMINI_FALLBACK_MODELS").split(",").map(x=>x.trim()),"gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.8-flash","gemini-3.5-flash"].filter((x,i,a)=>x&&!/^gemini-2\.5-/i.test(x)&&a.indexOf(x)===i).slice(0,4);
   const errors:string[]=[];
   for(const model of candidates){
    try{
@@ -134,13 +134,14 @@ async function run(p:P,images:any[],lang:string,notesText="",budgetMs=20000) {
  }
  let models=[p.model];
  if(p.id==="cloudflare"){
-  const visionModels=["@cf/qwen/qwen3.8-27b","@cf/google/gemma-4-26b-a4b-it"];
+  const currentModels=["@cf/deepseek-ai/deepseek-v4.1-flash-1017","@cf/google/gemma-4-26b-a4b-it","@cf/qwen/qwen3.8-27b"];
   const configured=env("CLOUDFLARE_FALLBACK_MODELS").split(",").map(x=>x.trim()).filter(Boolean);
-  models=images.length?[...visionModels,p.model,...configured]:[p.model,...configured,...visionModels];
-  models=models.filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,4);
+  models=[p.model,...configured,...currentModels].filter((x,i,a)=>x&&!/@cf\/(?:zai-org\/glm-4\.7-flash|zai-org\/glm-5\.2|deepseek-ai\/deepseek-v4-(?:flash-0731|pro-0813)|qwen\/qwen3-30b-a3b-fp8)/i.test(x)&&a.indexOf(x)===i).slice(0,4);
  }
  if(p.id==="nvidia"){
-  models=[p.model,...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim()),"nvidia/nemotron-3.5-super-vl-120b-a12b","nvidia/nemotron-3.5-super-120b-a12b"].filter((x,i,a)=>x&&a.indexOf(x)===i); models=images.length?models.filter(x=>/vl|vision/i.test(x)).slice(0,3):models.slice(0,3);
+  const candidates=[p.model,...env("NVIDIA_FALLBACK_MODELS").split(",").map(x=>x.trim()),"nvidia/nemotron-3.5-super-120b-a12b","nvidia/nemotron-3.5-super-vl-120b-a12b","stepfun-ai/step-3.7-flash"];
+  models=candidates.filter((x,i,a)=>x&&a.indexOf(x)===i);
+  models=images.length?models.filter(x=>/vl|vision|step-3\.7-flash/i.test(x)).slice(0,3):models.slice(0,4);
  }
  if(p.id==="aihorde"){
   if(images.length)throw new Error("AI Horde text models are skipped for image notes because the selected worker does not declare vision support");
